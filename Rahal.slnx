@@ -1,3 +1,34 @@
 <Solution>
+  <Folder Name="/Gamification/">
+    <Project Path="Gamification.Application/Gamification.Application.csproj" Id="1a3ae29b-ac3a-445d-aa8d-902613bf4555" />
+    <Project Path="Gamification.Domain/Gamification.Domain.csproj" Id="a7f66e7e-e22a-4082-ba25-df15efe62935" />
+    <Project Path="Gamification.Infrastructure/Gamification.Infrastructure.csproj" Id="fdb845dd-856a-4497-8a74-c01a503a7e51" />
+  </Folder>
+  <Folder Name="/Payment/">
+    <Project Path="Payment.Application/Payment.Application.csproj" Id="df1cfbdf-77f5-462e-a443-845481790429" />
+    <Project Path="Payment.Domain/Payment.Domain.csproj" Id="f1bad3fa-054b-4e32-b61e-3489f024d9c3" />
+    <Project Path="Payment.Infrastructure/Payment.Infrastructure.csproj" Id="31d7813d-24f9-40b7-9e3a-e5f01779b5ba" />
+  </Folder>
+  <Folder Name="/Places/">
+    <Project Path="Places.Application/Places.Application.csproj" Id="95e0695f-4205-4f1b-b01e-0f325142cda0" />
+    <Project Path="Places.Domain/Places.Domain.csproj" Id="efa8df2a-3d87-4d38-ac0f-af4adf97f85b" />
+    <Project Path="Places.Infrastructure/Places.Infrastructure.csproj" Id="83a4c2c9-0681-472f-94d6-7697640f3571" />
+  </Folder>
+  <Folder Name="/Rewards/">
+    <Project Path="Rewards.Application/Rewards.Application.csproj" Id="ddd3c8eb-4e58-4253-bf29-af051d99917e" />
+    <Project Path="Rewards.Domain/Rewards.Domain.csproj" Id="754d5e7a-45d3-4e01-96aa-9ad673b46b62" />
+    <Project Path="Rewards.Infrastructure/Rewards.Infrastructure.csproj" Id="94894240-6a05-4574-8c8c-7d570d06e9d3" />
+  </Folder>
+  <Folder Name="/SharedKernel/" />
+  <Folder Name="/SocialMedia/">
+    <Project Path="SocialMedia.Application/SocialMedia.Application.csproj" Id="a78a581f-6c41-410c-a45d-ac2ac4173755" />
+    <Project Path="SocialMedia.Domain/SocialMedia.Domain.csproj" Id="79bf1c5a-7382-4fc9-8347-24a978a46164" />
+    <Project Path="SocialMedia.Infrastructure/SocialMedia.Infrastructure.csproj" Id="8a9f533a-eb73-48f8-a661-1801cdc01f67" />
+  </Folder>
+  <Folder Name="/Users/">
+    <Project Path="Domain/Users.Domain.csproj" Id="8fbe3690-9e88-429d-9121-ad1026b418ff" />
+    <Project Path="Users.Application/Users.Application.csproj" Id="7595cf3d-8e55-4ae3-afc5-9940b95153e2" />
+    <Project Path="Users.Infrastructure/Users.Infrastructure.csproj" Id="a90159d6-fed8-49d9-9c2c-3f8c5f2aa792" />
+  </Folder>
   <Project Path="Rahal.Api/Rahal.Api.csproj" />
 </Solution>
