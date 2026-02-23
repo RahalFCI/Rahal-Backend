@@ -1,3 +1,4 @@
+using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Shared.Infrastructure;
 
@@ -12,6 +13,9 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+//Run all pending migrations
+await app.ApplyMigrationsAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
