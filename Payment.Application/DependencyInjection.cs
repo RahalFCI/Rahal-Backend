@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Infrastructure
+namespace Payment.Application
 {
     public static class DependencyInjection
     {

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Infrastructure
+namespace SocialMedia.Infrastructure
 {
     public static class DependencyInjection
     {

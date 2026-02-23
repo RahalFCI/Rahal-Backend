@@ -15,7 +15,30 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="Extensions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Users.Domain.csproj" />
+    <ProjectReference Include="..\Gamification.Application\Gamification.Application.csproj" />
+    <ProjectReference Include="..\Gamification.Domain\Gamification.Domain.csproj" />
+    <ProjectReference Include="..\Gamification.Infrastructure\Gamification.Infrastructure.csproj" />
+    <ProjectReference Include="..\Payment.Application\Payment.Application.csproj" />
+    <ProjectReference Include="..\Payment.Domain\Payment.Domain.csproj" />
+    <ProjectReference Include="..\Payment.Infrastructure\Payment.Infrastructure.csproj" />
+    <ProjectReference Include="..\Places.Application\Places.Application.csproj" />
+    <ProjectReference Include="..\Places.Domain\Places.Domain.csproj" />
+    <ProjectReference Include="..\Places.Infrastructure\Places.Infrastructure.csproj" />
+    <ProjectReference Include="..\Rewards.Application\Rewards.Application.csproj" />
+    <ProjectReference Include="..\Rewards.Domain\Rewards.Domain.csproj" />
+    <ProjectReference Include="..\Rewards.Infrastructure\Rewards.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
+    <ProjectReference Include="..\Shared.Domain\Shared.Domain.csproj" />
+    <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\SocialMedia.Application\SocialMedia.Application.csproj" />
+    <ProjectReference Include="..\SocialMedia.Domain\SocialMedia.Domain.csproj" />
+    <ProjectReference Include="..\SocialMedia.Infrastructure\SocialMedia.Infrastructure.csproj" />
+    <ProjectReference Include="..\Users.Application\Users.Application.csproj" />
+    <ProjectReference Include="..\Users.Infrastructure\Users.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Infrastructure
+namespace Gamification.Application
 {
     public static class DependencyInjection
     {

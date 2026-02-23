@@ -1,5 +1,10 @@
+using Shared.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
+
+//Inject services
+builder.Services.AddAllModules(builder.Configuration);
 
 builder.Services.AddControllers();
 
