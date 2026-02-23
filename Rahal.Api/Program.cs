@@ -1,3 +1,4 @@
+using Rahal.Api.Middlewares;
 using Shared.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseExceptionHandlingMiddleware();
 
 app.UseHttpsRedirection();
 
