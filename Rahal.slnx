@@ -19,7 +19,11 @@
     <Project Path="Rewards.Domain/Rewards.Domain.csproj" Id="754d5e7a-45d3-4e01-96aa-9ad673b46b62" />
     <Project Path="Rewards.Infrastructure/Rewards.Infrastructure.csproj" Id="94894240-6a05-4574-8c8c-7d570d06e9d3" />
   </Folder>
-  <Folder Name="/SharedKernel/" />
+  <Folder Name="/SharedKernel/">
+    <Project Path="Shared.Application/Shared.Application.csproj" Id="6a7b7637-e3c9-418b-8748-bf2547e1072b" />
+    <Project Path="Shared.Domain/Shared.Domain.csproj" Id="f4c38cd5-393e-4c68-8026-e6ac34c593e0" />
+    <Project Path="Shared.Infrastructure/Shared.Infrastructure.csproj" Id="7325ba86-e5cc-40e9-8816-128c401a8c4a" />
+  </Folder>
   <Folder Name="/SocialMedia/">
     <Project Path="SocialMedia.Application/SocialMedia.Application.csproj" Id="a78a581f-6c41-410c-a45d-ac2ac4173755" />
     <Project Path="SocialMedia.Domain/SocialMedia.Domain.csproj" Id="79bf1c5a-7382-4fc9-8347-24a978a46164" />

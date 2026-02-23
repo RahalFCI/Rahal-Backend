@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Folder Include="Persistence\Configurations\" />
+    <Folder Include="Persistence\Configurations\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 

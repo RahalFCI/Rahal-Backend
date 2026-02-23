@@ -10,7 +10,7 @@ namespace Users.Infrastructure
     {
         public static IServiceCollection AddUsersInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-
+            
 
             return services;
         }
