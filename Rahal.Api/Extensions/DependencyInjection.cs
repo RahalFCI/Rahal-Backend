@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Text;
 using Users.Application;
 using Users.Infrastructure;
+using Shared.Application;
 
 namespace Shared.Infrastructure
 {
@@ -46,6 +47,10 @@ namespace Shared.Infrastructure
             //Payment Module
             services.AddPaymentApplication(configuration);
             services.AddPaymentInfrastructure(configuration);
+            
+            //Shared Module
+            services.AddSharedApplication(configuration);
+            services.AddSharedInfrastructure(configuration);
 
             return services;
         }

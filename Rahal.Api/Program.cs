@@ -4,6 +4,7 @@ using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
 using Shared.Infrastructure;
+using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +46,33 @@ builder.Services.AddOpenApi("internal", options =>
 });
 builder.Services.AddOpenApi("public");
 
+//Cors
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 var app = builder.Build();
+
+// Test Redis connection
+try
+{
+    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+    var db = redis.GetDatabase();
+    await db.PingAsync();
+    app.Logger.LogInformation("Redis connection successful");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Failed to connect to Redis");
+    throw;
+}
+
 
 app.UseHttpLogging(); //Enable Http Logging
 
@@ -65,6 +92,7 @@ if (app.Environment.IsDevelopment())
 
 }
 
+app.UseCors();
 
 app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
