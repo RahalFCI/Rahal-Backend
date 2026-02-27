@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.Options;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
@@ -9,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 //Inject services
-builder.Services.AddAllModules(builder.Configuration);
+//builder.Services.AddAllModules(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -33,27 +34,49 @@ builder.Host.UseSerilog((HostBuilderContext context, IServiceProvider services, 
 });
 
 
-builder.Services.AddOpenApi();
+// Required to access HttpContext in services
+builder.Services.AddHttpContextAccessor();
+
+
+//Register OpenApi Document for internal and public APIs
+builder.Services.AddOpenApi("internal", options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); //Applying Bearer Security Scheme for the internal API document
+});
+builder.Services.AddOpenApi("public");
 
 var app = builder.Build();
 
-app.Logger.LogInformation("Application is starting up...");
+app.UseHttpLogging(); //Enable Http Logging
 
 //Run all pending migrations
-await app.ApplyMigrationsAsync();
+//await app.ApplyMigrationsAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = string.Empty;
+        options.SwaggerEndpoint("/openapi/internal.json", "Internal");
+        options.SwaggerEndpoint("/openapi/public.json", "Public");
+    });
+
 }
+
+
+app.UseRouting(); //Identifying action method based on route
+app.UseAuthentication(); //Enable Authentication Middleware
+app.UseAuthorization(); //Enable Authorization Middleware
+app.MapControllers(); //Execute the filter pipeline (action + filters)
 
 app.UseExceptionHandlingMiddleware();
 
+app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
 
 app.Run();
