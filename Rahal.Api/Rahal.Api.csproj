@@ -14,10 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Domain\Users.Domain.csproj" />
     <ProjectReference Include="..\Gamification.Application\Gamification.Application.csproj" />
     <ProjectReference Include="..\Gamification.Domain\Gamification.Domain.csproj" />
