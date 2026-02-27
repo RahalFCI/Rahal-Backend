@@ -3,12 +3,18 @@ using Microsoft.Extensions.Options;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
+using Shared.Application.Settings;
 using Shared.Infrastructure;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//Configure Rate Limit Settings
+builder.Services.Configure<RateLimitSettings>(builder.Configuration.GetSection("RateLimitSettings"));
+
+//Configure Cache Settings
+builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
 
 //Inject services
 //builder.Services.AddAllModules(builder.Configuration);
