@@ -6,12 +6,28 @@ using Serilog;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
 using StackExchange.Redis;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Configure Rate Limit Settings
-builder.Services.Configure<RateLimitSettings>(builder.Configuration.GetSection("RateLimitSettings"));
+//Register Rate Limiting 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("per-user", httpContext =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                      ?? "anonymous",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(1),
+            PermitLimit = 60
+        }));
+});
 
 //Configure Cache Settings
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
@@ -80,8 +96,6 @@ catch (Exception ex)
 }
 
 
-app.UseHttpLogging(); //Enable Http Logging
-
 //Run all pending migrations
 //await app.ApplyMigrationsAsync();
 
@@ -98,19 +112,15 @@ if (app.Environment.IsDevelopment())
 
 }
 
+app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
+app.UseHttpsRedirection();
+app.UseHttpLogging(); //Enable Http Logging
 app.UseCors();
-
 app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
-app.MapControllers(); //Execute the filter pipeline (action + filters)
-
+app.UseRateLimiter();
 app.UseExceptionHandlingMiddleware();
-
-app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
+app.MapControllers(); //Execute the filter pipeline (action + filters)
 
 app.Run();
