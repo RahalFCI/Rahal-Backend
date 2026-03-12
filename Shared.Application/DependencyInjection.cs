@@ -13,16 +13,15 @@ namespace Shared.Application
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddSharedApplication(this IServiceCollection services, IConfiguration configuration, IOptions<RedisSettings> redisSettings)
+        public static IServiceCollection AddSharedApplication(this IServiceCollection services, IConfiguration configuration)
         {
-            // Bind RedisSettings from environment variables
-            RedisSettings _redisSettings = redisSettings.Value;
 
             // Configure Redis Connection
             var redisConnection = configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException("Redis connection string is required");
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
+                var _redisSettings = sp.GetRequiredService<IOptions<RedisSettings>>().Value;
                 var redisConfig = ConfigurationOptions.Parse(redisConnection);
                 redisConfig.AbortOnConnectFail = _redisSettings.AbortOnConnectFail;
                 redisConfig.ConnectRetry = _redisSettings.ConnectRetry;

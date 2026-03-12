@@ -16,24 +16,29 @@ namespace Shared.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<T?> GetByIdAsync<TKey>(TKey id)
+        public async Task<T?> GetByIdAsync<TKey>(TKey id, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Set<T>().FindAsync(id);
+            return await _dbContext.Set<T>().FindAsync(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<T?>> GetAllAsync()
+        public async Task<IEnumerable<T?>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Set<T>().ToListAsync();
+            return await _dbContext.Set<T>().ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<T?>> GetAllByExpression(Expression<Func<T, bool>> conditionExpression)
+        public async Task<IEnumerable<T?>> GetAllByExpression(Expression<Func<T, bool>> conditionExpression, CancellationToken cancellationToken)
         {
-            return await _dbContext.Set<T>().Where(conditionExpression).ToListAsync();
+            return await _dbContext.Set<T>().Where(conditionExpression).ToListAsync(cancellationToken);
         }
 
-        public async Task<T?> GetProductByExpression(Expression<Func<T, bool>> conditionExpression)
+        public async Task<T?> GetByExpression(Expression<Func<T, bool>> conditionExpression, CancellationToken cancellationToken)
         {
-            return await _dbContext.Set<T>().FirstOrDefaultAsync(conditionExpression);
+            return await _dbContext.Set<T>().FirstOrDefaultAsync(conditionExpression, cancellationToken);
+        }
+
+        public IQueryable<T> GetTable()
+        {
+            return _dbContext.Set<T>();
         }
 
         public void Add(T entity)
