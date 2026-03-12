@@ -22,6 +22,7 @@
     <Folder Include="DTOs\" />
     <Folder Include="Interfaces\" />
     <Folder Include="Mappers\" />
+    <Folder Include="MediatR\" />
     <Folder Include="Services\" />
     <Folder Include="Validators\" />
   </ItemGroup>
