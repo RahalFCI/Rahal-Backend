@@ -5,7 +5,7 @@ using Users.Domain.Enums;
 
 namespace Users.Application.DTOs
 {
-    internal record RegisterRequestDto(
+    public record RegisterRequestDto(
         string Name,
         string Email,
         string PhoneNumber,

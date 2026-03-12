@@ -6,7 +6,7 @@ using Users.Domain.Enums;
 
 namespace Users.Domain.Entities._Common
 {
-    internal abstract class User : IdentityUser<Guid>
+    public abstract class User : IdentityUser<Guid>
     {
         public required string DisplayName { get; set; } = string.Empty;
         public string ProfilePictureURL { get; set; } = string.Empty;

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Users.Application.DTOs
 {
-    internal record LoginRequestDto(string Email, string Password)
+    public record LoginRequestDto(string Email, string Password)
     {
     }
 }
