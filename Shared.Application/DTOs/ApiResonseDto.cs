@@ -1,17 +1,13 @@
-﻿using System;
+﻿using Shared.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Shared.Application.DTOs
 {
-    public class ApiResponse
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; } = string.Empty;
-    }
+    public record ApiResponse<TResult>(TResult Data, bool IsSuccess, ErrorCode errorCode) { 
+        public static ApiResponse<TResult> Success(TResult data) => new(data, true, ErrorCode.None);
+            public static ApiResponse<TResult> Failure(ErrorCode errorCode) => new(default!, false, errorCode);
 
-    public class ApiResponse<T> : ApiResponse
-    {
-        public T? Data { get; set; }
     }
 }
