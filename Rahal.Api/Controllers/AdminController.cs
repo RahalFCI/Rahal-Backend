@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using Users.Application.DTOs;
+using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
-using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.Register;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
@@ -16,16 +16,16 @@ using Users.Domain.Enums;
 
 namespace Rahal.Api.Controllers
 {
-    public class ExplorerController : CustomControllerBase
+    public class AdminController : CustomControllerBase
     {
-        private readonly IAuthService<Explorer> _authService;
-        private readonly IUserService<Explorer, ExplorerDto, ExplorerSummaryDto> _userService;
-        private readonly IUserFactory<RegisterExplorerDto, Explorer> _userFactory;
+        private readonly IAuthService<Admin> _authService;
+        private readonly IUserService<Admin, AdminDto, AdminSummaryDto> _userService;
+        private readonly IUserFactory<RegisterAdminDto, Admin> _userFactory;
 
-        public ExplorerController(
-            IAuthService<Explorer> authService,
-            IUserService<Explorer, ExplorerDto, ExplorerSummaryDto> userService,
-            IUserFactory<RegisterExplorerDto, Explorer> userFactory)
+        public AdminController(
+            IAuthService<Admin> authService,
+            IUserService<Admin, AdminDto, AdminSummaryDto> userService,
+            IUserFactory<RegisterAdminDto, Admin> userFactory)
         {
             _authService = authService;
             _userService = userService;
@@ -33,20 +33,20 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Register a new explorer user
+        /// Register a new admin user
         /// </summary>
         [HttpPost("register")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterExplorerDto registerRequestDto)
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterAdminDto registerAdminDto)
         {
-            var user = _userFactory.CreateUser(registerRequestDto);
+            var user = _userFactory.CreateUser(registerAdminDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerRequestDto.Password);
+            var result = await _authService.RegisterAsync(user, registerAdminDto.Password);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -55,7 +55,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Login explorer user
+        /// Login admin user
         /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
@@ -72,7 +72,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Logout explorer user
+        /// Logout admin user
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
@@ -92,10 +92,10 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Get explorer by ID
+        /// Get admin by ID
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -110,7 +110,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Get all explorers (Admin only)
+        /// Get all admins (Admin only)
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -124,17 +124,17 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Update explorer profile
+        /// Update admin profile
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ExplorerDto explorerDto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] AdminDto adminDto)
         {
-            var result = await _userService.UpdateUser(explorerDto);
+            var result = await _userService.UpdateUser(adminDto);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -143,10 +143,10 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Update explorer password
+        /// Update admin password
         /// </summary>
         [HttpPut("password/{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,7 +162,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Delete explorer user (Admin only)
+        /// Delete admin user (Admin only)
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
