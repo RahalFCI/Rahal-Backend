@@ -49,7 +49,8 @@ namespace Users.Application.Validators
 
             RuleFor(x => x.CountryCode)
                 .NotEmpty().WithMessage("Country code is required")
-                .Length(2).WithMessage("Country code must be a 2-letter ISO 3166-1 code");
+                .Length(2).WithMessage("Country code must be a 2-letter ISO 3166-1 code")
+                .Must(code => CountryValidator.IsValid(code)).WithMessage("Country code must be a valid ISO 3166-1 country code");
 
             RuleFor(x => x.ProfilePictureUrl)
                 .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))

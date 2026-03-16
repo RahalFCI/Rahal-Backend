@@ -2,15 +2,17 @@ using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs;
-using Users.Application.DTOs.Register;
+using Users.Application.DTOs.Vendor;
 
 namespace Users.Application.Validators
 {
-    public class RegisterVendorDtoValidator : AbstractValidator<RegisterVendorDto>
+    public class VendorDtoValidator : AbstractValidator<VendorDto>
     {
-        public RegisterVendorDtoValidator()
+        public VendorDtoValidator()
         {
+            RuleFor(x => x.Id)
+                .NotEqual(Guid.Empty).WithMessage("Vendor ID must be a valid GUID");
+
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required")
                 .Length(3, 100).WithMessage("Name must be between 3 and 100 characters");
@@ -18,18 +20,6 @@ namespace Users.Application.Validators
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")
                 .EmailAddress().WithMessage("Email must be a valid email address");
-
-            RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required")
-                .MinimumLength(8).WithMessage("Password must be at least 8 characters long")
-                .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter")
-                .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter")
-                .Matches(@"[0-9]").WithMessage("Password must contain at least one digit")
-                .Matches(@"[!@#$%^&*()_+\-=\[\]{};':"",.<>?/\\|`~]").WithMessage("Password must contain at least one special character");
-
-            RuleFor(x => x.ConfirmPassword)
-                .NotEmpty().WithMessage("Confirm Password is required")
-                .Equal(x => x.Password).WithMessage("Passwords do not match");
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty().WithMessage("Phone number is required")
@@ -45,8 +35,8 @@ namespace Users.Application.Validators
                 .Length(5, 200).WithMessage("Address must be between 5 and 200 characters");
 
             RuleFor(x => x.AddressUrl)
+                .NotEmpty().WithMessage("Address URL is required")
                 .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
-                .When(x => !string.IsNullOrWhiteSpace(x.AddressUrl))
                 .WithMessage("Address URL must be a valid URL");
 
             RuleFor(x => x.WorkingHours)
@@ -61,6 +51,10 @@ namespace Users.Application.Validators
                 .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
                 .When(x => !string.IsNullOrWhiteSpace(x.ProfilePictureUrl))
                 .WithMessage("Profile picture URL must be a valid URL");
+
+            RuleFor(x => x.Role)
+                .NotEmpty().WithMessage("Role is required")
+                .IsInEnum().WithMessage("Role must be a valid enum value");
         }
     }
 }

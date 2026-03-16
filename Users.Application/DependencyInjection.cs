@@ -69,9 +69,14 @@ namespace Users.Application
 
             // Register Fluent Validation
             services.AddValidatorsFromAssemblyContaining<RegisterExplorerDtoValidator>();
+
+            // Register DTO Validators
             services.AddScoped<IValidator<RegisterExplorerDto>, RegisterExplorerDtoValidator>();
             services.AddScoped<IValidator<RegisterVendorDto>, RegisterVendorDtoValidator>();
             services.AddScoped<IValidator<RegisterAdminDto>, RegisterAdminDtoValidator>();
+            services.AddScoped<IValidator<ExplorerDto>, ExplorerDtoValidator>();
+            services.AddScoped<IValidator<VendorDto>, VendorDtoValidator>();
+            services.AddScoped<IValidator<AdminDto>, AdminDtoValidator>();
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
 
