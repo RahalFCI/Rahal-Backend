@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Users.Domain.Entities;
 
 namespace Users.Infrastructure.Persistence
 {
@@ -11,7 +12,12 @@ namespace Users.Infrastructure.Persistence
         public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options)
         {
         }
-        //TODO: DbSets to be added and make its configuration file
+        
+        public DbSet<Explorer> Explorers { get; set; }
+        public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Admin> Admins { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
