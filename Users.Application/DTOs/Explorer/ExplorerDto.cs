@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Users.Application.DTOs._Common;
 using Users.Domain.Enums;
+namespace Users.Application.DTOs.Explorer
 {
-    
-}
-
-namespace Users.Application.DTOs
-{
-    public record UserDto(Guid Id,
-        string Name,
-        string Email,
-        string PhoneNumber,
+    public record ExplorerDto(
         DateOnly BirthDate,
         GenderEnum gender,
         string Bio,
@@ -20,10 +14,12 @@ namespace Users.Application.DTOs
         int CumlativeXp,
         int Level,
         bool IsPublic,
-        bool IsPremium,
-        string ProfilePictureUrl
+        bool IsPremium
         //TODO: Add Plan Tier
-        )
+        ) : BaseUserDto
     {
+        public ExplorerDto() : this(default, default, string.Empty, string.Empty, default, default, default, default, default)
+        {
+        }
     }
 }

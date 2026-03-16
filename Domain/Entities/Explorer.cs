@@ -7,10 +7,8 @@ using Users.Domain.Enums;
 
 namespace Users.Domain.Entities
 {
-    internal class Explorer : User
+    public class Explorer : User
     {
-        public required Guid UserId { get; set; }
-        public required User User { get; set; }
         public string Bio { get; set; } = string.Empty;
         public required string CountryCode { get; set; } //TODO: validate on the country code
         public required GenderEnum Gender { get; set; }

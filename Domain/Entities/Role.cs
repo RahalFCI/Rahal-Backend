@@ -1,13 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Domain.Entities._Common;
 
 namespace Users.Domain.Entities
 {
-    public class Admin : User
+    public class Role : IdentityRole<Guid>
     {
-
-
     }
 }

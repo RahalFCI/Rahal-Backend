@@ -16,6 +16,7 @@ namespace Shared.Domain.Enums
         ValidationError = 42200,
         InvalidFormat = 42201,
         InvalidValue = 42202,
+        InvalidCredentials = 42203,
 
         // Resource errors
         NotFound = 40400,
@@ -24,7 +25,9 @@ namespace Shared.Domain.Enums
 
         // Authorization
         Unauthorized = 40100,
+        LockedOut = 40301,
         Forbidden = 40300,
+
 
         // State / business rules
         InvalidOperation = 40910,

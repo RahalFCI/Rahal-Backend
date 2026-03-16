@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Application.DTOs
+namespace Users.Application.DTOs.Auth
 {
     public record AuthResponseDto(string AccessToken,
         string RefreshToken,
@@ -10,5 +10,8 @@ namespace Users.Application.DTOs
         DateTime RefreshTokenExpiration
         )
     {
+        public AuthResponseDto() : this(string.Empty, string.Empty, DateTime.MinValue, DateTime.MinValue)
+        {
+        }
     }
 }

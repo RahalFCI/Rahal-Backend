@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Users.Application.Settings
 {
-    internal class JWTSettings
+    public class JWTSettings
     {
         public string? Secret { get; set; }
         public string? Issuer { get; set; }

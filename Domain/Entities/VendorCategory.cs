@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Users.Domain.Entities
 {
-    internal class VendorCategory : BaseEntity<int>
+    public class VendorCategory : BaseEntity<int>
     {
-        public required int CategoryName { get; set; }
+        public required string CategoryName { get; set; }
     }
 }
