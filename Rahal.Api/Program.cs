@@ -1,3 +1,4 @@
+using ECommerce.API.Filters;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Options;
 using Rahal.Api.Extensions;
@@ -33,13 +34,21 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
 
 //Inject services
-//builder.Services.AddAllModules(builder.Configuration);
+builder.Services.AddAllModules(builder.Configuration);
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(
+    options =>
+    {
+        options.Filters.Add<ValidationActionFilter>();
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); //Automatically serialize enums as strings in JSON responses
     });
+
+//Register ValidationActionFilter as a scoped service to enable dependency injection in the filter
+builder.Services.AddScoped<ValidationActionFilter>();
+
 
 
 //Register in HTTP Logging
@@ -97,7 +106,7 @@ catch (Exception ex)
 
 
 //Run all pending migrations
-//await app.ApplyMigrationsAsync();
+await app.ApplyMigrationsAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
