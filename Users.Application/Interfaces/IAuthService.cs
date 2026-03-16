@@ -10,8 +10,8 @@ namespace Users.Application.Interfaces
 {
     public interface IAuthService<TUser> where TUser : User
     {
-        Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, String Password);
-        Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto);
-        Task LogoutAsync();
+        Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, String Password, CancellationToken cancellationToken = default);
+        Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto, CancellationToken cancellationToken = default);
+        Task LogoutAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -37,7 +37,7 @@ namespace Users.Application.Services
             _logger = logger;
         }
 
-        public async Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto)
+        public async Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Login attempt initiated for email: {Email}", loginRequestDto.Email);
 
@@ -87,7 +87,7 @@ namespace Users.Application.Services
             return ApiResponse<AuthResponseDto?>.Success(authResponse);
         }
 
-        public async Task LogoutAsync()
+        public async Task LogoutAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Logout initiated for user");
 
@@ -121,7 +121,7 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password)
+        public async Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
 

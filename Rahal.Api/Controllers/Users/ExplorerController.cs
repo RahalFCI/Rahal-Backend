@@ -39,14 +39,14 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterExplorerDto registerRequestDto)
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterExplorerDto registerRequestDto, CancellationToken cancellationToken)
         {
             var user = _userFactory.CreateUser(registerRequestDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerRequestDto.Password);
+            var result = await _authService.RegisterAsync(user, registerRequestDto.Password, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -61,9 +61,9 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto authRequestDto)
+        public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto authRequestDto, CancellationToken cancellationToken)
         {
-            var result = await _authService.LoginAsync(authRequestDto);
+            var result = await _authService.LoginAsync(authRequestDto, cancellationToken);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);
@@ -78,11 +78,11 @@ namespace Rahal.Api.Controllers.Users
         [Authorize]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> LogoutAsync()
+        public async Task<IActionResult> LogoutAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await _authService.LogoutAsync();
+                await _authService.LogoutAsync(cancellationToken);
                 return NoContent();
             }
             catch (UnauthorizedAccessException)
@@ -99,9 +99,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var result = await _userService.GetById(id);
+            var result = await _userService.GetById(id, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -117,9 +117,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
-            var result = await _userService.GetAllUsers();
+            var result = await _userService.GetAllUsers(cancellationToken);
             return Ok(result);
         }
 
@@ -132,9 +132,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ExplorerDto explorerDto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ExplorerDto explorerDto, CancellationToken cancellationToken)
         {
-            var result = await _userService.UpdateUser(explorerDto);
+            var result = await _userService.UpdateUser(explorerDto, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -151,9 +151,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdatePasswordAsync([FromRoute] Guid id, [FromBody] UpdatePasswordDto updatePasswordDto)
+        public async Task<IActionResult> UpdatePasswordAsync([FromRoute] Guid id, [FromBody] UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken)
         {
-            var result = await _userService.UpdatePassword(id, updatePasswordDto);
+            var result = await _userService.UpdatePassword(id, updatePasswordDto, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -170,9 +170,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var result = await _userService.DeleteUser(id);
+            var result = await _userService.DeleteUser(id, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);

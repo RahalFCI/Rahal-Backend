@@ -35,7 +35,7 @@ namespace Users.Application.Services
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> DeleteUser(Guid id)
+        public async Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User deletion initiated for user {UserId}", id);
 
@@ -60,11 +60,11 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("User deleted successfully.");
         }
 
-        public async Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsers()
+        public async Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsers(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Fetching all users of type {UserType}", typeof(TUser).Name);
 
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _userManager.Users.ToListAsync(cancellationToken);
 
             var summaries = users.Select(_mapper.ToSummary).ToList();
 
@@ -74,7 +74,7 @@ namespace Users.Application.Services
             return ApiResponse<IEnumerable<TSummary>>.Success(summaries);
         }
 
-        public async Task<ApiResponse<TDto>> GetById(Guid id)
+        public async Task<ApiResponse<TDto>> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User retrieval initiated for user {UserId}", id);
 
@@ -98,7 +98,7 @@ namespace Users.Application.Services
             return ApiResponse<TDto>.Success(userDto);
         }
 
-        public async Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto)
+        public async Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Password update initiated for user {UserId}", id);
 
@@ -123,7 +123,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(TDto userDto)
+        public async Task<ApiResponse<string>> UpdateUser(TDto userDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User update initiated for user {UserId}", userDto.Id);
 
