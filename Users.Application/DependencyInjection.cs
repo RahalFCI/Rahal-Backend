@@ -14,6 +14,7 @@ using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;
+using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Mappers;
 using Users.Application.Services;
@@ -74,20 +75,26 @@ namespace Users.Application
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
 
-            // Register MediatR
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+            // Register Factories
+            services.AddScoped<IUserFactory<RegisterExplorerDto, Explorer>, ExplorerUserFactory>();
+            services.AddScoped<IUserFactory<RegisterVendorDto, Vendor>, VendorUserFactory>();
+            services.AddScoped<IUserFactory<RegisterAdminDto, Admin>, AdminUserFactory>();
 
             // Register Mappers and Services
             services.AddScoped<IUserMapper<Vendor, VendorDto, VendorSummaryDto>, VendorMapper>();
             services.AddScoped<IUserMapper<Explorer, ExplorerDto, ExplorerSummaryDto>, ExplorerMapper>();
             services.AddScoped<IUserMapper<Admin, AdminDto, AdminSummaryDto>, AdminMapper>();
 
+            //Register User Services
             services.AddScoped<IUserService<Vendor, VendorDto, VendorSummaryDto>,
                 UserService<Vendor, VendorDto, VendorSummaryDto>>();
             services.AddScoped<IUserService<Admin, AdminDto, AdminSummaryDto>,
                 UserService<Admin, AdminDto, AdminSummaryDto>>();
             services.AddScoped<IUserService<Explorer, ExplorerDto, ExplorerSummaryDto>,
                 UserService<Explorer, ExplorerDto, ExplorerSummaryDto>>();
+
+            //Register Auth Services
             services.AddScoped<IAuthService<Explorer>, AuthService<Explorer>>();
             services.AddScoped<IAuthService<Vendor>, AuthService<Vendor>>();
             services.AddScoped<IAuthService<Admin>, AuthService<Admin>>();

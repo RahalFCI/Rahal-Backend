@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Shared.Domain\Shared.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="MediatR\Handlers\" />
+  </ItemGroup>
+
 </Project>
