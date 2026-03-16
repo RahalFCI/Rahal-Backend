@@ -5,27 +5,27 @@ using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using Users.Application.DTOs;
+using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Register;
-using Users.Application.DTOs.Vendor;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Services;
 using Users.Domain.Entities;
 using Users.Domain.Enums;
 
-namespace Rahal.Api.Controllers
+namespace Rahal.Api.Controllers.Users
 {
-    public class VendorController : CustomControllerBase
+    public class AdminController : CustomControllerBase
     {
-        private readonly IAuthService<Vendor> _authService;
-        private readonly IUserService<Vendor, VendorDto, VendorSummaryDto> _userService;
-        private readonly IUserFactory<RegisterVendorDto, Vendor> _userFactory;
+        private readonly IAuthService<Admin> _authService;
+        private readonly IUserService<Admin, AdminDto, AdminSummaryDto> _userService;
+        private readonly IUserFactory<RegisterAdminDto, Admin> _userFactory;
 
-        public VendorController(
-            IAuthService<Vendor> authService,
-            IUserService<Vendor, VendorDto, VendorSummaryDto> userService,
-            IUserFactory<RegisterVendorDto, Vendor> userFactory)
+        public AdminController(
+            IAuthService<Admin> authService,
+            IUserService<Admin, AdminDto, AdminSummaryDto> userService,
+            IUserFactory<RegisterAdminDto, Admin> userFactory)
         {
             _authService = authService;
             _userService = userService;
@@ -33,20 +33,20 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Register a new vendor user
+        /// Register a new admin user
         /// </summary>
         [HttpPost("register")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterVendorDto registerVendorDto)
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterAdminDto registerAdminDto)
         {
-            var user = _userFactory.CreateUser(registerVendorDto);
+            var user = _userFactory.CreateUser(registerAdminDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerVendorDto.Password);
+            var result = await _authService.RegisterAsync(user, registerAdminDto.Password);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -55,7 +55,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Login vendor user
+        /// Login admin user
         /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
@@ -72,7 +72,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Logout vendor user
+        /// Logout admin user
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
@@ -92,10 +92,10 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Get vendor by ID
+        /// Get admin by ID
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -110,7 +110,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Get all vendors (Admin only)
+        /// Get all admins (Admin only)
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -124,17 +124,17 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Update vendor profile
+        /// Update admin profile
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] VendorDto vendorDto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] AdminDto adminDto)
         {
-            var result = await _userService.UpdateUser(vendorDto);
+            var result = await _userService.UpdateUser(adminDto);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -143,10 +143,10 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Update vendor password
+        /// Update admin password
         /// </summary>
         [HttpPut("password/{id}")]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,7 +162,7 @@ namespace Rahal.Api.Controllers
         }
 
         /// <summary>
-        /// Delete vendor user (Admin only)
+        /// Delete admin user (Admin only)
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
