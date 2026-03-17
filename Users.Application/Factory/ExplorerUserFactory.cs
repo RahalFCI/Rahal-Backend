@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Register;
 using Users.Application.Mappers;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 
 namespace Users.Application.Factory
 {
-    public class ExplorerUserFactory : IUserFactory<RegisterExplorerDto, Explorer>
+    public class ExplorerUserFactory : IUserFactory<RegisterExplorerDto, User>
     {
-        public Explorer CreateUser(RegisterExplorerDto dto)
+        public User CreateUser(RegisterExplorerDto dto)
         {
-            return dto.ToEntity();
+            var user = dto.CreateExplorerUser();
+            user.ExplorerProfile = dto.CreateExplorerProfile(user.Id, user);
+            return user;
         }
     }
 }

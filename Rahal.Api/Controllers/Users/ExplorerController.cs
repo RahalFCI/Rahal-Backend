@@ -11,21 +11,21 @@ using Users.Application.DTOs.Register;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Services;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
 namespace Rahal.Api.Controllers.Users
 {
     public class ExplorerController : CustomControllerBase
     {
-        private readonly IAuthService<Explorer> _authService;
-        private readonly IUserService<Explorer, ExplorerDto, ExplorerSummaryDto> _userService;
-        private readonly IUserFactory<RegisterExplorerDto, Explorer> _userFactory;
+        private readonly IAuthService _authService;
+        private readonly IUserService<ExplorerDto, ExplorerSummaryDto> _userService;
+        private readonly IUserFactory<RegisterExplorerDto, User> _userFactory;
 
         public ExplorerController(
-            IAuthService<Explorer> authService,
-            IUserService<Explorer, ExplorerDto, ExplorerSummaryDto> userService,
-            IUserFactory<RegisterExplorerDto, Explorer> userFactory)
+            IAuthService authService,
+            IUserService<ExplorerDto, ExplorerSummaryDto> userService,
+            IUserFactory<RegisterExplorerDto, User> userFactory)
         {
             _authService = authService;
             _userService = userService;

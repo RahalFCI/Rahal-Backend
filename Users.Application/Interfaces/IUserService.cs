@@ -9,12 +9,18 @@ using Users.Domain.Entities._Common;
 
 namespace Users.Application.Interfaces
 {
-    public interface IUserService<TUser, TDto, TSummary> where TUser : User where TDto : BaseUserDto where TSummary : BaseUserSummaryDto
+    /// <summary>
+    /// Generic interface for type-specific user services
+    /// Each user type (Explorer, Vendor, Admin) has its own service implementation
+    /// </summary>
+    public interface IUserService<TDto, TSummary> 
+        where TDto : BaseUserDto 
+        where TSummary : BaseUserSummaryDto
     {
-        public Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsers(CancellationToken cancellationToken = default);
-        public Task<ApiResponse<TDto>> GetById(Guid id, CancellationToken cancellationToken = default);
-        public Task<ApiResponse<string>> UpdateUser(TDto user, CancellationToken cancellationToken = default);
-        public Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default);
-        public Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken = default);
+        Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsers(CancellationToken cancellationToken = default);
+        Task<ApiResponse<TDto>> GetById(Guid id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> UpdateUser(TDto user, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken = default);
     }
 }

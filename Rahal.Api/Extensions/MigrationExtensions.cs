@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Payment.Infrastructure.Persistence;
 using Places.Infrastructure.Persistence;
 using Rewards.Infrastructure.Persistence;
+using Shared.Application.Interfaces;
 using SocialMedia.Infrastructure.Persistence;
 using Users.Infrastructure.Persistence;
 
@@ -20,6 +21,17 @@ namespace Rahal.Api.Extensions
             await MigrateAsync<PlacesDbContext>(scope);
             await MigrateAsync<PaymentDbContext>(scope);
             await MigrateAsync<GamificationDbContext>(scope);
+
+            var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+            try
+            {
+                await dbInitializer.SeedAsync();
+            }
+            catch (Exception)
+            {
+
+            }
+                
         }
 
         private static async Task MigrateAsync<TContext>(IServiceScope scope)
@@ -27,6 +39,12 @@ namespace Rahal.Api.Extensions
         {
             var context = scope.ServiceProvider.GetRequiredService<TContext>();
             await context.Database.MigrateAsync();
+        }
+
+        public static async Task<WebApplication> SeedAsync(this WebApplication app)
+        {
+            
+            return app;
         }
     }
 }

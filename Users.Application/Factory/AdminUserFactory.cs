@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Register;
 using Users.Application.Mappers;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 
 namespace Users.Application.Factory
 {
-    public class AdminUserFactory : IUserFactory<RegisterAdminDto, Admin>
+    public class AdminUserFactory : IUserFactory<RegisterAdminDto, User>
     {
-        public Admin CreateUser(RegisterAdminDto dto)
+        public User CreateUser(RegisterAdminDto dto)
         {
-            return dto.ToEntity();
+            var user = dto.CreateAdminUser();
+            user.AdminProfile = dto.CreateAdminProfile(user.Id, user);
+            return user;
         }
     }
 }

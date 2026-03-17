@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Admin;
@@ -20,7 +21,6 @@ using Users.Application.Mappers;
 using Users.Application.Services;
 using Users.Application.Settings;
 using Users.Application.Validators;
-using Users.Domain.Entities;
 
 namespace Users.Application
 {
@@ -45,27 +45,26 @@ namespace Users.Application
 
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; //How Asp.Net will authenticate the user
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; //How will Asp.Net will respond when authentication fails
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
                 .AddJwtBearer(op =>
                 {
                     op.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = true,             // Check that token's issuer matches our expected Issuer
-                        ValidateAudience = true,           // Check that token's audience matches our expected Audience
-                        ValidateLifetime = true,           // Ensure token hasn't expired
-                        ValidIssuer = jwtSettings!.Issuer, // Our configured issuer (from appsettings.json or env vars)
-                        ValidAudience = jwtSettings.Audience, // Our configured audience
-                        ValidateIssuerSigningKey = true,   // Check token signature
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret!)) // Use our secret key to verify signature
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = jwtSettings!.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret!)),
+                        RoleClaimType = ClaimTypes.Role
                     };
                 });
 
-            services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build(); //Require User to be Authenticcated for all endpoints by default
-            });
+            services.AddAuthorization();
 
             // Register Fluent Validation
             services.AddValidatorsFromAssemblyContaining<RegisterExplorerDtoValidator>();
@@ -80,29 +79,26 @@ namespace Users.Application
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
 
+            // Register Single Auth Service
+            services.AddScoped<IAuthService, AuthService>();
 
-            // Register Factories
-            services.AddScoped<IUserFactory<RegisterExplorerDto, Explorer>, ExplorerUserFactory>();
-            services.AddScoped<IUserFactory<RegisterVendorDto, Vendor>, VendorUserFactory>();
-            services.AddScoped<IUserFactory<RegisterAdminDto, Admin>, AdminUserFactory>();
+            // Register Factories (now return User instead of specific types)
+            services.AddScoped<IUserFactory<RegisterExplorerDto, Users.Domain.Entities._Common.User>, ExplorerUserFactory>();
+            services.AddScoped<IUserFactory<RegisterVendorDto, Users.Domain.Entities._Common.User>, VendorUserFactory>();
+            services.AddScoped<IUserFactory<RegisterAdminDto, Users.Domain.Entities._Common.User>, AdminUserFactory>();
 
-            // Register Mappers and Services
-            services.AddScoped<IUserMapper<Vendor, VendorDto, VendorSummaryDto>, VendorMapper>();
-            services.AddScoped<IUserMapper<Explorer, ExplorerDto, ExplorerSummaryDto>, ExplorerMapper>();
-            services.AddScoped<IUserMapper<Admin, AdminDto, AdminSummaryDto>, AdminMapper>();
+            // Register Mappers
+            services.AddScoped<IUserMapper<ExplorerDto, ExplorerSummaryDto>, ExplorerMapper>();
+            services.AddScoped<IUserMapper<VendorDto, VendorSummaryDto>, VendorMapper>();
+            services.AddScoped<IUserMapper<AdminDto, AdminSummaryDto>, AdminMapper>();
 
-            //Register User Services
-            services.AddScoped<IUserService<Vendor, VendorDto, VendorSummaryDto>,
-                UserService<Vendor, VendorDto, VendorSummaryDto>>();
-            services.AddScoped<IUserService<Admin, AdminDto, AdminSummaryDto>,
-                UserService<Admin, AdminDto, AdminSummaryDto>>();
-            services.AddScoped<IUserService<Explorer, ExplorerDto, ExplorerSummaryDto>,
-                UserService<Explorer, ExplorerDto, ExplorerSummaryDto>>();
+            // Register Type-Specific User Services
+            services.AddScoped<IUserService<ExplorerDto, ExplorerSummaryDto>, ExplorerService>();
+            services.AddScoped<IUserService<VendorDto, VendorSummaryDto>, VendorService>();
+            services.AddScoped<IUserService<AdminDto, AdminSummaryDto>, AdminService>();
 
-            //Register Auth Services
-            services.AddScoped<IAuthService<Explorer>, AuthService<Explorer>>();
-            services.AddScoped<IAuthService<Vendor>, AuthService<Vendor>>();
-            services.AddScoped<IAuthService<Admin>, AuthService<Admin>>();
+            // Register Token Service
+            services.AddScoped<TokenService>();
 
             return services;
         }

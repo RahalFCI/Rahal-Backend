@@ -11,21 +11,21 @@ using Users.Application.DTOs.Vendor;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Services;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
 namespace Rahal.Api.Controllers.Users
 {
     public class VendorController : CustomControllerBase
     {
-        private readonly IAuthService<Vendor> _authService;
-        private readonly IUserService<Vendor, VendorDto, VendorSummaryDto> _userService;
-        private readonly IUserFactory<RegisterVendorDto, Vendor> _userFactory;
+        private readonly IAuthService _authService;
+        private readonly IUserService<VendorDto, VendorSummaryDto> _userService;
+        private readonly IUserFactory<RegisterVendorDto, User> _userFactory;
 
         public VendorController(
-            IAuthService<Vendor> authService,
-            IUserService<Vendor, VendorDto, VendorSummaryDto> userService,
-            IUserFactory<RegisterVendorDto, Vendor> userFactory)
+            IAuthService authService,
+            IUserService<VendorDto, VendorSummaryDto> userService,
+            IUserFactory<RegisterVendorDto, User> userFactory)
         {
             _authService = authService;
             _userService = userService;

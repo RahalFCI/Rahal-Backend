@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
+using System.Security.Claims;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
@@ -11,21 +13,21 @@ using Users.Application.DTOs.Register;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Services;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
 namespace Rahal.Api.Controllers.Users
 {
     public class AdminController : CustomControllerBase
     {
-        private readonly IAuthService<Admin> _authService;
-        private readonly IUserService<Admin, AdminDto, AdminSummaryDto> _userService;
-        private readonly IUserFactory<RegisterAdminDto, Admin> _userFactory;
+        private readonly IAuthService _authService;
+        private readonly IUserService<AdminDto, AdminSummaryDto> _userService;
+        private readonly IUserFactory<RegisterAdminDto, User> _userFactory;
 
         public AdminController(
-            IAuthService<Admin> authService,
-            IUserService<Admin, AdminDto, AdminSummaryDto> userService,
-            IUserFactory<RegisterAdminDto, Admin> userFactory)
+            IAuthService authService,
+            IUserService<AdminDto, AdminSummaryDto> userService,
+            IUserFactory<RegisterAdminDto, User> userFactory)
         {
             _authService = authService;
             _userService = userService;
@@ -51,7 +53,7 @@ namespace Rahal.Api.Controllers.Users
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(nameof(RegisterAsync), result);
+            return Ok(result);
         }
 
         /// <summary>
@@ -108,6 +110,7 @@ namespace Rahal.Api.Controllers.Users
 
             return Ok(result);
         }
+
 
         /// <summary>
         /// Get all admins (Admin only)

@@ -90,36 +90,25 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Test Redis connection
-try
-{
-    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
-    var db = redis.GetDatabase();
-    await db.PingAsync();
-    app.Logger.LogInformation("Redis connection successful");
-}
-catch (Exception ex)
-{
-    app.Logger.LogError(ex, "Failed to connect to Redis");
-    throw;
-}
+//TODO: uncomment after setting redis
+//// Test Redis connection
+//try
+//{
+//    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+//    var db = redis.GetDatabase();
+//    await db.PingAsync();
+//    app.Logger.LogInformation("Redis connection successful");
+//}
+//catch (Exception ex)
+//{
+//    app.Logger.LogError(ex, "Failed to connect to Redis");
+//    throw;
+//}
 
 
 //Run all pending migrations
 await app.ApplyMigrationsAsync();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-    {
-        options.RoutePrefix = string.Empty;
-        options.SwaggerEndpoint("/openapi/internal.json", "Internal");
-        options.SwaggerEndpoint("/openapi/public.json", "Public");
-    });
-
-}
 
 app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
 app.UseHttpsRedirection();
@@ -130,6 +119,20 @@ app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
 app.UseRateLimiter();
 app.UseExceptionHandlingMiddleware();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi().AllowAnonymous();
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = string.Empty;
+        options.SwaggerEndpoint("/openapi/internal.json", "Internal");
+        options.SwaggerEndpoint("/openapi/public.json", "Public");
+    });
+
+}
+
 app.MapControllers(); //Execute the filter pipeline (action + filters)
 
 app.Run();

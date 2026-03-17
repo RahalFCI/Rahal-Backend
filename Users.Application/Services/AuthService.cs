@@ -1,4 +1,3 @@
-﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
@@ -6,32 +5,32 @@ using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
 using Users.Application.DTOs.Auth;
 using Users.Application.Interfaces;
-using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
 namespace Users.Application.Services
 {
-    internal class AuthService<TUser> : IAuthService<TUser> where TUser : User
+    /// <summary>
+    /// Single instance authentication service for all user types
+    /// Handles login, logout, and registration regardless of user type
+    /// </summary>
+    internal class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly RoleManager<Role> _roleManager;
         private readonly TokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
-        private readonly ILogger<AuthService<TUser>> _logger;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            RoleManager<Role> roleManager,
             TokenService tokenService,
             ICurrentUserService currentUserService,
-            ILogger<AuthService<TUser>> logger)
+            ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _roleManager = roleManager;
             _tokenService = tokenService;
             _currentUserService = currentUserService;
             _logger = logger;
@@ -55,7 +54,7 @@ namespace Users.Application.Services
                 _logger.LogWarning("Login failed: User {UserId} account is not allowed to sign in", user.Id);
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.Unauthorized);
             }
-
+            
             if (result.IsLockedOut)
             {
                 _logger.LogWarning("Login failed: User {UserId} account is locked out", user.Id);
@@ -141,21 +140,21 @@ namespace Users.Application.Services
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
             }
 
-            var roleResult = await _userManager.AddToRoleAsync(user, user.Role.ToString());
+            var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
 
             if (!roleResult.Succeeded)
             {
                 _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
-                    user.Role.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
             }
 
-            var roles = new List<string> { user.Role.ToString() };
+            var roles = new List<string> { user.UserType.ToString() };
 
             var authResponse = _tokenService.GenerateToken(user, roles, null);
 
             _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
-                user.Id, user.Email, user.Role);
+                user.Id, user.Email, user.UserType);
 
             return ApiResponse<AuthResponseDto?>.Success(authResponse);
         }

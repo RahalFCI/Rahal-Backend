@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,9 +26,8 @@ namespace Users.Infrastructure
                 )
             );
 
-
-            //Enable Identity
-            services.AddIdentity<User, Role>(options =>
+            // Enable Identity with default role type
+            services.AddIdentityCore<User>(options =>
             {
                 options.User.RequireUniqueEmail = true;
 
@@ -39,14 +39,20 @@ namespace Users.Infrastructure
                 options.Password.RequireLowercase = true;
                 options.Password.RequiredUniqueChars = 1;
             })
+                .AddRoles<Role>()
                 .AddEntityFrameworkStores<UsersDbContext>()
-                .AddDefaultTokenProviders() //Generate Token for reset password, change email, etc
+                .AddDefaultTokenProviders()
                 .AddUserStore<UserStore<User, Role, UsersDbContext, Guid>>()
                 .AddRoleStore<RoleStore<Role, UsersDbContext, Guid>>();
 
-            
+            services.AddScoped<SignInManager<User>>();
+
+
+            services.AddScoped<IDbInitializer, DBInitializer>();
+
 
             return services;
         }
     }
 }
+

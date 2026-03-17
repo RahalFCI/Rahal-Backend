@@ -8,9 +8,13 @@ using Users.Application.DTOs.Auth;
 
 namespace Users.Application.Interfaces
 {
-    public interface IAuthService<TUser> where TUser : User
+    /// <summary>
+    /// Single instance service for authentication
+    /// Handles login, logout, and registration for all user types
+    /// </summary>
+    public interface IAuthService
     {
-        Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, String Password, CancellationToken cancellationToken = default);
+        Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, CancellationToken cancellationToken = default);
         Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto, CancellationToken cancellationToken = default);
         Task LogoutAsync(CancellationToken cancellationToken = default);
     }

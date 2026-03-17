@@ -6,7 +6,7 @@ using Users.Domain.Enums;
 
 namespace Users.Application.DTOs.Admin
 {
-    public record AdminDto() : BaseUserDto
+    public record AdminDto() : BaseUserDto()
     {
         
     }

@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Register;
 using Users.Application.Mappers;
-using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 
 namespace Users.Application.Factory
 {
-    public class VendorUserFactory : IUserFactory<RegisterVendorDto, Vendor>
+    public class VendorUserFactory : IUserFactory<RegisterVendorDto, User>
     {
-        public Vendor CreateUser(RegisterVendorDto dto)
+        public User CreateUser(RegisterVendorDto dto)
         {
-            return dto.ToEntity();
+            var user = dto.CreateVendorUser();
+            user.VendorProfile = dto.CreateVendorProfile(user.Id, user);
+            return user;
         }
     }
 }
