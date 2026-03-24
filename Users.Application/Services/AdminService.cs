@@ -49,7 +49,9 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var result = await _userManager.DeleteAsync(user);
+            user.IsDeleted = true;
+
+            var result = await _userManager.UpdateAsync(user);
 
             if(!result.Succeeded)
             {
