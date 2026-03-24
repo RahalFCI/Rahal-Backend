@@ -59,6 +59,9 @@ namespace Users.Infrastructure.Persistence.Configuration
             builder.Property(e => e.IsPublic)
                 .HasDefaultValue(true);
 
+            builder.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
             builder.Property(e => e.IsPremium)
                 .HasDefaultValue(false);
 
