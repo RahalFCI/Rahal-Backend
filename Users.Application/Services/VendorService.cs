@@ -41,7 +41,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Vendor deletion initiated for user {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Vendor)
             {
@@ -67,6 +67,27 @@ namespace Users.Application.Services
             _logger.LogInformation("Fetching all Vendors");
 
             var vendors = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Vendor)
+                .Include(u => u.VendorProfile)
+                .ToListAsync(cancellationToken);
+
+            var summaries = vendors
+                .Where(u => u.VendorProfile != null)
+                .Select(u => _mapper.ToSummary(u))
+                .Cast<VendorSummaryDto>()
+                .ToList();
+
+            _logger.LogInformation("Successfully retrieved {Count} Vendors", summaries.Count);
+
+            return ApiResponse<IEnumerable<VendorSummaryDto>>.Success(summaries);
+        }
+
+        public async Task<ApiResponse<IEnumerable<VendorSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Vendors");
+
+            var vendors = await _userManager.Users
+                .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Vendor)
                 .Include(u => u.VendorProfile)
                 .ToListAsync(cancellationToken);
@@ -112,7 +133,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Password update initiated for Vendor {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Vendor)
             {

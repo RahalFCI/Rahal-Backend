@@ -18,6 +18,7 @@ namespace Users.Application.Interfaces
         where TSummary : BaseUserSummaryDto
     {
         Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsers(CancellationToken cancellationToken = default);
+        Task<ApiResponse<IEnumerable<TSummary>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default);
         Task<ApiResponse<TDto>> GetById(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdateUser(TDto user, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default);

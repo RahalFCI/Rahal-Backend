@@ -124,6 +124,20 @@ namespace Rahal.Api.Controllers.Users
         }
 
         /// <summary>
+        /// Get all explorers including deleted (Admin only)
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+        {
+            var result = await _userService.GetAllUsersIncludingDeleted(cancellationToken);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Update explorer profile
         /// </summary>
         [HttpPut("{id}")]

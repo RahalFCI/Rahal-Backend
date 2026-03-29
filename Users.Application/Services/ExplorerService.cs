@@ -41,7 +41,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Explorer deletion initiated for user {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Explorer)
             {
@@ -67,6 +67,27 @@ namespace Users.Application.Services
             _logger.LogInformation("Fetching all Explorers");
 
             var explorers = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Explorer)
+                .Include(u => u.ExplorerProfile)
+                .ToListAsync(cancellationToken);
+
+            var summaries = explorers
+                .Where(u => u.ExplorerProfile != null)
+                .Select(u => _mapper.ToSummary(u))
+                .Cast<ExplorerSummaryDto>()
+                .ToList();
+
+            _logger.LogInformation("Successfully retrieved {Count} Explorers", summaries.Count);
+
+            return ApiResponse<IEnumerable<ExplorerSummaryDto>>.Success(summaries);
+        }
+
+        public async Task<ApiResponse<IEnumerable<ExplorerSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Explorers");
+
+            var explorers = await _userManager.Users
+                .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Explorer)
                 .Include(u => u.ExplorerProfile)
                 .ToListAsync(cancellationToken);
@@ -112,7 +133,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Password update initiated for Explorer {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Explorer)
             {

@@ -13,6 +13,9 @@ namespace Users.Infrastructure.Persistence.Configuration
 
             builder.HasKey(e => e.Id);
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+
             // Foreign key to User
             builder.HasOne(e => e.User)
                 .WithOne(u => u.VendorProfile)

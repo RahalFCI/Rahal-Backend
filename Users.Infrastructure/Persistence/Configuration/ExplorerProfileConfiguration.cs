@@ -13,6 +13,8 @@ namespace Users.Infrastructure.Persistence.Configuration
 
             builder.HasKey(e => e.Id);
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
             // Foreign key to User
             builder.HasOne(e => e.User)
                 .WithOne(u => u.ExplorerProfile)
@@ -58,9 +60,6 @@ namespace Users.Infrastructure.Persistence.Configuration
 
             builder.Property(e => e.IsPublic)
                 .HasDefaultValue(true);
-
-            builder.Property(e => e.IsDeleted)
-                .HasDefaultValue(false);
 
             builder.Property(e => e.IsPremium)
                 .HasDefaultValue(false);

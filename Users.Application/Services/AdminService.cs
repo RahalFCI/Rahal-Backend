@@ -41,7 +41,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Admin deletion initiated for user {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Admin)
             {
@@ -69,6 +69,27 @@ namespace Users.Application.Services
             _logger.LogInformation("Fetching all Admins");
 
             var admins = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Admin)
+                .Include(u => u.AdminProfile)
+                .ToListAsync(cancellationToken);
+
+            var summaries = admins
+                .Where(u => u.AdminProfile != null)
+                .Select(u => _mapper.ToSummary(u))
+                .Cast<AdminSummaryDto>()
+                .ToList();
+
+            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
+
+            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+        }
+
+        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Admins");
+
+            var admins = await _userManager.Users
+                .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Admin)
                 .Include(u => u.AdminProfile)
                 .ToListAsync(cancellationToken);
@@ -114,7 +135,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Password update initiated for Admin {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Admin)
             {

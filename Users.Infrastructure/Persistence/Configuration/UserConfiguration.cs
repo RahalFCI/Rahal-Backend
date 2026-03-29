@@ -13,6 +13,9 @@ namespace Users.Infrastructure.Persistence.Configuration
         {
             builder.ToTable("AspNetUsers", "users");
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+
             // Properties
             builder.Property(e => e.DisplayName)
                 .IsRequired()
