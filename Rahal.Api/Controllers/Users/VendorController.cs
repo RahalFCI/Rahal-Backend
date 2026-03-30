@@ -193,5 +193,26 @@ namespace Rahal.Api.Controllers.Users
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Restore deleted vendor user (Admin only)
+        /// </summary>
+        [HttpPut("restore/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> RestoreAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _userService.RestoreDeletedUser(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }
+

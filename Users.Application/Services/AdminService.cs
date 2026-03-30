@@ -204,5 +204,39 @@ namespace Users.Application.Services
             _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);
             return ApiResponse<string>.Success("Admin updated successfully");
         }
+
+        public async Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Admin restoration initiated for user {UserId}", id);
+
+            var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+            if (user is null || user.UserType != UserRoleEnum.Admin)
+            {
+                _logger.LogWarning("Admin restoration failed: User {UserId} not found or not an Admin", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            if (!user.IsDeleted)
+            {
+                _logger.LogWarning("Admin restoration failed: User {UserId} is not deleted", id);
+                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+            }
+
+            user.IsDeleted = false;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Admin restoration failed: Could not restore user {UserId}. Errors: {Errors}",
+                    id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            _logger.LogInformation("Admin {UserId} successfully restored", id);
+            return ApiResponse<string>.Success("Admin restored successfully.");
+        }
     }
 }
+
