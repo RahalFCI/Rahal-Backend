@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
@@ -78,9 +77,14 @@ namespace Users.Application
             services.AddScoped<IValidator<AdminDto>, AdminDtoValidator>();
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
+            services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
+            services.AddScoped<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
 
             // Register Single Auth Service
             services.AddScoped<IAuthService, AuthService>();
+
+            // Register Password Reset Service
+            services.AddScoped<IPasswordResetService, PasswordResetService>();
 
             // Register Factories (now return User instead of specific types)
             services.AddScoped<IUserFactory<RegisterExplorerDto, Users.Domain.Entities._Common.User>, ExplorerUserFactory>();

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;

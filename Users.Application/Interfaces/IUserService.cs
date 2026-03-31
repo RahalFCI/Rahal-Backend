@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs._Common;
+using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
 using Users.Domain.Entities._Common;
 
