@@ -14,8 +14,10 @@ namespace Users.Application.Validators
                 .NotEmpty().WithMessage("Email is required")
                 .EmailAddress().WithMessage("Email must be a valid email address");
 
-            RuleFor(x => x.Token)
-                .NotEmpty().WithMessage("Token is required");
+            RuleFor(x => x.Otp)
+                .NotEmpty().WithMessage("OTP is required")
+                .Length(6).WithMessage("OTP must be 6 digits")
+                .Matches(@"^\d{6}$").WithMessage("OTP must contain only digits");
 
             RuleFor(x => x.NewPassword)
                 .NotEmpty().WithMessage("New password is required")

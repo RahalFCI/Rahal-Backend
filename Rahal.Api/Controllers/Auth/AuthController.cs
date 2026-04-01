@@ -43,7 +43,7 @@ namespace Rahal.Api.Controllers.Auth
         }
 
         /// <summary>
-        /// Reset password using token and new password
+        /// Reset password using otp and new password
         /// </summary>
         [HttpPost("reset-password")]
         [AllowAnonymous]

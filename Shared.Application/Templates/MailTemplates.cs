@@ -7,7 +7,7 @@ namespace Shared.Application.Templates
 {
     public static class MailTemplates
     {
-        public static MailRequest PasswordReset(string to, string userName, string resetLink) =>
+        public static MailRequest PasswordReset(string to, string userName, string otp) =>
             new()
             {
                 To = to,
@@ -18,12 +18,12 @@ namespace Shared.Application.Templates
               <h2>Reset your password</h2>
               <p>Hi {userName},</p>
               <p>We received a request to reset your password.
-                 Click the button below — this link expires in <strong>2 hours</strong>.</p>
-              <a href="{resetLink}"
-                 style="display:inline-block;padding:12px 24px;background:#4F46E5;
-                        color:white;border-radius:6px;text-decoration:none;margin:16px 0">
-                Reset password
-              </a>
+                 Use the code below — this code expires in <strong>10 minutes</strong>.</p>
+              <div style="background:#f3f4f6;padding:20px;border-radius:6px;text-align:center;margin:16px 0">
+                <p style="font-size:32px;font-weight:bold;letter-spacing:4px;color:#4F46E5;margin:0">
+                  {otp}
+                </p>
+              </div>
               <p style="color:#6B7280;font-size:13px">
                 If you didn't request this, you can safely ignore this email.
               </p>

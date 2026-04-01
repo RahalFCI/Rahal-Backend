@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -16,13 +15,15 @@ namespace Users.Application.Services
 {
     /// <summary>
     /// Service for handling password reset operations
-    /// Manages forgot password token generation and password reset completion
+    /// Manages OTP generation and password reset completion
     /// </summary>
     internal class PasswordResetService : IPasswordResetService
     {
         private readonly UserManager<User> _userManager;
         private readonly IEmailService _emailService;
         private readonly ILogger<PasswordResetService> _logger;
+        private const int OTP_LENGTH = 6;
+        private const int OTP_EXPIRY_MINUTES = 10;
 
         public PasswordResetService(
             UserManager<User> userManager,
@@ -42,6 +43,7 @@ namespace Users.Application.Services
 
                 var user = await _userManager.FindByEmailAsync(email);
 
+                // Always return success even if user doesn't exist
                 if (user is null)
                 {
                     _logger.LogWarning("Password reset requested for non-existent email: {Email}", email);
@@ -54,23 +56,30 @@ namespace Users.Application.Services
                     return;
                 }
 
-                // Generate password reset token
-                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-                
-                // Encode token for URL safety
-                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
+                // Generate 6-digit OTP
+                var otp = GenerateOtp();
 
-                // Build reset link - adjust based on your frontend URL
-                var resetLink = $"https://rahal.com/reset-password?token={encodedToken}&email={Uri.EscapeDataString(email)}";
+                // Store OTP and expiry time in user
+                user.PasswordResetOtp = otp;
+                user.PasswordResetOtpExpiry = DateTime.UtcNow.AddMinutes(OTP_EXPIRY_MINUTES);
 
-                _logger.LogInformation("Generated password reset token for user {UserId}", user.Id);
+                var updateResult = await _userManager.UpdateAsync(user);
 
-                // Create and send email
-                var mailRequest = MailTemplates.PasswordReset(email, user.DisplayName, resetLink);
+                if (!updateResult.Succeeded)
+                {
+                    _logger.LogError("Failed to store OTP for user {UserId}. Errors: {Errors}",
+                        user.Id, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                    return;
+                }
+
+                _logger.LogInformation("Generated OTP for user {UserId}", user.Id);
+
+                // Create and send email with OTP
+                var mailRequest = MailTemplates.PasswordReset(email, user.DisplayName, otp);
 
                 await _emailService.SendAsync(mailRequest, ct);
 
-                _logger.LogInformation("Password reset email sent successfully to {Email}", email);
+                _logger.LogInformation("Password reset OTP email sent successfully to {Email}", email);
             }
             catch (Exception ex)
             {
@@ -99,33 +108,66 @@ namespace Users.Application.Services
                     return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
                 }
 
-                // Decode token from URL-safe format
-                var decodedTokenBytes = WebEncoders.Base64UrlDecode(request.Token);
-                var decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
-
-                // Reset password
-                var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.NewPassword);
-
-                if (result.Succeeded)
+                // Validate OTP
+                if (string.IsNullOrWhiteSpace(user.PasswordResetOtp))
                 {
-                    _logger.LogInformation("Password successfully reset for user {UserId}", user.Id);
-                    return ApiResponse<string>.Success("Password reset successfully.");
+                    _logger.LogWarning("Password reset failed: No OTP found for user {UserId}", user.Id);
+                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
                 }
 
-                _logger.LogWarning("Password reset failed for user {UserId}. Errors: {Errors}",
-                    user.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
-                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
-            }
-            catch (FormatException formatEx)
-            {
-                _logger.LogError(formatEx, "Invalid token format provided for password reset");
-                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+                if (user.PasswordResetOtpExpiry is null || user.PasswordResetOtpExpiry < DateTime.UtcNow)
+                {
+                    _logger.LogWarning("Password reset failed: OTP expired for user {UserId}", user.Id);
+                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                if (!user.PasswordResetOtp.Equals(request.Otp, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("Password reset failed: Invalid OTP provided for user {UserId}", user.Id);
+                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                // Reset password
+                var removePasswordResult = await _userManager.RemovePasswordAsync(user);
+                if (!removePasswordResult.Succeeded)
+                {
+                    _logger.LogError("Failed to remove old password for user {UserId}", user.Id);
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                var addPasswordResult = await _userManager.AddPasswordAsync(user, request.NewPassword);
+                if (!addPasswordResult.Succeeded)
+                {
+                    _logger.LogWarning("Password reset failed for user {UserId}. Errors: {Errors}",
+                        user.Id, string.Join(", ", addPasswordResult.Errors.Select(e => e.Description)));
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                // Clear OTP after successful password reset
+                user.PasswordResetOtp = null;
+                user.PasswordResetOtpExpiry = null;
+
+                await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation("Password successfully reset for user {UserId}", user.Id);
+                return ApiResponse<string>.Success("Password reset successfully.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error occurred during password reset for email: {Email}", request.Email);
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
             }
+        }
+
+        /// <summary>
+        /// Generates a random 6-digit OTP
+        /// </summary>
+        private string GenerateOtp()
+        {
+            var random = new Random();
+            var otp = random.Next(100000, 999999).ToString();
+            _logger.LogDebug("Generated OTP");
+            return otp;
         }
     }
 }
