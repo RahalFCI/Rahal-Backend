@@ -146,6 +146,7 @@ namespace Users.Application.Services
             {
                 _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
                     user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                await _userManager.DeleteAsync(user);
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
             }
 

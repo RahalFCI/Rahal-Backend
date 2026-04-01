@@ -6,6 +6,7 @@ using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
+using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
@@ -20,15 +21,18 @@ namespace Rahal.Api.Controllers.Users
         private readonly IAuthService _authService;
         private readonly IUserService<ExplorerDto, ExplorerSummaryDto> _userService;
         private readonly IUserFactory<RegisterExplorerDto, User> _userFactory;
+        private readonly IOAuthGoogleFacade _googleOAuthFacade;
 
         public ExplorerController(
             IAuthService authService,
             IUserService<ExplorerDto, ExplorerSummaryDto> userService,
-            IUserFactory<RegisterExplorerDto, User> userFactory)
+            IUserFactory<RegisterExplorerDto, User> userFactory,
+            IOAuthGoogleFacade googleOAuthFacade)
         {
             _authService = authService;
             _userService = userService;
             _userFactory = userFactory;
+            _googleOAuthFacade = googleOAuthFacade;
         }
 
         /// <summary>
@@ -63,6 +67,29 @@ namespace Rahal.Api.Controllers.Users
         public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto authRequestDto, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(authRequestDto, cancellationToken);
+
+            if (!result.IsSuccess)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Authenticate explorer via Google OAuth
+        /// </summary>
+        [HttpPost("google-signin")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GoogleSignInAsync(
+            [FromBody] GoogleSignInRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _googleOAuthFacade.AuthenticateAsync(
+                request.IdToken,
+                UserRoleEnum.Explorer,
+                cancellationToken);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);

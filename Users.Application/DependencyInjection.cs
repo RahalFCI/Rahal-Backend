@@ -12,6 +12,7 @@ using System.Text;
 using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
+using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;
 using Users.Application.Factory;
@@ -79,12 +80,18 @@ namespace Users.Application
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
             services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
             services.AddScoped<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
+            services.AddScoped<IValidator<GoogleSignInRequest>, GoogleSignInRequestValidator>();
 
             // Register Single Auth Service
             services.AddScoped<IAuthService, AuthService>();
 
             // Register Password Reset Service
             services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+            // Register Google OAuth Services
+            services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+            services.AddScoped<IOAuthGoogleService, GoogleAuthService>();
+            services.AddScoped<IOAuthGoogleFacade, GoogleOAuthFacade>();
 
             // Register Factories (now return User instead of specific types)
             services.AddScoped<IUserFactory<RegisterExplorerDto, Users.Domain.Entities._Common.User>, ExplorerUserFactory>();
@@ -103,6 +110,10 @@ namespace Users.Application
 
             // Register Token Service
             services.AddScoped<TokenService>();
+
+            //OAuth Registration
+            services.AddScoped<IOAuthGoogleService, GoogleAuthService>();
+            services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 
             return services;
         }

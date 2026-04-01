@@ -32,7 +32,7 @@ namespace Rahal.Api.Controllers.Auth
             try
             {
                 await _passwordResetService.ForgotPasswordAsync(request.Email, cancellationToken);
-                
+
                 // Always return success for security (prevent email enumeration attacks)
                 return NoContent();
             }
