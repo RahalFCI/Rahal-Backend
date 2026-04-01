@@ -51,6 +51,7 @@ builder.Services.AddScoped<ValidationActionFilter>();
 
 
 
+
 //Register in HTTP Logging
 builder.Services.AddHttpLogging(options =>
 {

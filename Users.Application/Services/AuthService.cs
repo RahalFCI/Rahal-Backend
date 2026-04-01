@@ -18,14 +18,14 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            TokenService tokenService,
+            ITokenService tokenService,
             ICurrentUserService currentUserService,
             ILogger<AuthService> logger)
         {

@@ -152,7 +152,7 @@ namespace Rahal.Api.Controllers.Users
         /// <summary>
         /// Get all vendors including deleted (Admin only)
         /// </summary>
-        [HttpGet]
+        [HttpGet("include-deleted")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

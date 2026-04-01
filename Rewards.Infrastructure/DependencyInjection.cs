@@ -12,10 +12,17 @@ namespace Rewards.Infrastructure
     {
         public static IServiceCollection AddRewardsInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            string connectionstringtemplate = configuration.GetConnectionString("DefaultConnection")!;
+            string connectionstring = connectionstringtemplate.Replace("$DATABASE_HOST", Environment.GetEnvironmentVariable("DATABASE_HOST"))
+                .Replace("$DATABASE_PORT", Environment.GetEnvironmentVariable("DATABASE_PORT"))
+                .Replace("$DATABASE_NAME", Environment.GetEnvironmentVariable("DATABASE_NAME"))
+                .Replace("$DATABASE_USERNAME", Environment.GetEnvironmentVariable("DATABASE_USERNAME"))
+                .Replace("$DATABASE_PASSWORD", Environment.GetEnvironmentVariable("DATABASE_PASSWORD"));
+
             services.AddDbContext<RewardsDbContext>(options =>
                 options.UseNpgsql(
-                    configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "rewards")
+                    connectionstring,
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
                 )
             );
 

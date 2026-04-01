@@ -1,0 +1,37 @@
+services:
+  rahal.api:
+    image: ${DOCKER_REGISTRY-}rahalapi
+    build:
+      context: .
+      dockerfile: Rahal.Api/Dockerfile
+    environment:
+     - DATABASE_HOST=postgres-container
+     - DATABASE_PORT=5432
+     - DATABASE_NAME=Rahal
+     - DATABASE_USERNAME=postgres
+     - DATABASE_PASSWORD=admin
+     - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
+     - ASPNETCORE_ENVIRONMENT=Development
+
+    ports:
+     - "7145:8080"
+    networks:
+     - rahal-network
+    depends_on:
+     - postgres-container
+
+  postgres-container:
+   image: postgres:13
+   environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=admin
+    - POSTGRES_DB=Rahal
+   ports:
+    - "5432:5432"
+   networks:
+    - rahal-network
+
+
+networks:
+ rahal-network:
+  driver: bridge

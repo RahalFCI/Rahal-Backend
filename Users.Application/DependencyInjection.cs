@@ -109,11 +109,7 @@ namespace Users.Application
             services.AddScoped<IUserService<AdminDto, AdminSummaryDto>, AdminService>();
 
             // Register Token Service
-            services.AddScoped<TokenService>();
-
-            //OAuth Registration
-            services.AddScoped<IOAuthGoogleService, GoogleAuthService>();
-            services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+            services.AddScoped<ITokenService, TokenService>();
 
             return services;
         }
