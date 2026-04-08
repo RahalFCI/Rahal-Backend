@@ -36,6 +36,7 @@ namespace Users.Domain.Entities
 
         public int Level { get; set; } = 1;
 
+        public int Streak { get; set; } = 0;
 
         public bool IsPublic { get; set; } = true;
 
@@ -43,6 +44,8 @@ namespace Users.Domain.Entities
         public bool IsPremium { get; set; } = false;
 
         public int? PlanTierId { get; set; }
+
+
 
 
         // public PlanTier? PlanTier { get; set; } TODO: uncomment

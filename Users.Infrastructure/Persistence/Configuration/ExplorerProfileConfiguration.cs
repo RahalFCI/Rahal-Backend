@@ -58,6 +58,9 @@ namespace Users.Infrastructure.Persistence.Configuration
             builder.Property(e => e.Level)
                 .HasDefaultValue(1);
 
+            builder.Property(e => e.Streak)
+                .HasDefaultValue(0);
+
             builder.Property(e => e.IsPublic)
                 .HasDefaultValue(true);
 
