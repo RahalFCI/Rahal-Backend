@@ -24,10 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Users.Application\Users.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\" />
+    <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

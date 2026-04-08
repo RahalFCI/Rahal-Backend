@@ -6,12 +6,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Application.Interfaces;
+using Shared.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Users.Application.Interfaces;
 using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Infrastructure.Persistence;
+using Users.Infrastructure.Repositories;
 
 namespace Users.Infrastructure
 {
@@ -66,6 +69,8 @@ namespace Users.Infrastructure
 
             services.AddScoped<IDbInitializer, DBInitializer>();
 
+            // Register Email Verification Repository
+            services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
 
             return services;
         }

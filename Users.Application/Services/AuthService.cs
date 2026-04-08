@@ -20,6 +20,7 @@ namespace Users.Application.Services
         private readonly SignInManager<User> _signInManager;
         private readonly ITokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IEmailVerificationService _emailVerificationService;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
@@ -27,12 +28,14 @@ namespace Users.Application.Services
             SignInManager<User> signInManager,
             ITokenService tokenService,
             ICurrentUserService currentUserService,
+            IEmailVerificationService emailVerificationService,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenService = tokenService;
             _currentUserService = currentUserService;
+            _emailVerificationService = emailVerificationService;
             _logger = logger;
         }
 
@@ -65,6 +68,13 @@ namespace Users.Application.Services
             {
                 _logger.LogWarning("Login failed: Invalid credentials for user {UserId}", user.Id);
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
+            }
+
+            // Check if email is confirmed
+            if (!user.EmailConfirmed)
+            {
+                _logger.LogWarning("Login failed: Email not verified for user {UserId}", user.Id);
+                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.EmailNotVerified);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -153,6 +163,21 @@ namespace Users.Application.Services
             var roles = new List<string> { user.UserType.ToString() };
 
             var authResponse = _tokenService.GenerateToken(user, roles, null);
+
+            // Send verification OTP
+            var otpResult = await _emailVerificationService.SendVerificationOtpAsync(user, cancellationToken);
+
+            if (!otpResult.IsSuccess)
+            {
+                _logger.LogWarning("Failed to send verification OTP for user {UserId}. ErrorCode: {ErrorCode}", 
+                    user.Id, otpResult.errorCode);
+                // Continue registration even if OTP sending fails, but log the error
+            }
+            else
+            {
+                _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
+                    user.Id, user.Email);
+            }
 
             _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
                 user.Id, user.Email, user.UserType);

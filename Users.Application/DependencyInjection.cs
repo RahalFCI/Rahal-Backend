@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
+using Users.Application.DTOs.EmailVerification;
 using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
@@ -81,12 +82,17 @@ namespace Users.Application
             services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
             services.AddScoped<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
             services.AddScoped<IValidator<GoogleSignInRequest>, GoogleSignInRequestValidator>();
+            services.AddScoped<IValidator<VerifyOtpRequest>, VerifyOtpValidator>();
+            services.AddScoped<IValidator<ResendOtpRequest>, ResendOtpValidator>();
 
             // Register Single Auth Service
             services.AddScoped<IAuthService, AuthService>();
 
             // Register Password Reset Service
             services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+            // Register Email Verification Service
+            services.AddScoped<IEmailVerificationService, EmailVerificationService>();
 
             // Register Google OAuth Services
             services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();

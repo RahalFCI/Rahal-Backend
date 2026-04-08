@@ -1,5 +1,6 @@
 using ECommerce.API.Filters;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
@@ -27,6 +28,16 @@ builder.Services.AddRateLimiter(options =>
         {
             Window = TimeSpan.FromMinutes(1),
             PermitLimit = 60
+        }));
+
+    options.AddPolicy("otp-resend", httpContext =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() 
+                      ?? "anonymous",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(5),
+            PermitLimit = 3
         }));
 });
 
@@ -118,6 +129,7 @@ app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
 app.UseRateLimiter();
+
 app.UseExceptionHandlingMiddleware();
 
 // Configure the HTTP request pipeline.
@@ -132,6 +144,7 @@ if (app.Environment.IsDevelopment())
     });
 
 }
+
 
 app.MapControllers(); //Execute the filter pipeline (action + filters)
 

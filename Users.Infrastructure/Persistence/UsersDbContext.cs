@@ -28,6 +28,8 @@ namespace Users.Infrastructure.Persistence
 
         public DbSet<VendorCategory> VendorCategories { get; set; }
 
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
