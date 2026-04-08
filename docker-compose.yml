@@ -10,6 +10,8 @@ services:
      - DATABASE_NAME=Rahal
      - DATABASE_USERNAME=postgres
      - DATABASE_PASSWORD=admin
+     - REDIS_HOST=redis
+     - REDIS_PORT=6379 
      - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
      - ASPNETCORE_ENVIRONMENT=Development
 
@@ -31,6 +33,12 @@ services:
    networks:
     - rahal-network
 
+  redis:
+   image: redis:8
+   ports:
+    - "6379:6379"
+   networks:
+    - rahal-network
 
 networks:
  rahal-network:

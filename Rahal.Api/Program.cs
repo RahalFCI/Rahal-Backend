@@ -91,20 +91,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-//TODO: uncomment after setting redis
-//// Test Redis connection
-//try
-//{
-//    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
-//    var db = redis.GetDatabase();
-//    await db.PingAsync();
-//    app.Logger.LogInformation("Redis connection successful");
-//}
-//catch (Exception ex)
-//{
-//    app.Logger.LogError(ex, "Failed to connect to Redis");
-//    throw;
-//}
+// Test Redis connection
+try
+{
+    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+var db = redis.GetDatabase();
+await db.PingAsync();
+app.Logger.LogInformation("Redis connection successful");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Failed to connect to Redis");
+    throw;
+}
 
 
 //Run all pending migrations
