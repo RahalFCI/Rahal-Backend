@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MediatR;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Application.Templates;
@@ -12,6 +13,7 @@ using System.Text;
 using Users.Application.Interfaces;
 using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
+using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
@@ -21,6 +23,7 @@ namespace Users.Application.Services
         private readonly IEmailVerificationRepository _repository;
         private readonly UserManager<User> _userManager;
         private readonly IEmailService _emailService;
+        private readonly IPublisher _publisher;
         private readonly ILogger<EmailVerificationService> _logger;
 
         private const int OTP_EXPIRY_MINUTES = 10;
@@ -30,11 +33,13 @@ namespace Users.Application.Services
             IEmailVerificationRepository repository,
             UserManager<User> userManager,
             IEmailService emailService,
+            IPublisher publisher,
             ILogger<EmailVerificationService> logger)
         {
             _repository = repository;
             _userManager = userManager;
             _emailService = emailService;
+            _publisher = publisher;
             _logger = logger;
         }
 
@@ -166,6 +171,16 @@ namespace Users.Application.Services
 
                 _logger.LogInformation("Email successfully verified for user {UserId}", user.Id);
 
+                // Publish UserCreatedEvent to trigger welcome email and other handlers
+                var userCreatedEvent = new UserCreatedEvent(
+                    user.Id,
+                    user.DisplayName,
+                    user.Email!
+                );
+
+                await _publisher.Publish(userCreatedEvent, cancellationToken);
+                _logger.LogInformation("UserCreatedEvent published for user {UserId}", user.Id);
+
                 return ApiResponse<string>.Success("Email verified successfully");
             }
             catch (Exception ex)
@@ -228,19 +243,16 @@ namespace Users.Application.Services
 
         private static string GenerateOtp()
         {
-            using (var rng = new RNGCryptoServiceProvider())
-            {
-                byte[] tokenData = new byte[4];
-                rng.GetBytes(tokenData);
-                int randomNumber = BitConverter.ToInt32(tokenData, 0);
-                int otp = Math.Abs(randomNumber % 1000000); // Get last 6 digits
-                return otp.ToString("D6"); // Ensure 6 digits with leading zeros if needed
-            }
+
+            byte[] data = RandomNumberGenerator.GetBytes(32);
+            int randomNumber = BitConverter.ToInt32(data, 0);
+            int otp = Math.Abs(randomNumber % 1000000); // Get last 6 digits
+            return otp.ToString("D6"); // Ensure 6 digits with leading zeros if needed
         }
 
         private static string HashOtp(string otp)
         {
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            using (var sha256 = SHA256.Create())
             {
                 byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(otp));
                 return Convert.ToBase64String(hashedBytes);

@@ -58,8 +58,30 @@ namespace Shared.Application.Templates
             new()
             {
                 To = to,
-                Subject = $"Welcome, {userName}!",
-                Body = $"<h2>Welcome aboard, {userName}!</h2>"
+                DisplayName = userName,
+                Subject = $"Welcome to Rahal, {userName}!",
+                Body = $"""
+            <div style="font-family:sans-serif;max-width:480px;margin:auto">
+              <h2>Welcome to Rahal, {userName}! 🎉</h2>
+              <p>Hi {userName},</p>
+              <p>Your email has been verified and your account is now fully activated!</p>
+              <p>You're all set to start exploring, earning XP, and climbing the leaderboards.</p>
+              <div style="background:#f3f4f6;padding:20px;border-radius:6px;margin:16px 0">
+                <p><strong>Quick tips to get started:</strong></p>
+                <ul style="margin:10px 0;padding-left:20px">
+                  <li>Complete your profile to help others learn about you</li>
+                  <li>Start exploring and earning XP</li>
+                  <li>Join challenges and compete with friends</li>
+                  <li>Climb the leaderboards and unlock achievements</li>
+                </ul>
+              </div>
+              <p>If you have any questions or need help, feel free to reach out to our support team.</p>
+              <p style="color:#6B7280;font-size:13px;margin-top:20px">
+                Happy exploring!<br/>
+                The Rahal Team
+              </p>
+            </div>
+            """
             };
     }
 }
