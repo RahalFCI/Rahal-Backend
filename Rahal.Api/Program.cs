@@ -123,6 +123,7 @@ await app.ApplyMigrationsAsync();
 
 app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseHttpLogging(); //Enable Http Logging
 app.UseCors();
 app.UseRouting(); //Identifying action method based on route

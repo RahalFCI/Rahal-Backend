@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,15 +26,18 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly IUserMapper<AdminDto, AdminSummaryDto> _mapper;
+        private readonly IProfilePictureService _profilePictureService;
         private readonly ILogger<AdminService> _logger;
 
         public AdminService(
             UserManager<User> userManager,
             IUserMapper<AdminDto, AdminSummaryDto> mapper,
+            IProfilePictureService profilePictureService,
             ILogger<AdminService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _profilePictureService = profilePictureService;
             _logger = logger;
         }
 
@@ -156,7 +160,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(AdminDto userDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> UpdateUser(AdminDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Admin update initiated for user {UserId}", userDto.Id);
 
@@ -183,26 +187,49 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.Conflict);
             }
 
-            // Update User entity
-            user.DisplayName = userDto.Name;
-            user.Email = userDto.Email;
-            user.NormalizedEmail = userDto.Email.ToUpper();
-            user.UserName = userDto.Email;
-            user.NormalizedUserName = userDto.Email.ToUpper();
-            user.PhoneNumber = userDto.PhoneNumber;
-            user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
-
-            var result = await _userManager.UpdateAsync(user);
-
-            if (!result.Succeeded)
+            try
             {
-                _logger.LogError("Admin update failed for user {UserId}. Errors: {Errors}",
-                    userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
-                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
-            }
+                // Handle profile picture update if provided
+                if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    _logger.LogInformation("Updating profile picture for Admin {UserId}", userDto.Id);
+                    var profilePictureUrl = await _profilePictureService.UpdateProfilePictureAsync(
+                        profilePicture, 
+                        user.ProfilePictureURL, 
+                        cancellationToken);
+                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
+                    _logger.LogInformation("Profile picture successfully updated for Admin {UserId}", userDto.Id);
+                }
 
-            _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);
-            return ApiResponse<string>.Success("Admin updated successfully");
+                // Update User entity
+                user.DisplayName = userDto.Name;
+                user.Email = userDto.Email;
+                user.NormalizedEmail = userDto.Email.ToUpper();
+                user.UserName = userDto.Email;
+                user.NormalizedUserName = userDto.Email.ToUpper();
+                user.PhoneNumber = userDto.PhoneNumber;
+                if (profilePicture == null || profilePicture.Length == 0)
+                {
+                    user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
+                }
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Admin update failed for user {UserId}. Errors: {Errors}",
+                        userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);
+                return ApiResponse<string>.Success("Admin updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during Admin update for user {UserId}", userDto.Id);
+                throw;
+            }
         }
 
         public async Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default)

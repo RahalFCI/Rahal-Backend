@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -21,6 +22,7 @@ namespace Users.Application.Services
         private readonly ITokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IEmailVerificationService _emailVerificationService;
+        private readonly IProfilePictureService _profilePictureService;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
@@ -29,6 +31,7 @@ namespace Users.Application.Services
             ITokenService tokenService,
             ICurrentUserService currentUserService,
             IEmailVerificationService emailVerificationService,
+            IProfilePictureService profilePictureService,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
@@ -36,6 +39,7 @@ namespace Users.Application.Services
             _tokenService = tokenService;
             _currentUserService = currentUserService;
             _emailVerificationService = emailVerificationService;
+            _profilePictureService = profilePictureService;
             _logger = logger;
         }
 
@@ -130,7 +134,7 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
 
@@ -141,48 +145,86 @@ namespace Users.Application.Services
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.AlreadyExists);
             }
 
-            var result = await _userManager.CreateAsync(user, Password);
-
-            if (!result.Succeeded)
+            try
             {
-                _logger.LogError("Registration failed: Could not create user {Email}. Errors: {Errors}",
-                    user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                // Handle profile picture upload if provided
+                if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    _logger.LogInformation("Uploading profile picture for user registration");
+                    var profilePictureUrl = await _profilePictureService.UploadProfilePictureAsync(profilePicture, cancellationToken);
+                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
+                    _logger.LogInformation("Profile picture successfully uploaded to {Url}", profilePictureUrl);
+                }
+
+                var result = await _userManager.CreateAsync(user, Password);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Registration failed: Could not create user {Email}. Errors: {Errors}",
+                        user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
+
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
+                        user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+
+                    // Delete uploaded picture if role assignment fails
+                    if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
+                    {
+                        await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
+                    }
+
+                    await _userManager.DeleteAsync(user);
+                    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                var roles = new List<string> { user.UserType.ToString() };
+
+                var authResponse = _tokenService.GenerateToken(user, roles, null);
+
+                // Send verification OTP
+                var otpResult = await _emailVerificationService.SendVerificationOtpAsync(user, cancellationToken);
+
+                if (!otpResult.IsSuccess)
+                {
+                    _logger.LogWarning("Failed to send verification OTP for user {UserId}. ErrorCode: {ErrorCode}", 
+                        user.Id, otpResult.errorCode);
+                    // Continue registration even if OTP sending fails, but log the error
+                }
+                else
+                {
+                    _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
+                        user.Id, user.Email);
+                }
+
+                _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
+                    user.Id, user.Email, user.UserType);
+
+                return ApiResponse<AuthResponseDto?>.Success(authResponse);
             }
-
-            var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
-
-            if (!roleResult.Succeeded)
+            catch (Exception ex)
             {
-                _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
-                    user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
-                await _userManager.DeleteAsync(user);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
+
+                // Clean up uploaded picture if an exception occurs
+                if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
+                {
+                    try
+                    {
+                        await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogError(deleteEx, "Failed to delete uploaded picture during rollback");
+                    }
+                }
+
+                throw;
             }
-
-            var roles = new List<string> { user.UserType.ToString() };
-
-            var authResponse = _tokenService.GenerateToken(user, roles, null);
-
-            // Send verification OTP
-            var otpResult = await _emailVerificationService.SendVerificationOtpAsync(user, cancellationToken);
-
-            if (!otpResult.IsSuccess)
-            {
-                _logger.LogWarning("Failed to send verification OTP for user {UserId}. ErrorCode: {ErrorCode}", 
-                    user.Id, otpResult.errorCode);
-                // Continue registration even if OTP sending fails, but log the error
-            }
-            else
-            {
-                _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
-                    user.Id, user.Email);
-            }
-
-            _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
-                user.Id, user.Email, user.UserType);
-
-            return ApiResponse<AuthResponseDto?>.Success(authResponse);
         }
     }
 }

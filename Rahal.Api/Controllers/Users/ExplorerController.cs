@@ -42,14 +42,14 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterExplorerDto registerRequestDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAsync([FromForm] RegisterExplorerDto registerRequestDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             var user = _userFactory.CreateUser(registerRequestDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerRequestDto.Password, cancellationToken);
+            var result = await _authService.RegisterAsync(user, registerRequestDto.Password, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -172,9 +172,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ExplorerDto explorerDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromForm] ExplorerDto explorerDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.UpdateUser(explorerDto, cancellationToken);
+            var result = await _userService.UpdateUser(explorerDto, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

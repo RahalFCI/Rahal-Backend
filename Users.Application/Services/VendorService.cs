@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,15 +26,18 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly IUserMapper<VendorDto, VendorSummaryDto> _mapper;
+        private readonly IProfilePictureService _profilePictureService;
         private readonly ILogger<VendorService> _logger;
 
         public VendorService(
             UserManager<User> userManager,
             IUserMapper<VendorDto, VendorSummaryDto> mapper,
+            IProfilePictureService profilePictureService,
             ILogger<VendorService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _profilePictureService = profilePictureService;
             _logger = logger;
         }
 
@@ -154,7 +158,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(VendorDto userDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> UpdateUser(VendorDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Vendor update initiated for user {UserId}", userDto.Id);
 
@@ -181,33 +185,56 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.Conflict);
             }
 
-            // Update User entity
-            user.DisplayName = userDto.Name;
-            user.Email = userDto.Email;
-            user.NormalizedEmail = userDto.Email.ToUpper();
-            user.UserName = userDto.Email;
-            user.NormalizedUserName = userDto.Email.ToUpper();
-            user.PhoneNumber = userDto.PhoneNumber;
-            user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
-
-            // Update Vendor Profile
-            user.VendorProfile.CountryCode = userDto.CountryCode;
-            user.VendorProfile.Address = userDto.Address;
-            user.VendorProfile.AddressUrl = userDto.AddressUrl;
-            user.VendorProfile.WorkingHours = userDto.WorkingHours;
-            user.VendorProfile.CategoryId = userDto.CategoryId;
-
-            var result = await _userManager.UpdateAsync(user);
-
-            if (!result.Succeeded)
+            try
             {
-                _logger.LogError("Vendor update failed for user {UserId}. Errors: {Errors}",
-                    userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
-                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
-            }
+                // Handle profile picture update if provided
+                if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    _logger.LogInformation("Updating profile picture for Vendor {UserId}", userDto.Id);
+                    var profilePictureUrl = await _profilePictureService.UpdateProfilePictureAsync(
+                        profilePicture, 
+                        user.ProfilePictureURL, 
+                        cancellationToken);
+                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
+                    _logger.LogInformation("Profile picture successfully updated for Vendor {UserId}", userDto.Id);
+                }
 
-            _logger.LogInformation("Vendor {UserId} successfully updated", userDto.Id);
-            return ApiResponse<string>.Success("Vendor updated successfully");
+                // Update User entity
+                user.DisplayName = userDto.Name;
+                user.Email = userDto.Email;
+                user.NormalizedEmail = userDto.Email.ToUpper();
+                user.UserName = userDto.Email;
+                user.NormalizedUserName = userDto.Email.ToUpper();
+                user.PhoneNumber = userDto.PhoneNumber;
+                if (profilePicture == null || profilePicture.Length == 0)
+                {
+                    user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
+                }
+
+                // Update Vendor Profile
+                user.VendorProfile.CountryCode = userDto.CountryCode;
+                user.VendorProfile.Address = userDto.Address;
+                user.VendorProfile.AddressUrl = userDto.AddressUrl;
+                user.VendorProfile.WorkingHours = userDto.WorkingHours;
+                user.VendorProfile.CategoryId = userDto.CategoryId;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Vendor update failed for user {UserId}. Errors: {Errors}",
+                        userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                _logger.LogInformation("Vendor {UserId} successfully updated", userDto.Id);
+                return ApiResponse<string>.Success("Vendor updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during Vendor update for user {UserId}", userDto.Id);
+                throw;
+            }
         }
 
         public async Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default)

@@ -46,14 +46,14 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterAdminDto registerAdminDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAsync([FromForm] RegisterAdminDto registerAdminDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             var user = _userFactory.CreateUser(registerAdminDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerAdminDto.Password, cancellationToken);
+            var result = await _authService.RegisterAsync(user, registerAdminDto.Password, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -78,7 +78,6 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
         /// Authenticate admin via Google OAuth
         /// </summary>
         [HttpPost("google-signin")]
@@ -177,9 +176,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] AdminDto adminDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromForm] AdminDto adminDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.UpdateUser(adminDto, cancellationToken);
+            var result = await _userService.UpdateUser(adminDto, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

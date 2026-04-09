@@ -94,6 +94,9 @@ namespace Users.Application
             // Register Email Verification Service
             services.AddScoped<IEmailVerificationService, EmailVerificationService>();
 
+            // Register Profile Picture Service
+            services.AddScoped<IProfilePictureService, ProfilePictureService>();
+
             // Register Google OAuth Services
             services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
             services.AddScoped<IOAuthGoogleService, GoogleAuthService>();

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Interfaces;
 using Shared.Application.Settings;
 using Shared.Infrastructure.Email;
+using Shared.Infrastructure.FileStorage;
 using Shared.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,9 @@ namespace Shared.Infrastructure
             configuration.GetSection(MailSettings.SectionName));
 
             services.AddTransient<IEmailService, SmtpEmailService>();
+
+            // Register file storage service
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
             return services;
         }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,15 +26,18 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly IUserMapper<ExplorerDto, ExplorerSummaryDto> _mapper;
+        private readonly IProfilePictureService _profilePictureService;
         private readonly ILogger<ExplorerService> _logger;
 
         public ExplorerService(
             UserManager<User> userManager,
             IUserMapper<ExplorerDto, ExplorerSummaryDto> mapper,
+            IProfilePictureService profilePictureService,
             ILogger<ExplorerService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _profilePictureService = profilePictureService;
             _logger = logger;
         }
 
@@ -154,7 +158,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(ExplorerDto userDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> UpdateUser(ExplorerDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Explorer update initiated for user {UserId}", userDto.Id);
 
@@ -181,32 +185,55 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.Conflict);
             }
 
-            // Update User entity
-            user.DisplayName = userDto.Name;
-            user.Email = userDto.Email;
-            user.NormalizedEmail = userDto.Email.ToUpper();
-            user.UserName = userDto.Email;
-            user.NormalizedUserName = userDto.Email.ToUpper();
-            user.PhoneNumber = userDto.PhoneNumber;
-            user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
-
-            // Update Explorer Profile
-            user.ExplorerProfile.Bio = userDto.Bio;
-            user.ExplorerProfile.CountryCode = userDto.CountryCode;
-            user.ExplorerProfile.IsPublic = userDto.IsPublic;
-            user.ExplorerProfile.Gender = userDto.gender;
-
-            var result = await _userManager.UpdateAsync(user);
-
-            if (!result.Succeeded)
+            try
             {
-                _logger.LogError("Explorer update failed for user {UserId}. Errors: {Errors}",
-                    userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
-                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
-            }
+                // Handle profile picture update if provided
+                if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    _logger.LogInformation("Updating profile picture for Explorer {UserId}", userDto.Id);
+                    var profilePictureUrl = await _profilePictureService.UpdateProfilePictureAsync(
+                        profilePicture, 
+                        user.ProfilePictureURL, 
+                        cancellationToken);
+                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
+                    _logger.LogInformation("Profile picture successfully updated for Explorer {UserId}", userDto.Id);
+                }
 
-            _logger.LogInformation("Explorer {UserId} successfully updated", userDto.Id);
-            return ApiResponse<string>.Success("Explorer updated successfully");
+                // Update User entity
+                user.DisplayName = userDto.Name;
+                user.Email = userDto.Email;
+                user.NormalizedEmail = userDto.Email.ToUpper();
+                user.UserName = userDto.Email;
+                user.NormalizedUserName = userDto.Email.ToUpper();
+                user.PhoneNumber = userDto.PhoneNumber;
+                if (profilePicture == null || profilePicture.Length == 0)
+                {
+                    user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
+                }
+
+                // Update Explorer Profile
+                user.ExplorerProfile.Bio = userDto.Bio;
+                user.ExplorerProfile.CountryCode = userDto.CountryCode;
+                user.ExplorerProfile.IsPublic = userDto.IsPublic;
+                user.ExplorerProfile.Gender = userDto.gender;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Explorer update failed for user {UserId}. Errors: {Errors}",
+                        userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                _logger.LogInformation("Explorer {UserId} successfully updated", userDto.Id);
+                return ApiResponse<string>.Success("Explorer updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during Explorer update for user {UserId}", userDto.Id);
+                throw;
+            }
         }
 
         public async Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default)
