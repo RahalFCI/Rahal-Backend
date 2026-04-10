@@ -9,10 +9,9 @@ namespace Users.Application.DTOs.Register
         string Email,
         string Password,
         string ConfirmPassword,
-        string PhoneNumber,
-        string ProfilePictureUrl)
+        string PhoneNumber)
     {
-        public RegisterAdminDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)
+        public RegisterAdminDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)
         {
         }
     }

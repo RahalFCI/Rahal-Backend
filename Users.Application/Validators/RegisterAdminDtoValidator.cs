@@ -35,10 +35,7 @@ namespace Users.Application.Validators
                 .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Phone number must be a valid international format (E.164)");
 
-            RuleFor(x => x.ProfilePictureUrl)
-                .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
-                .When(x => !string.IsNullOrWhiteSpace(x.ProfilePictureUrl))
-                .WithMessage("Profile picture URL must be a valid URL");
+
         }
     }
 }

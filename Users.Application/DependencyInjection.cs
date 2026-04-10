@@ -16,6 +16,7 @@ using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;
+using Users.Application.EventHandlers;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Mappers;
@@ -119,6 +120,9 @@ namespace Users.Application
 
             // Register Token Service
             services.AddScoped<ITokenService, TokenService>();
+
+            
+
 
             return services;
         }

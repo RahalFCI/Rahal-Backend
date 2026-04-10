@@ -15,10 +15,9 @@ namespace Users.Application.DTOs.Register
         GenderEnum Gender,
         string Bio,
         string CountryCode,
-        bool IsPublic,
-        string ProfilePictureUrl)
+        bool IsPublic)
     {
-        public RegisterExplorerDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, default, default, string.Empty, string.Empty, default, string.Empty)
+        public RegisterExplorerDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, default, default, string.Empty, string.Empty, default)
         {
         }
     }

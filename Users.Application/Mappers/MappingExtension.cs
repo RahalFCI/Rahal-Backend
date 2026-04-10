@@ -31,7 +31,6 @@ namespace Users.Application.Mappers
             Email = dto.Email,
             UserName = dto.Email,
             PhoneNumber = dto.PhoneNumber,
-            ProfilePictureURL = dto.ProfilePictureUrl ?? string.Empty,
             UserType = UserRoleEnum.Explorer,
         };
 
@@ -60,7 +59,6 @@ namespace Users.Application.Mappers
             Email = dto.Email,
             UserName = dto.Email,
             PhoneNumber = dto.PhoneNumber,
-            ProfilePictureURL = dto.ProfilePictureUrl ?? string.Empty,
             UserType = UserRoleEnum.Vendor,
         };
 
@@ -85,7 +83,6 @@ namespace Users.Application.Mappers
             Email = dto.Email,
             UserName = dto.Email,
             PhoneNumber = dto.PhoneNumber,
-            ProfilePictureURL = dto.ProfilePictureUrl ?? string.Empty,
             UserType = UserRoleEnum.Admin,
         };
 

@@ -11,6 +11,7 @@ using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Users.Application.EventHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,12 @@ builder.Services.AddRateLimiter(options =>
             Window = TimeSpan.FromMinutes(5),
             PermitLimit = 3
         }));
+});
+
+// Register MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
 });
 
 //Configure Cache Settings
