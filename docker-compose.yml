@@ -12,6 +12,9 @@ services:
      - DATABASE_PASSWORD=admin
      - REDIS_HOST=redis
      - REDIS_PORT=6379 
+     - MEILI_HOST=meilisearch
+     - MEILI_PORT=7700 
+     - MEILI_API_KEY=masterKey123 
      - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
      - ASPNETCORE_ENVIRONMENT=Development
 
@@ -40,6 +43,20 @@ services:
    networks:
     - rahal-network
 
+  meilisearch:
+   image: getmeili/meilisearch:v1.41.0
+   ports:
+    - "7700:7700"
+   networks:
+    - rahal-network
+   environment:
+    - MEILI_MASTER_KEY=masterKey123
+   volumes:
+    - meilisearch_data:/meili_data
+
 networks:
  rahal-network:
   driver: bridge
+
+volumes:
+  meilisearch_data:

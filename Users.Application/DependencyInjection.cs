@@ -121,8 +121,6 @@ namespace Users.Application
             // Register Token Service
             services.AddScoped<ITokenService, TokenService>();
 
-            
-
 
             return services;
         }

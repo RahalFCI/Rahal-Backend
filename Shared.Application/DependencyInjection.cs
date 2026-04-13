@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Shared.Application.DTOs.Search;
 using Shared.Application.Interfaces;
 using Shared.Application.Services;
 using Shared.Application.Settings;
+using Shared.Application.Validators.Search;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -40,6 +43,8 @@ namespace Shared.Application
             services.AddScoped<ICacheService, RedisCacheService>(); //Internally redis registers cache as singleton, injected as scoped to avoid issues with HttpContext access
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+            // Register FluentValidation validators
+            services.AddScoped<IValidator<SearchRequestDto>, SearchRequestValidator>();
 
             return services;
         }

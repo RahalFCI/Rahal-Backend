@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using Users.Application.Interfaces;
 using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
+using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
@@ -27,17 +29,20 @@ namespace Users.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly IUserMapper<AdminDto, AdminSummaryDto> _mapper;
         private readonly IProfilePictureService _profilePictureService;
+        private readonly IMediator _mediator;
         private readonly ILogger<AdminService> _logger;
 
         public AdminService(
             UserManager<User> userManager,
             IUserMapper<AdminDto, AdminSummaryDto> mapper,
             IProfilePictureService profilePictureService,
+            IMediator mediator,
             ILogger<AdminService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
             _profilePictureService = profilePictureService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -62,6 +67,21 @@ namespace Users.Application.Services
                 _logger.LogError("Admin deletion failed: Could not delete user {UserId}. Errors: {Errors}",
                     id, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            // Publish UserDeletedEvent for search index cleanup
+            try
+            {
+                await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
+                _logger.LogInformation("UserDeletedEvent published for user {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to publish UserDeletedEvent for user {UserId}. " +
+                    "Deletion succeeded but user may still be in search index.",
+                    id);
+                // Don't throw - search event failure shouldn't fail deletion
             }
 
             _logger.LogInformation("Admin {UserId} successfully deleted", id);
@@ -220,6 +240,21 @@ namespace Users.Application.Services
                     _logger.LogError("Admin update failed for user {UserId}. Errors: {Errors}",
                         userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
                     return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                // Publish UserUpdatedEvent for search index update
+                try
+                {
+                    await _mediator.Publish(new UserUpdatedEvent(userDto.Id), cancellationToken);
+                    _logger.LogInformation("UserUpdatedEvent published for user {UserId}", userDto.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to publish UserUpdatedEvent for user {UserId}. " +
+                        "Update succeeded but search index may be stale.",
+                        userDto.Id);
+                    // Don't throw - search event failure shouldn't fail update
                 }
 
                 _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);

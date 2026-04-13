@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using Users.Application.DTOs.Auth;
 using Users.Application.Interfaces;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
+using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
@@ -23,6 +25,7 @@ namespace Users.Application.Services
         private readonly ICurrentUserService _currentUserService;
         private readonly IEmailVerificationService _emailVerificationService;
         private readonly IProfilePictureService _profilePictureService;
+        private readonly IMediator _mediator;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
@@ -32,6 +35,7 @@ namespace Users.Application.Services
             ICurrentUserService currentUserService,
             IEmailVerificationService emailVerificationService,
             IProfilePictureService profilePictureService,
+            IMediator mediator,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
@@ -40,6 +44,7 @@ namespace Users.Application.Services
             _currentUserService = currentUserService;
             _emailVerificationService = emailVerificationService;
             _profilePictureService = profilePictureService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -197,34 +202,51 @@ namespace Users.Application.Services
                 }
                 else
                 {
-                    _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
-                        user.Id, user.Email);
-                }
+                        _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
+                            user.Id, user.Email);
+                        }
 
-                _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
-                    user.Id, user.Email, user.UserType);
+                        // Publish UserCreatedEvent for search indexing
+                        try
+                        {
+                            await _mediator.Publish(
+                                new UserCreatedEvent(user.Id, user.DisplayName, user.Email!),
+                                cancellationToken);
+                            _logger.LogInformation("UserCreatedEvent published for user {UserId}", user.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, 
+                                "Failed to publish UserCreatedEvent for user {UserId}. " +
+                                "Registration succeeded but user may not be searchable until next sync.",
+                                user.Id);
+                            // Don't throw - search event failure shouldn't fail registration
+                        }
 
-                return ApiResponse<AuthResponseDto?>.Success(authResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
+                        _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
+                            user.Id, user.Email, user.UserType);
 
-                // Clean up uploaded picture if an exception occurs
-                if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
-                {
-                    try
-                    {
-                        await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
+                        return ApiResponse<AuthResponseDto?>.Success(authResponse);
                     }
-                    catch (Exception deleteEx)
+                    catch (Exception ex)
                     {
-                        _logger.LogError(deleteEx, "Failed to delete uploaded picture during rollback");
-                    }
-                }
+                        _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
 
-                throw;
-            }
+                        // Clean up uploaded picture if an exception occurs
+                        if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
+                        {
+                            try
+                            {
+                                await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
+                            }
+                            catch (Exception deleteEx)
+                            {
+                                _logger.LogError(deleteEx, "Failed to delete uploaded picture during rollback");
+                            }
+                        }
+
+                        throw;
+                    }
         }
     }
 }

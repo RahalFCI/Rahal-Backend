@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Users.Application.EventHandlers;
+using Users.Infrastructure.Search.EventHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +47,9 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
 });
+
 
 //Configure Cache Settings
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
@@ -123,6 +126,8 @@ catch (Exception ex)
     throw;
 }
 
+//Initializing Meilisearch Indexes at startup
+app.InitializeSearchIndexesAsync().GetAwaiter().GetResult();
 
 //Run all pending migrations
 await app.ApplyMigrationsAsync();

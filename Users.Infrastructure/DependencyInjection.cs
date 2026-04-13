@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.Interfaces;
+using Users.Application.Services;
 using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Infrastructure.Persistence;
 using Users.Infrastructure.Repositories;
+using Users.Infrastructure.Search;
+using Users.Infrastructure.Search.EventHandlers;
 
 namespace Users.Infrastructure
 {
@@ -71,6 +75,9 @@ namespace Users.Infrastructure
 
             // Register Email Verification Repository
             services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
+
+            // Register Search Index Configuration
+            services.AddScoped<ISearchIndexInitializer, UserIndexConfig>();
 
             return services;
         }

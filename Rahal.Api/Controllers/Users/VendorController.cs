@@ -54,7 +54,7 @@ namespace Rahal.Api.Controllers.Users
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(nameof(RegisterAsync), result);
+            return Ok(result);
         }
 
         /// <summary>
