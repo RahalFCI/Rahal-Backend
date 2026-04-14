@@ -9,7 +9,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Auth;
 using Users.Application.Interfaces;
 using Users.Application.Settings;

@@ -27,6 +27,7 @@ namespace Shared.Domain.Enums
         Unauthorized = 40100,
         LockedOut = 40301,
         Forbidden = 40300,
+        EmailNotVerified = 40302,
 
 
         // State / business rules

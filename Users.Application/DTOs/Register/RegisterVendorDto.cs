@@ -14,10 +14,9 @@ namespace Users.Application.DTOs.Register
         string Address,
         string AddressUrl,
         Dictionary<DayOfWeek, string> WorkingHours,
-        int CategoryId,
-        string ProfilePictureUrl)
+        int CategoryId)
     {
-        public RegisterVendorDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, new Dictionary<DayOfWeek, string>(), 0, string.Empty)
+        public RegisterVendorDto() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, new Dictionary<DayOfWeek, string>(), 0)
         {
         }
     }

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
+using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
@@ -21,15 +21,18 @@ namespace Rahal.Api.Controllers.Users
         private readonly IAuthService _authService;
         private readonly IUserService<ExplorerDto, ExplorerSummaryDto> _userService;
         private readonly IUserFactory<RegisterExplorerDto, User> _userFactory;
+        private readonly IOAuthGoogleFacade _googleOAuthFacade;
 
         public ExplorerController(
             IAuthService authService,
             IUserService<ExplorerDto, ExplorerSummaryDto> userService,
-            IUserFactory<RegisterExplorerDto, User> userFactory)
+            IUserFactory<RegisterExplorerDto, User> userFactory,
+            IOAuthGoogleFacade googleOAuthFacade)
         {
             _authService = authService;
             _userService = userService;
             _userFactory = userFactory;
+            _googleOAuthFacade = googleOAuthFacade;
         }
 
         /// <summary>
@@ -39,19 +42,19 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterExplorerDto registerRequestDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAsync([FromForm] RegisterExplorerDto registerRequestDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             var user = _userFactory.CreateUser(registerRequestDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerRequestDto.Password, cancellationToken);
+            var result = await _authService.RegisterAsync(user, registerRequestDto.Password, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(nameof(RegisterAsync), result);
+            return Ok(result);
         }
 
         /// <summary>
@@ -64,6 +67,29 @@ namespace Rahal.Api.Controllers.Users
         public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto authRequestDto, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(authRequestDto, cancellationToken);
+
+            if (!result.IsSuccess)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Authenticate explorer via Google OAuth
+        /// </summary>
+        [HttpPost("google-signin")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GoogleSignInAsync(
+            [FromBody] GoogleSignInRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _googleOAuthFacade.AuthenticateAsync(
+                request.IdToken,
+                UserRoleEnum.Explorer,
+                cancellationToken);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);
@@ -124,6 +150,20 @@ namespace Rahal.Api.Controllers.Users
         }
 
         /// <summary>
+        /// Get all explorers including deleted (Admin only)
+        /// </summary>
+        [HttpGet("include-deleted")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+        {
+            var result = await _userService.GetAllUsersIncludingDeleted(cancellationToken);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Update explorer profile
         /// </summary>
         [HttpPut("{id}")]
@@ -132,9 +172,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ExplorerDto explorerDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromForm] ExplorerDto explorerDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.UpdateUser(explorerDto, cancellationToken);
+            var result = await _userService.UpdateUser(explorerDto, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -179,5 +219,26 @@ namespace Rahal.Api.Controllers.Users
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Restore deleted explorer user (Admin only)
+        /// </summary>
+        [HttpPut("restore/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> RestoreAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _userService.RestoreDeletedUser(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }
+

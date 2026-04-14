@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Users.Domain.Events
 {
-    internal record UserCreatedEvent(int UserId, string Name, string Email) : BaseDomainEvent
+    public record UserCreatedEvent(Guid UserId, string Name, string Email) : BaseDomainEvent
     {
     }
 }

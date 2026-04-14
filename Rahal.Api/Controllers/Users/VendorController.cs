@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Auth;
+using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;
 using Users.Application.Factory;
@@ -21,15 +21,18 @@ namespace Rahal.Api.Controllers.Users
         private readonly IAuthService _authService;
         private readonly IUserService<VendorDto, VendorSummaryDto> _userService;
         private readonly IUserFactory<RegisterVendorDto, User> _userFactory;
+        private readonly IOAuthGoogleFacade _googleOAuthFacade;
 
         public VendorController(
             IAuthService authService,
             IUserService<VendorDto, VendorSummaryDto> userService,
-            IUserFactory<RegisterVendorDto, User> userFactory)
+            IUserFactory<RegisterVendorDto, User> userFactory,
+            IOAuthGoogleFacade googleOAuthFacade)
         {
             _authService = authService;
             _userService = userService;
             _userFactory = userFactory;
+            _googleOAuthFacade = googleOAuthFacade;
         }
 
         /// <summary>
@@ -39,19 +42,19 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterVendorDto registerVendorDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAsync([FromForm] RegisterVendorDto registerVendorDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             var user = _userFactory.CreateUser(registerVendorDto);
 
             if (user is null)
                 return BadRequest(ApiResponse<string>.Failure(ErrorCode.InvalidRequest));
 
-            var result = await _authService.RegisterAsync(user, registerVendorDto.Password, cancellationToken);
+            var result = await _authService.RegisterAsync(user, registerVendorDto.Password, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(nameof(RegisterAsync), result);
+            return Ok(result);
         }
 
         /// <summary>
@@ -64,6 +67,29 @@ namespace Rahal.Api.Controllers.Users
         public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto authRequestDto, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(authRequestDto, cancellationToken);
+
+            if (!result.IsSuccess)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Authenticate vendor via Google OAuth
+        /// </summary>
+        [HttpPost("google-signin")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GoogleSignInAsync(
+            [FromBody] GoogleSignInRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _googleOAuthFacade.AuthenticateAsync(
+                request.IdToken,
+                UserRoleEnum.Vendor,
+                cancellationToken);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);
@@ -124,6 +150,20 @@ namespace Rahal.Api.Controllers.Users
         }
 
         /// <summary>
+        /// Get all vendors including deleted (Admin only)
+        /// </summary>
+        [HttpGet("include-deleted")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+        {
+            var result = await _userService.GetAllUsersIncludingDeleted(cancellationToken);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Update vendor profile
         /// </summary>
         [HttpPut("{id}")]
@@ -132,9 +172,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] VendorDto vendorDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromForm] VendorDto vendorDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.UpdateUser(vendorDto, cancellationToken);
+            var result = await _userService.UpdateUser(vendorDto, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -179,5 +219,26 @@ namespace Rahal.Api.Controllers.Users
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Restore deleted vendor user (Admin only)
+        /// </summary>
+        [HttpPut("restore/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> RestoreAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _userService.RestoreDeletedUser(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }
+

@@ -1,3 +1,5 @@
+using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,13 +9,14 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs._Common;
 using Users.Application.DTOs.Admin;
+using Users.Application.DTOs.Auth;
 using Users.Application.Interfaces;
 using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
+using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
@@ -25,15 +28,21 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly IUserMapper<AdminDto, AdminSummaryDto> _mapper;
+        private readonly IProfilePictureService _profilePictureService;
+        private readonly IMediator _mediator;
         private readonly ILogger<AdminService> _logger;
 
         public AdminService(
             UserManager<User> userManager,
             IUserMapper<AdminDto, AdminSummaryDto> mapper,
+            IProfilePictureService profilePictureService,
+            IMediator mediator,
             ILogger<AdminService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _profilePictureService = profilePictureService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -41,7 +50,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Admin deletion initiated for user {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Admin)
             {
@@ -49,13 +58,30 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var result = await _userManager.DeleteAsync(user);
+            user.IsDeleted = true;
+
+            var result = await _userManager.UpdateAsync(user);
 
             if(!result.Succeeded)
             {
                 _logger.LogError("Admin deletion failed: Could not delete user {UserId}. Errors: {Errors}",
                     id, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            // Publish UserDeletedEvent for search index cleanup
+            try
+            {
+                await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
+                _logger.LogInformation("UserDeletedEvent published for user {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to publish UserDeletedEvent for user {UserId}. " +
+                    "Deletion succeeded but user may still be in search index.",
+                    id);
+                // Don't throw - search event failure shouldn't fail deletion
             }
 
             _logger.LogInformation("Admin {UserId} successfully deleted", id);
@@ -67,6 +93,27 @@ namespace Users.Application.Services
             _logger.LogInformation("Fetching all Admins");
 
             var admins = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Admin)
+                .Include(u => u.AdminProfile)
+                .ToListAsync(cancellationToken);
+
+            var summaries = admins
+                .Where(u => u.AdminProfile != null)
+                .Select(u => _mapper.ToSummary(u))
+                .Cast<AdminSummaryDto>()
+                .ToList();
+
+            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
+
+            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+        }
+
+        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Admins");
+
+            var admins = await _userManager.Users
+                .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Admin)
                 .Include(u => u.AdminProfile)
                 .ToListAsync(cancellationToken);
@@ -112,7 +159,7 @@ namespace Users.Application.Services
         {
             _logger.LogInformation("Password update initiated for Admin {UserId}", id);
 
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (user is null || user.UserType != UserRoleEnum.Admin)
             {
@@ -133,7 +180,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(AdminDto userDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> UpdateUser(AdminDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Admin update initiated for user {UserId}", userDto.Id);
 
@@ -160,26 +207,98 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.Conflict);
             }
 
-            // Update User entity
-            user.DisplayName = userDto.Name;
-            user.Email = userDto.Email;
-            user.NormalizedEmail = userDto.Email.ToUpper();
-            user.UserName = userDto.Email;
-            user.NormalizedUserName = userDto.Email.ToUpper();
-            user.PhoneNumber = userDto.PhoneNumber;
-            user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
+            try
+            {
+                // Handle profile picture update if provided
+                if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    _logger.LogInformation("Updating profile picture for Admin {UserId}", userDto.Id);
+                    var profilePictureUrl = await _profilePictureService.UpdateProfilePictureAsync(
+                        profilePicture, 
+                        user.ProfilePictureURL, 
+                        cancellationToken);
+                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
+                    _logger.LogInformation("Profile picture successfully updated for Admin {UserId}", userDto.Id);
+                }
+
+                // Update User entity
+                user.DisplayName = userDto.Name;
+                user.Email = userDto.Email;
+                user.NormalizedEmail = userDto.Email.ToUpper();
+                user.UserName = userDto.Email;
+                user.NormalizedUserName = userDto.Email.ToUpper();
+                user.PhoneNumber = userDto.PhoneNumber;
+                if (profilePicture == null || profilePicture.Length == 0)
+                {
+                    user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
+                }
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Admin update failed for user {UserId}. Errors: {Errors}",
+                        userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                // Publish UserUpdatedEvent for search index update
+                try
+                {
+                    await _mediator.Publish(new UserUpdatedEvent(userDto.Id), cancellationToken);
+                    _logger.LogInformation("UserUpdatedEvent published for user {UserId}", userDto.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to publish UserUpdatedEvent for user {UserId}. " +
+                        "Update succeeded but search index may be stale.",
+                        userDto.Id);
+                    // Don't throw - search event failure shouldn't fail update
+                }
+
+                _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);
+                return ApiResponse<string>.Success("Admin updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during Admin update for user {UserId}", userDto.Id);
+                throw;
+            }
+        }
+
+        public async Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Admin restoration initiated for user {UserId}", id);
+
+            var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+            if (user is null || user.UserType != UserRoleEnum.Admin)
+            {
+                _logger.LogWarning("Admin restoration failed: User {UserId} not found or not an Admin", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            if (!user.IsDeleted)
+            {
+                _logger.LogWarning("Admin restoration failed: User {UserId} is not deleted", id);
+                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+            }
+
+            user.IsDeleted = false;
 
             var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
-                _logger.LogError("Admin update failed for user {UserId}. Errors: {Errors}",
-                    userDto.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                _logger.LogError("Admin restoration failed: Could not restore user {UserId}. Errors: {Errors}",
+                    id, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
             }
 
-            _logger.LogInformation("Admin {UserId} successfully updated", userDto.Id);
-            return ApiResponse<string>.Success("Admin updated successfully");
+            _logger.LogInformation("Admin {UserId} successfully restored", id);
+            return ApiResponse<string>.Success("Admin restored successfully.");
         }
     }
 }
+

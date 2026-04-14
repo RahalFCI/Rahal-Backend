@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Application.DTOs
+namespace Users.Application.DTOs.Auth
 {
     public record TokenDto(string AccessToken, string RefreshToken)
     {

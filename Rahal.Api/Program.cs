@@ -1,5 +1,6 @@
 using ECommerce.API.Filters;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
@@ -10,6 +11,8 @@ using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Users.Application.EventHandlers;
+using Users.Infrastructure.Search.EventHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +31,25 @@ builder.Services.AddRateLimiter(options =>
             Window = TimeSpan.FromMinutes(1),
             PermitLimit = 60
         }));
+
+    options.AddPolicy("otp-resend", httpContext =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() 
+                      ?? "anonymous",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(5),
+            PermitLimit = 3
+        }));
 });
+
+// Register MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
+});
+
 
 //Configure Cache Settings
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
@@ -48,6 +69,7 @@ builder.Services.AddControllers(
 
 //Register ValidationActionFilter as a scoped service to enable dependency injection in the filter
 builder.Services.AddScoped<ValidationActionFilter>();
+
 
 
 
@@ -90,21 +112,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-//TODO: uncomment after setting redis
-//// Test Redis connection
-//try
-//{
-//    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
-//    var db = redis.GetDatabase();
-//    await db.PingAsync();
-//    app.Logger.LogInformation("Redis connection successful");
-//}
-//catch (Exception ex)
-//{
-//    app.Logger.LogError(ex, "Failed to connect to Redis");
-//    throw;
-//}
+// Test Redis connection
+try
+{
+    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+var db = redis.GetDatabase();
+await db.PingAsync();
+app.Logger.LogInformation("Redis connection successful");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Failed to connect to Redis");
+    throw;
+}
 
+//Initializing Meilisearch Indexes at startup
+app.InitializeSearchIndexesAsync().GetAwaiter().GetResult();
 
 //Run all pending migrations
 await app.ApplyMigrationsAsync();
@@ -112,12 +135,14 @@ await app.ApplyMigrationsAsync();
 
 app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseHttpLogging(); //Enable Http Logging
 app.UseCors();
 app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
 app.UseRateLimiter();
+
 app.UseExceptionHandlingMiddleware();
 
 // Configure the HTTP request pipeline.
@@ -132,6 +157,7 @@ if (app.Environment.IsDevelopment())
     });
 
 }
+
 
 app.MapControllers(); //Execute the filter pipeline (action + filters)
 

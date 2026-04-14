@@ -55,5 +55,10 @@ namespace Shared.Infrastructure.Repositories
         {
             _dbContext.Set<T>().Remove(entity);
         }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

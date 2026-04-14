@@ -27,4 +27,12 @@ RUN dotnet publish "./Rahal.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# These are defaults - will be overridden by docker-compose.yml
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+ENV DATABASE_HOST=localhost
+ENV DATABASE_PORT=5432
+ENV DATABASE_NAME=Rahal
+ENV DATABASE_USERNAME=postgres
+ENV DATABASE_PASSWORD=admin
 ENTRYPOINT ["dotnet", "Rahal.Api.dll"]

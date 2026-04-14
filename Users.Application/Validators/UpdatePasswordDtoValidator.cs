@@ -2,7 +2,7 @@ using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs;
+using Users.Application.DTOs.Auth;
 
 namespace Users.Application.Validators
 {

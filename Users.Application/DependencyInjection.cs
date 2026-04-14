@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
+using Users.Application.DTOs.EmailVerification;
 using Users.Application.DTOs.Explorer;
+using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.DTOs.Vendor;
+using Users.Application.EventHandlers;
 using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Mappers;
@@ -78,9 +80,28 @@ namespace Users.Application
             services.AddScoped<IValidator<AdminDto>, AdminDtoValidator>();
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
+            services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
+            services.AddScoped<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
+            services.AddScoped<IValidator<GoogleSignInRequest>, GoogleSignInRequestValidator>();
+            services.AddScoped<IValidator<VerifyOtpRequest>, VerifyOtpValidator>();
+            services.AddScoped<IValidator<ResendOtpRequest>, ResendOtpValidator>();
 
             // Register Single Auth Service
             services.AddScoped<IAuthService, AuthService>();
+
+            // Register Password Reset Service
+            services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+            // Register Email Verification Service
+            services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+
+            // Register Profile Picture Service
+            services.AddScoped<IProfilePictureService, ProfilePictureService>();
+
+            // Register Google OAuth Services
+            services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+            services.AddScoped<IOAuthGoogleService, GoogleAuthService>();
+            services.AddScoped<IOAuthGoogleFacade, GoogleOAuthFacade>();
 
             // Register Factories (now return User instead of specific types)
             services.AddScoped<IUserFactory<RegisterExplorerDto, Users.Domain.Entities._Common.User>, ExplorerUserFactory>();
@@ -98,7 +119,8 @@ namespace Users.Application
             services.AddScoped<IUserService<AdminDto, AdminSummaryDto>, AdminService>();
 
             // Register Token Service
-            services.AddScoped<TokenService>();
+            services.AddScoped<ITokenService, TokenService>();
+
 
             return services;
         }

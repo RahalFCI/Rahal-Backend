@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
-using Users.Application.DTOs;
 using Users.Application.DTOs.Auth;
 using Users.Domain.Entities._Common;
 

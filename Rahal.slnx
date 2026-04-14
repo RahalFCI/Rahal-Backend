@@ -34,5 +34,8 @@
     <Project Path="Users.Application/Users.Application.csproj" Id="7595cf3d-8e55-4ae3-afc5-9940b95153e2" />
     <Project Path="Users.Infrastructure/Users.Infrastructure.csproj" Id="a90159d6-fed8-49d9-9c2c-3f8c5f2aa792" />
   </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
   <Project Path="Rahal.Api/Rahal.Api.csproj" />
 </Solution>

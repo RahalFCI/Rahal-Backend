@@ -11,6 +11,8 @@ namespace Users.Infrastructure.Persistence.Configuration
         {
             builder.ToTable("AdminProfiles", "users");
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
             builder.HasKey(e => e.Id);
 
             // Foreign key to User

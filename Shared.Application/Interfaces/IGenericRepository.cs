@@ -15,5 +15,6 @@ namespace Shared.Application.Interfaces
         void Add(T entity);
         void Update(T entity);
         void Delete(T entity);
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -57,10 +57,6 @@ namespace Users.Application.Validators
                 .NotEqual(0).WithMessage("Category is required")
                 .GreaterThan(0).WithMessage("Category ID must be a positive number");
 
-            RuleFor(x => x.ProfilePictureUrl)
-                .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
-                .When(x => !string.IsNullOrWhiteSpace(x.ProfilePictureUrl))
-                .WithMessage("Profile picture URL must be a valid URL");
         }
     }
 }
