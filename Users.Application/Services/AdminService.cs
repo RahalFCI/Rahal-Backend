@@ -59,7 +59,7 @@ namespace Users.Application.Services
             }
 
             user.IsDeleted = true;
-
+            user.DeletedAt = DateTime.UtcNow;
             var result = await _userManager.UpdateAsync(user);
 
             if(!result.Succeeded)

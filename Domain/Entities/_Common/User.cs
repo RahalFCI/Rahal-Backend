@@ -27,6 +27,8 @@ namespace Users.Domain.Entities._Common
 
         public bool IsDeleted { get; set; } = false;
 
+        public DateTime? DeletedAt { get; set; } = DateTime.MinValue;
+
         // OTP fields for password reset
         public string? PasswordResetOtp { get; set; }
 
