@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Registry;
 using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,22 +13,20 @@ using System.Threading.Tasks;
 
 namespace Shared.Infrastructure.FileStorage
 {
-    /// <summary>
-    /// Local file storage service for storing uploaded files in the Rahal.Api wwwroot folder
-    /// Supports image file types (jpg, jpeg, png, gif, webp)
-    /// </summary>
     public class LocalFileStorageService : IFileStorageService
     {
         private readonly ILogger<LocalFileStorageService> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ResiliencePipeline _resiliencePipeline;
         private readonly string _storagePath;
         private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         private readonly long _maxFileSize = 5 * 1024 * 1024; // 5 MB
 
-        public LocalFileStorageService(IWebHostEnvironment webHostEnvironment, ILogger<LocalFileStorageService> logger)
+        public LocalFileStorageService(IWebHostEnvironment webHostEnvironment, ILogger<LocalFileStorageService> logger, ResiliencePipelineProvider<string> resiliencePipeline)
         {
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            _resiliencePipeline = resiliencePipeline.GetPipeline("file-storage");
 
             // Store files in Rahal.Api/wwwroot/uploads directory
             _storagePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
@@ -128,10 +128,8 @@ namespace Shared.Infrastructure.FileStorage
             }
         }
 
-        /// <summary>
-        /// Generates a unique filename to prevent conflicts
-        /// Uses timestamp and random string to ensure uniqueness
-        /// </summary>
+
+        // Generates a unique filename to prevent conflicts
         private static string GenerateUniqueFileName(string originalFileName)
         {
             var fileExtension = Path.GetExtension(originalFileName);

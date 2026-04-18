@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Polly;
 using Shared.Application.Interfaces;
 using Shared.Application.Settings;
+using Shared.Application.Settings.ReslilienceSettings;
 using Shared.Infrastructure.Email;
 using Shared.Infrastructure.FileStorage;
 using Shared.Infrastructure.Repositories;
@@ -30,16 +31,38 @@ namespace Shared.Infrastructure
             services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
             // Configure resilience options from appsettings
-            services.Configure<ResilienceSettings>(configuration.GetSection(ResilienceSettings.SectionName));
+            services.Configure<SearchResilienceSettings>(configuration.GetSection(SearchResilienceSettings.SectionName));
 
             // Register ResiliencePipeline as singleton
-            services.AddSingleton<ResiliencePipeline>(provider =>
+            services.AddSingleton<SearchResiliencePipelineFactory>();
+
+            services.AddResiliencePipeline("search", (builder, context) =>
             {
-                var logger = provider.GetRequiredService<ILogger<SearchResiliencePipelineFactory>>();
-                var options = provider.GetRequiredService<IOptions<ResilienceSettings>>().Value;
-                var factory = new SearchResiliencePipelineFactory(logger, options);
-                return factory.CreatePipeline();
+                var factory = context.ServiceProvider.GetRequiredService<SearchResiliencePipelineFactory>();
+                var pipeline = factory.CreatePipeline();
+
+                // copy strategies from factory pipeline into the builder
+                builder.AddPipeline(pipeline);
             });
+
+            services.AddResiliencePipeline("email", (builder, context) =>
+            {
+                var factory = context.ServiceProvider.GetRequiredService<EmailResiliencePipelineFactory>();
+                var pipeline = factory.CreatePipeline();
+
+                // copy strategies from factory pipeline into the builder
+                builder.AddPipeline(pipeline);
+            });
+
+            services.AddResiliencePipeline("file-storage", (builder, context) =>
+            {
+                var factory = context.ServiceProvider.GetRequiredService<FileStorageResiliencePipelineFactory>();
+                var pipeline = factory.CreatePipeline();
+
+                // copy strategies from factory pipeline into the builder
+                builder.AddPipeline(pipeline);
+            });
+
 
             // Configure Meilisearch settings
             services.Configure<MeilisearchSettings>(configuration.GetSection(MeilisearchSettings.SectionName));
