@@ -6,9 +6,8 @@ using System.Text;
 
 namespace Shared.Infrastructure.Persistence.Configurations
 {
-    public class BaseAuditableEntityConfiguration<TEntity, TKey> : BaseEntityConfiguration<TEntity, TKey>
-        where TEntity : BaseAuditableEntity<TKey>
-        where TKey : IEquatable<TKey>
+    public class BaseAuditableEntityConfiguration<TEntity> : BaseEntityConfiguration<TEntity>
+        where TEntity : BaseAuditableEntity
     {
         public override void Configure(EntityTypeBuilder<TEntity> builder)
         {
