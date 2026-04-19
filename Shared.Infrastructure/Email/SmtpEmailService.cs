@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Registry;
-using Shared.Application.DTOs;
+using Shared.Application.DTOs.Mail;
 using Shared.Application.Interfaces;
 using Shared.Application.Settings;
 using Shared.Domain.Entities;

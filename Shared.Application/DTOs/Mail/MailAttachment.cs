@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Shared.Domain.Entities
+namespace Shared.Application.DTOs.Mail
 {
     public record MailAttachment(string FileName, byte[] Content, string ContentType);
 

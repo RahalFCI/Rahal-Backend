@@ -1,4 +1,4 @@
-﻿using Shared.Application.DTOs;
+﻿using Shared.Application.DTOs.Mail;
 using System;
 using System.Collections.Generic;
 using System.Text;
