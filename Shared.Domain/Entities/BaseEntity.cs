@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Shared.Domain.Entities
 {
-    public abstract class BaseEntity<TKey> where TKey : IEquatable<TKey>
+    public abstract class BaseEntity
     {
-        public TKey Id { get; protected init; } = default!;
+        public Guid Id { get; protected init; } = default!;
         public bool IsDeleted { get; set; } = false;
     }
 }

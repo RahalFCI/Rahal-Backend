@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Registry;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Application.Settings;
@@ -17,11 +19,14 @@ namespace Shared.Infrastructure.Email
     {
         private readonly MailSettings _settings;
         private readonly ILogger<SmtpEmailService> _logger;
+        private readonly ResiliencePipeline _resiliencePipeline;
 
-        public SmtpEmailService(IOptions<MailSettings> settings, ILogger<SmtpEmailService> logger)
+
+        public SmtpEmailService(IOptions<MailSettings> settings, ILogger<SmtpEmailService> logger, ResiliencePipelineProvider<string> resiliencePipeline)
         {
             _settings = settings.Value;
             _logger = logger;
+            _resiliencePipeline = resiliencePipeline.GetPipeline("email");
         }
 
         public async Task SendAsync(MailRequest request, CancellationToken ct = default)
@@ -67,9 +72,6 @@ namespace Shared.Infrastructure.Email
             }
         }
 
-        /// <summary>
-        /// Creates and configures the SMTP client with authentication settings
-        /// </summary>
         private SmtpClient CreateSmtpClient()
         {
             var client = new SmtpClient
@@ -83,9 +85,6 @@ namespace Shared.Infrastructure.Email
             return client;
         }
 
-        /// <summary>
-        /// Builds the mail message from the request
-        /// </summary>
         private MailMessage BuildMailMessage(MailRequest request)
         {
             var mailMessage = new MailMessage
@@ -135,9 +134,6 @@ namespace Shared.Infrastructure.Email
             return mailMessage;
         }
 
-        /// <summary>
-        /// Validates the mail request for required fields
-        /// </summary>
         private void ValidateRequest(MailRequest request)
         {
             if (request == null)

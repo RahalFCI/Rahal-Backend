@@ -79,6 +79,10 @@ namespace Users.Infrastructure
             // Register Search Index Configuration
             services.AddScoped<ISearchIndexInitializer, UserIndexConfig>();
 
+            //Register Unit of Work
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
             return services;
         }
     }

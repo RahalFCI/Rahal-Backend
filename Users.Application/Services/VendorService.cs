@@ -58,9 +58,11 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var result = await _userManager.DeleteAsync(user);
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            var result = await _userManager.UpdateAsync(user);
 
-            if(!result.Succeeded)
+            if (!result.Succeeded)
             {
                 _logger.LogError("Vendor deletion failed: Could not delete user {UserId}. Errors: {Errors}",
                     id, string.Join(", ", result.Errors.Select(e => e.Description)));

@@ -2,6 +2,7 @@ using Meilisearch;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.CircuitBreaker;
+using Polly.Registry;
 using Shared.Application.Interfaces;
 using Shared.Application.Search;
 
@@ -16,11 +17,11 @@ namespace Shared.Infrastructure.Search
 
         public MeilisearchService(
             MeilisearchClient client,
-            ResiliencePipeline resiliencePipeline,
+            ResiliencePipelineProvider<string> resiliencePipeline,
             ILogger<MeilisearchService<T>> logger)
         {
             _client = client;
-            _resiliencePipeline = resiliencePipeline;
+            _resiliencePipeline = resiliencePipeline.GetPipeline("search");
             _logger = logger;
             // Index name derived from type name by convention (lowercase)
             _indexName = typeof(T).Name.ToLowerInvariant();

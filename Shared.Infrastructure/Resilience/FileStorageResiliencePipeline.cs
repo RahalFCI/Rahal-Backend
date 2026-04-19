@@ -1,23 +1,23 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
-using Polly.Timeout;
+using System.IdentityModel;
+using System.Collections.Generic;
+using System.Text;
 using Shared.Application.Settings.ReslilienceSettings;
 
 namespace Shared.Infrastructure.Resilience
 {
-    /// <summary>
-    /// Factory for creating configured resilience pipelines for external service integrations.
-    /// Provides a reusable pipeline with retry, circuit breaker, and timeout policies.
-    /// </summary>
-    public class SearchResiliencePipelineFactory
+    public class FileStorageResiliencePipelineFactory
     {
-        private readonly ILogger<SearchResiliencePipelineFactory> _logger;
-        private readonly SearchResilienceSettings _options;
+        private readonly ILogger<FileStorageResiliencePipelineFactory> _logger;
+        private readonly FileStorageResilienceSettings _options;
 
-        public SearchResiliencePipelineFactory(ILogger<SearchResiliencePipelineFactory> logger, IOptions<SearchResilienceSettings> options)
+        public FileStorageResiliencePipelineFactory(
+            ILogger<FileStorageResiliencePipelineFactory> logger,
+            IOptions<FileStorageResilienceSettings> options)
         {
             _logger = logger;
             _options = options.Value;
@@ -32,17 +32,19 @@ namespace Shared.Infrastructure.Resilience
                 .Build();
         }
 
-
         private RetryStrategyOptions CreateRetryPolicy() => new()
         {
             MaxRetryAttempts = _options.MaxRetries,
             Delay = TimeSpan.FromSeconds(_options.InitialDelaySeconds),
             BackoffType = DelayBackoffType.Exponential,
             UseJitter = true,
+            ShouldHandle = new PredicateBuilder()
+                .Handle<TimeoutException>()
+                .Handle<IOException>(),
             OnRetry = args =>
             {
                 _logger.LogWarning(
-                    "Search retry attempt {Attempt} after {Delay}s. Reason: {Exception}",
+                    "File storage retry attempt {Attempt} after {Delay}s. Reason: {Exception}",
                     args.AttemptNumber,
                     args.RetryDelay.TotalSeconds,
                     args.Outcome.Exception?.Message);
@@ -54,23 +56,23 @@ namespace Shared.Infrastructure.Resilience
         {
             FailureRatio = _options.CircuitBreakerFailureThreshold,
             BreakDuration = TimeSpan.FromSeconds(_options.CircuitBreakerOpenDurationSeconds),
-            MinimumThroughput = 5,
-            SamplingDuration = TimeSpan.FromSeconds(30),
+            MinimumThroughput = 3,
+            SamplingDuration = TimeSpan.FromSeconds(60),
             OnOpened = args =>
             {
                 _logger.LogError(
-                    "Search circuit breaker OPENED for {Duration}s.",
+                    "File storage circuit breaker OPENED for {Duration}s.",
                     args.BreakDuration.TotalSeconds);
                 return ValueTask.CompletedTask;
             },
             OnClosed = args =>
             {
-                _logger.LogInformation("Search circuit breaker CLOSED. Service recovered.");
+                _logger.LogInformation("File storage circuit breaker CLOSED. Storage recovered.");
                 return ValueTask.CompletedTask;
             },
             OnHalfOpened = args =>
             {
-                _logger.LogInformation("Search circuit breaker HALF-OPEN. Testing.");
+                _logger.LogInformation("File storage circuit breaker HALF-OPEN. Testing.");
                 return ValueTask.CompletedTask;
             }
         };

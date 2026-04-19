@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Shared.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
 namespace Shared.Application.Interfaces
 {
-    public interface IGenericRepository<T> where T : class
+    public interface IGenericRepository<T> where T : BaseEntity
     {
         Task<T?> GetByIdAsync<TKey>(TKey id, CancellationToken cancellationToken);
         Task<IEnumerable<T?>> GetAllAsync(CancellationToken cancellationToken);
@@ -16,5 +17,6 @@ namespace Shared.Application.Interfaces
         void Update(T entity);
         void Delete(T entity);
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
+        void SaveInclude(T entity, params string[] includedProperties);
     }
 }

@@ -8,7 +8,7 @@ using Shared.Application.Interfaces;
 using Shared.Application.Search;
 using Users.Infrastructure.Search;
 
-namespace Rahal.Api.Controllers
+namespace Rahal.Api.Controllers.Search
 {
     /// <summary>
     /// Search controller for querying indexed documents via Meilisearch

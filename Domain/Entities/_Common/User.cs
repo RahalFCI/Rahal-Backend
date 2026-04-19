@@ -13,12 +13,12 @@ namespace Users.Domain.Entities._Common
     public class User : IdentityUser<Guid>
     {
 
-        public required string DisplayName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
 
 
         public string ProfilePictureURL { get; set; } = string.Empty;
 
-        public required UserRoleEnum UserType { get; set; }
+        public UserRoleEnum UserType { get; set; }
 
 
         public string? RefreshToken { get; set; }
@@ -26,6 +26,8 @@ namespace Users.Domain.Entities._Common
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
         public bool IsDeleted { get; set; } = false;
+
+        public DateTime? DeletedAt { get; set; } = DateTime.MinValue;
 
         // OTP fields for password reset
         public string? PasswordResetOtp { get; set; }

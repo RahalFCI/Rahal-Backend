@@ -50,6 +50,7 @@ namespace Users.Infrastructure.Persistence.Configuration
                 .WithOne(p => p.User)
                 .HasForeignKey<AdminProfile>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

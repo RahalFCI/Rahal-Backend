@@ -6,6 +6,7 @@ using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using Users.Application.DTOs.Auth;
 using Users.Application.Interfaces;
+using Users.Application.Services;
 
 namespace Rahal.Api.Controllers.Auth
 {
@@ -14,10 +15,12 @@ namespace Rahal.Api.Controllers.Auth
     public class AuthController : CustomControllerBase
     {
         private readonly IPasswordResetService _passwordResetService;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IPasswordResetService passwordResetService)
+        public AuthController(IPasswordResetService passwordResetService, ITokenService tokenService)
         {
             _passwordResetService = passwordResetService;
+            _tokenService = tokenService;
         }
 
         /// <summary>
@@ -58,6 +61,23 @@ namespace Rahal.Api.Controllers.Auth
                 return BadRequest(result);
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateNewAccessToken(TokenDto tokenDto)
+        {
+
+            var response = await _tokenService.RefreshExpiredToken(tokenDto);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                return Unauthorized(response);
+            }
         }
     }
 }

@@ -1,12 +1,8 @@
 namespace Shared.Infrastructure.Resilience
 {
-    /// <summary>
-    /// Configuration options for resilience policies applied to external service integrations.
-    /// These settings are read from appsettings under the "Search:Resilience" section.
-    /// </summary>
-    public class ResilienceSettings
+    public class FileStorageResilienceSettings
     {
-        public const string SectionName = "Search:Resilience";
+        public const string SectionName = "ResilienceSettings:FileStorage";
         public int MaxRetries { get; set; } = 3;
         public int InitialDelaySeconds { get; set; } = 2;
         public int CircuitBreakerFailureThreshold { get; set; } = 5;
