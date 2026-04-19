@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
+using Rahal.Api.Filters;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Application.Templates;
@@ -39,9 +40,7 @@ namespace Rahal.Api.Controllers.Users
             _googleOAuthFacade = googleOAuthFacade;
         }
 
-        /// <summary>
-        /// Register a new admin user
-        /// </summary>
+
         [HttpPost("register")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -61,9 +60,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Login admin user
-        /// </summary>
+
         [HttpPost("login")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -78,8 +75,6 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// Authenticate admin via Google OAuth
-        /// </summary>
         [HttpPost("google-signin")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -100,9 +95,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Logout admin user
-        /// </summary>
+
         [HttpPost("logout")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -120,9 +113,7 @@ namespace Rahal.Api.Controllers.Users
             }
         }
 
-        /// <summary>
-        /// Get admin by ID
-        /// </summary>
+
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -139,9 +130,7 @@ namespace Rahal.Api.Controllers.Users
         }
 
 
-        /// <summary>
-        /// Get all admins (Admin only)
-        /// </summary>
+
         [HttpGet]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -153,9 +142,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Get all admins inclduing deleted (Admin only)
-        /// </summary>
+
         [HttpGet("include-deleted")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -167,13 +154,13 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Update admin profile
-        /// </summary>
+
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
+        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromForm] AdminDto adminDto, [FromForm] IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
@@ -186,13 +173,13 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Update admin password
-        /// </summary>
+
         [HttpPut("password/{id}")]
         [Authorize(Roles = "Admin")]
+        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UpdatePasswordAsync([FromRoute] Guid id, [FromBody] UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken)
@@ -205,9 +192,6 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        /// <summary>
-        /// Delete admin user (Admin only)
-        /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -224,9 +208,6 @@ namespace Rahal.Api.Controllers.Users
             return NoContent();
         }
 
-        /// <summary>
-        /// Restore deleted admin user (Admin only)
-        /// </summary>
         [HttpPut("restore/{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]

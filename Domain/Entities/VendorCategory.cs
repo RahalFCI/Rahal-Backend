@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Users.Domain.Entities
 {
-    public class VendorCategory : BaseEntity<int>
+    public class VendorCategory : BaseEntity
     {
         public required string CategoryName { get; set; }
     }

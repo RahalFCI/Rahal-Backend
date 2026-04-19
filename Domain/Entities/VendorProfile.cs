@@ -1,13 +1,13 @@
+using Shared.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Domain.Entities._Common;
 using Users.Domain.Entities._Common;
 
 namespace Users.Domain.Entities
 {
 
-    public class VendorProfile : BaseAuditableEntity
+    public class VendorProfile : BaseEntity
     {
 
         public required Guid UserId { get; set; }
@@ -27,7 +27,7 @@ namespace Users.Domain.Entities
         public required Dictionary<DayOfWeek, string> WorkingHours { get; set; }
 
 
-        public required int CategoryId { get; set; }
+        public required Guid CategoryId { get; set; }
 
 
         public VendorCategory? Category { get; set; }

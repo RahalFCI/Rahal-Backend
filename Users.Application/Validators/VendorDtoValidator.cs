@@ -44,8 +44,7 @@ namespace Users.Application.Validators
                 .Must(wh => wh != null && wh.Count > 0).WithMessage("At least one working day must be specified");
 
             RuleFor(x => x.CategoryId)
-                .NotEqual(0).WithMessage("Category is required")
-                .GreaterThan(0).WithMessage("Category ID must be a positive number");
+                .NotNull().WithMessage("Category is required");
 
             RuleFor(x => x.ProfilePictureUrl)
                 .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))

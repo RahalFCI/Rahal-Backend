@@ -1,7 +1,7 @@
+using Shared.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Domain.Entities._Common;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
@@ -9,7 +9,7 @@ namespace Users.Domain.Entities
 {
 
 
-    public class ExplorerProfile : BaseAuditableEntity
+    public class ExplorerProfile : BaseEntity
     {
 
         public required Guid UserId { get; set; }

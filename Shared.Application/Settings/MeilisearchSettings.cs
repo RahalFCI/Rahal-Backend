@@ -6,7 +6,7 @@ namespace Shared.Application.Settings
     /// </summary>
     public class MeilisearchSettings
     {
-        public const string SectionName = "Search:Meilisearch";
+        public const string SectionName = "Meilisearch";
         public string Url { get; set; } = string.Empty;
         public string ApiKey { get; set; } = string.Empty;
         public bool IsValid() => !string.IsNullOrWhiteSpace(Url) && !string.IsNullOrWhiteSpace(ApiKey);
