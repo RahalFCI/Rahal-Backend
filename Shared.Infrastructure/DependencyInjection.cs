@@ -32,9 +32,13 @@ namespace Shared.Infrastructure
 
             // Configure resilience options from appsettings
             services.Configure<SearchResilienceSettings>(configuration.GetSection(SearchResilienceSettings.SectionName));
+            services.Configure<EmailResilienceSettings>(configuration.GetSection(EmailResilienceSettings.SectionName));
+            services.Configure<FileStorageResilienceSettings>(configuration.GetSection(FileStorageResilienceSettings.SectionName));
 
             // Register ResiliencePipeline as singleton
             services.AddSingleton<SearchResiliencePipelineFactory>();
+            services.AddSingleton<EmailResiliencePipelineFactory>();
+            services.AddSingleton<FileStorageResiliencePipelineFactory>();
 
             services.AddResiliencePipeline("search", (builder, context) =>
             {

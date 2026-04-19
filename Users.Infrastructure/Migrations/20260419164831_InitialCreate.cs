@@ -8,39 +8,13 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Users.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class RefactorUserProfile : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Admins",
-                schema: "users");
-
-            migrationBuilder.DropTable(
-                name: "Explorers",
-                schema: "users");
-
-            migrationBuilder.DropTable(
-                name: "Vendors",
-                schema: "users");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_VendorCategory",
-                schema: "users",
-                table: "VendorCategory");
-
-            migrationBuilder.RenameTable(
-                name: "VendorCategory",
-                schema: "users",
-                newName: "VendorCategories",
-                newSchema: "users");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_VendorCategories",
-                schema: "users",
-                table: "VendorCategories",
-                column: "Id");
+            migrationBuilder.EnsureSchema(
+                name: "users");
 
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
@@ -68,6 +42,10 @@ namespace Users.Infrastructure.Migrations
                     UserType = table.Column<int>(type: "integer", nullable: false),
                     RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PasswordResetOtp = table.Column<string>(type: "text", nullable: true),
+                    PasswordResetOtpExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -86,6 +64,23 @@ namespace Users.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VendorCategories",
+                schema: "users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CategoryName = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorCategories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -230,6 +225,34 @@ namespace Users.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmailVerificationTokens",
+                schema: "users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CodeHash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsUsed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    AttemptCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now() at time zone 'UTC'"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, defaultValueSql: "now() at time zone 'UTC'"),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailVerificationTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmailVerificationTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "users",
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExplorerProfiles",
                 schema: "users",
                 columns: table => new
@@ -243,6 +266,7 @@ namespace Users.Infrastructure.Migrations
                     AvailableXp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     CumulativeXp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     Level = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    Streak = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     IsPremium = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     PlanTierId = table.Column<int>(type: "integer", nullable: true),
@@ -274,7 +298,7 @@ namespace Users.Infrastructure.Migrations
                     Address = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     AddressUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     WorkingHours = table.Column<Dictionary<DayOfWeek, string>>(type: "jsonb", nullable: false, comment: "JSON format: {\"Monday\": \"09:00-17:00\", ...}"),
-                    CategoryId = table.Column<int>(type: "integer", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uuid", nullable: false),
                     IsApproved = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -358,6 +382,18 @@ namespace Users.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_EmailVerificationToken_ExpiresAt",
+                schema: "users",
+                table: "EmailVerificationTokens",
+                column: "ExpiresAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmailVerificationToken_UserId",
+                schema: "users",
+                table: "EmailVerificationTokens",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExplorerProfiles_IsDeleted",
                 schema: "users",
                 table: "ExplorerProfiles",
@@ -424,6 +460,10 @@ namespace Users.Infrastructure.Migrations
                 schema: "users");
 
             migrationBuilder.DropTable(
+                name: "EmailVerificationTokens",
+                schema: "users");
+
+            migrationBuilder.DropTable(
                 name: "ExplorerProfiles",
                 schema: "users");
 
@@ -439,165 +479,9 @@ namespace Users.Infrastructure.Migrations
                 name: "AspNetUsers",
                 schema: "users");
 
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_VendorCategories",
-                schema: "users",
-                table: "VendorCategories");
-
-            migrationBuilder.RenameTable(
+            migrationBuilder.DropTable(
                 name: "VendorCategories",
-                schema: "users",
-                newName: "VendorCategory",
-                newSchema: "users");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_VendorCategory",
-                schema: "users",
-                table: "VendorCategory",
-                column: "Id");
-
-            migrationBuilder.CreateTable(
-                name: "Admins",
-                schema: "users",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false),
-                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
-                    DisplayName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "text", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "text", nullable: true),
-                    PasswordHash = table.Column<string>(type: "text", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    ProfilePictureURL = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, defaultValue: ""),
-                    RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Role = table.Column<int>(type: "integer", nullable: false, defaultValue: 2),
-                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
-                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Admins", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Explorers",
-                schema: "users",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false),
-                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
-                    DisplayName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "text", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "text", nullable: true),
-                    PasswordHash = table.Column<string>(type: "text", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    ProfilePictureURL = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, defaultValue: ""),
-                    RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Role = table.Column<int>(type: "integer", nullable: false, defaultValue: 2),
-                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
-                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    AvailableXp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    Bio = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, defaultValue: ""),
-                    BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    CountryCode = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
-                    CumaltiveXp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    Gender = table.Column<int>(type: "integer", nullable: false),
-                    IsPremium = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    IsPublic = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    Level = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
-                    PlanTierId = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Explorers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Vendors",
-                schema: "users",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false),
-                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
-                    DisplayName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "text", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "text", nullable: true),
-                    PasswordHash = table.Column<string>(type: "text", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    ProfilePictureURL = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, defaultValue: ""),
-                    RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Role = table.Column<int>(type: "integer", nullable: false, defaultValue: 2),
-                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
-                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    CategoryId = table.Column<int>(type: "integer", nullable: false),
-                    Address = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    AddressUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CountryCode = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
-                    IsApproved = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    WorkingHours = table.Column<Dictionary<DayOfWeek, string>>(type: "jsonb", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Vendors", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Vendors_VendorCategory_CategoryId",
-                        column: x => x.CategoryId,
-                        principalSchema: "users",
-                        principalTable: "VendorCategory",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Admins_Email",
-                schema: "users",
-                table: "Admins",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Explorers_Email",
-                schema: "users",
-                table: "Explorers",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Vendors_CategoryId",
-                schema: "users",
-                table: "Vendors",
-                column: "CategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Vendors_Email",
-                schema: "users",
-                table: "Vendors",
-                column: "Email",
-                unique: true);
+                schema: "users");
         }
     }
 }

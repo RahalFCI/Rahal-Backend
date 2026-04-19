@@ -27,7 +27,7 @@ namespace Users.Domain.Entities
         public required Dictionary<DayOfWeek, string> WorkingHours { get; set; }
 
 
-        public required int CategoryId { get; set; }
+        public required Guid CategoryId { get; set; }
 
 
         public VendorCategory? Category { get; set; }

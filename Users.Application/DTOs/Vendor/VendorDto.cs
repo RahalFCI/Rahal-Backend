@@ -12,7 +12,7 @@ namespace Users.Application.DTOs.Vendor
         string Address,
         string AddressUrl,
         Dictionary<DayOfWeek, string> WorkingHours,
-        int CategoryId,
+        Guid CategoryId,
         bool IsApproved) : BaseUserDto
     {
         public VendorDto() : this(string.Empty, string.Empty, string.Empty, new Dictionary<DayOfWeek, string>(), default, default) { }

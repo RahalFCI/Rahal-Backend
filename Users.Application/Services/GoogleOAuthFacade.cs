@@ -193,7 +193,7 @@ namespace Users.Application.Services
                 Address = string.Empty,
                 AddressUrl = string.Empty,
                 WorkingHours = new Dictionary<DayOfWeek, string>(), // Empty working hours
-                CategoryId = 1, // Default category
+                CategoryId = Guid.Empty, // Default category
                 CreatedAt = DateTime.UtcNow
             };
 

@@ -10,7 +10,7 @@ namespace Users.Application.DTOs.Vendor
         string CountryCode,
         string Address,
         string AddressUrl,
-        int CategoryId,
+        Guid CategoryId,
         bool IsApproved) : BaseUserSummaryDto
     {
         public VendorSummaryDto() : this(string.Empty, string.Empty, string.Empty, default, false) { }
