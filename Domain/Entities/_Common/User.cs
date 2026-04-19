@@ -13,12 +13,12 @@ namespace Users.Domain.Entities._Common
     public class User : IdentityUser<Guid>
     {
 
-        public required string DisplayName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
 
 
         public string ProfilePictureURL { get; set; } = string.Empty;
 
-        public required UserRoleEnum UserType { get; set; }
+        public UserRoleEnum UserType { get; set; }
 
 
         public string? RefreshToken { get; set; }

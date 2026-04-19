@@ -10,13 +10,13 @@ namespace Users.Domain.Entities
     public class EmailVerificationToken : BaseAuditableEntity
     {
 
-        public required Guid UserId { get; set; }
+        public Guid UserId { get; set; }
  
-        public required User User { get; set; }
+        public User? User { get; set; }
 
-        public required string CodeHash { get; set; }
+        public string CodeHash { get; set; } = string.Empty;
 
-        public required DateTime ExpiresAt { get; set; }
+        public DateTime ExpiresAt { get; set; }
 
         public bool IsUsed { get; set; } = false;
 
