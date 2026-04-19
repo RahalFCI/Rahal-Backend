@@ -1,4 +1,5 @@
 using Shared.Application.DTOs;
+using Users.Application.DTOs.Auth;
 using Users.Domain.Entities._Common;
 
 namespace Users.Application.Interfaces

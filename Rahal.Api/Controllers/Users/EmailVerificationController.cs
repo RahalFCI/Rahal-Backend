@@ -8,10 +8,7 @@ using Users.Application.Interfaces;
 
 namespace Rahal.Api.Controllers.Users
 {
-    /// <summary>
-    /// Controller for email verification operations
-    /// Handles email verification OTP sending, verification, and resend
-    /// </summary>
+
     [ApiController]
     [Route("api/[controller]")]
     public class EmailVerificationController : ControllerBase
@@ -27,12 +24,6 @@ namespace Rahal.Api.Controllers.Users
             _logger = logger;
         }
 
-        /// <summary>
-        /// Verify email with OTP
-        /// </summary>
-        /// <param name="request">Request containing email and OTP</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Success or failure response</returns>
         [HttpPost("verify-email")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -56,13 +47,7 @@ namespace Rahal.Api.Controllers.Users
             return StatusCode(GetStatusCodeFromErrorCode(result.errorCode), result);
         }
 
-        /// <summary>
-        /// Resend email verification OTP
-        /// Rate limited to 3 attempts per 5 minutes
-        /// </summary>
-        /// <param name="request">Request containing email</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Success or failure response</returns>
+
         [HttpPost("resend-verification")]
         [AllowAnonymous]
         [EnableRateLimiting("otp-resend")]
@@ -87,9 +72,7 @@ namespace Rahal.Api.Controllers.Users
         
         }
 
-        /// <summary>
-        /// Maps ErrorCode to HTTP status code
-        /// </summary>
+
         private static int GetStatusCodeFromErrorCode(ErrorCode errorCode)
         {
             return errorCode switch

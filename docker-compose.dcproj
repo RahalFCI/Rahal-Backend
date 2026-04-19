@@ -14,4 +14,7 @@
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Users.Api\Controllers\" />
+  </ItemGroup>
 </Project>
