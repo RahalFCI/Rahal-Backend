@@ -1,9 +1,8 @@
-﻿using Shared.Domain.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Shared.Application.DTOs
+namespace Shared.Application.DTOs.Mail
 {
     public record MailRequest
     {
