@@ -1,13 +1,13 @@
+using Shared.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Domain.Entities._Common;
 using Users.Domain.Entities._Common;
 
 namespace Users.Domain.Entities
 {
 
-    public class VendorProfile : BaseAuditableEntity
+    public class VendorProfile : BaseEntity
     {
 
         public required Guid UserId { get; set; }

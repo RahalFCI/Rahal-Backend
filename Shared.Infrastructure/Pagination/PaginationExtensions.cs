@@ -37,7 +37,7 @@ namespace Shared.Infrastructure.Pagination
             CursorPaginationRequest request,
             Func<T, string> cursorSelector,  // tells us which field is the cursor
             CancellationToken ct = default)
-            where T : BaseAuditableEntity
+            where T : BaseEntity
         {
             // decode cursor and apply it
             if (request.Cursor is not null)

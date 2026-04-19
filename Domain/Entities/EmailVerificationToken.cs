@@ -1,13 +1,13 @@
+using Shared.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Domain.Entities._Common;
 using Users.Domain.Entities._Common;
 
 namespace Users.Domain.Entities
 {
 
-    public class EmailVerificationToken : BaseAuditableEntity
+    public class EmailVerificationToken : BaseEntity
     {
 
         public Guid UserId { get; set; }
