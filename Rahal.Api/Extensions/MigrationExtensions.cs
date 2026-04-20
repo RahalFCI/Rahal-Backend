@@ -5,6 +5,7 @@ using Places.Infrastructure.Persistence;
 using Rewards.Infrastructure.Persistence;
 using Shared.Application.Interfaces;
 using SocialMedia.Infrastructure.Persistence;
+using System.Data;
 using Users.Infrastructure.Persistence;
 
 namespace Rahal.Api.Extensions
@@ -22,10 +23,14 @@ namespace Rahal.Api.Extensions
             await MigrateAsync<PaymentDbContext>(scope);
             await MigrateAsync<GamificationDbContext>(scope);
 
-            var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+            var seeders = scope.ServiceProvider.GetServices<IDbInitializer>();
+
             try
             {
-                await dbInitializer.SeedAsync();
+                foreach (var seeder in seeders)
+                {
+                    await seeder.SeedAsync();
+                }
             }
             catch (Exception)
             {

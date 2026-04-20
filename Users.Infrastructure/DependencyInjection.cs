@@ -71,7 +71,7 @@ namespace Users.Infrastructure
             services.AddScoped<SignInManager<User>>();
 
 
-            services.AddScoped<IDbInitializer, DBInitializer>();
+            services.AddScoped<IDbInitializer, UsersDBInitializer>();
 
             // Register Email Verification Repository
             services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();

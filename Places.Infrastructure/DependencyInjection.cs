@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Places.Infrastructure.Persistence;
+using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
-using Places.Infrastructure.Persistence;
 
 namespace Places.Infrastructure
 {
@@ -22,9 +24,12 @@ namespace Places.Infrastructure
             services.AddDbContext<PlacesDbContext>(options =>
                 options.UseNpgsql(
                     connectionstring,
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "places")
                 )
             );
+
+            // Places module registration
+            services.AddScoped<IDbInitializer, PlacesDBInitializer>();
 
             return services;
         }

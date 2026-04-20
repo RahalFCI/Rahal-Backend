@@ -22,7 +22,7 @@ namespace Gamification.Infrastructure
             services.AddDbContext<GamificationDbContext>(options =>
                 options.UseNpgsql(
                     connectionstring,
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "gamification")
                 )
             );
 

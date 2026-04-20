@@ -22,7 +22,7 @@ namespace SocialMedia.Infrastructure
             services.AddDbContext<SocialMediaDbContext>(options =>
                 options.UseNpgsql(
                     connectionstring,
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "socialmedia")
                 )
             );
 

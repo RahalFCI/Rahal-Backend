@@ -8,7 +8,7 @@ using Users.Domain.Enums;
 
 namespace Users.Infrastructure.Persistence
 {
-    public class DBInitializer(RoleManager<Role> roleManager) : IDbInitializer
+    public class UsersDBInitializer(RoleManager<Role> roleManager) : IDbInitializer
     {
       
         public async Task SeedAsync()
