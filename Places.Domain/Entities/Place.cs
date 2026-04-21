@@ -14,6 +14,7 @@ namespace Places.Domain.Entities
         public double TicketPrice { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public Address? Address { get; set; }
         public int GeoFenceRange { get; set; }
 
 

@@ -4,11 +4,7 @@ using Places.Domain.Entities;
 
 namespace Places.Infrastructure.Persistence.Configuration
 {
-    /// <summary>
-    /// Entity configuration for CheckIn
-    /// Configures table mapping, indexes, and constraints
-    /// Note: CheckIn does not inherit from BaseEntity, so no soft delete filter is applied
-    /// </summary>
+
     public class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
     {
         public void Configure(EntityTypeBuilder<CheckIn> builder)

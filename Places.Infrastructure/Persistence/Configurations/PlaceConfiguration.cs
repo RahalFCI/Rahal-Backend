@@ -4,10 +4,7 @@ using Places.Domain.Entities;
 
 namespace Places.Infrastructure.Persistence.Configuration
 {
-    /// <summary>
-    /// Entity configuration for Place
-    /// Configures table mapping, indexes, constraints, and soft delete query filter
-    /// </summary>
+
     public class PlaceConfiguration : IEntityTypeConfiguration<Place>
     {
         public void Configure(EntityTypeBuilder<Place> builder)
@@ -37,6 +34,18 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(200);
+
+            builder.OwnsOne(e => e.Address, address =>
+            {
+                address.Property(a => a.AddressLine)
+                    .HasMaxLength(200);
+                address.Property(a => a.City)
+                    .HasMaxLength(200)
+                    .IsRequired();
+                address.Property(a => a.Government)
+                    .HasMaxLength(200)
+                    .IsRequired();
+            });
 
             // Large string mapped to TEXT type in database
             builder.Property(e => e.Description)
@@ -100,6 +109,12 @@ namespace Places.Infrastructure.Persistence.Configuration
 
             builder.HasIndex(e => e.IsDeleted)
                 .HasDatabaseName("IX_Places_IsDeleted");
+
+            builder.HasIndex(e => e.Address!.City)
+                .HasDatabaseName("IX_Places_City");
+
+            builder.HasIndex(e => e.Address!.Government)
+                .HasDatabaseName("IX_Places_Government");
         }
     }
 }
