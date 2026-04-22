@@ -67,7 +67,7 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasPrecision(11, 8)
                 .HasComment("Geographic longitude coordinate");
 
-            builder.Property(e => e.GeoFenceRange)
+            builder.Property(e => e.GeofenceRange)
                 .IsRequired()
                 .HasDefaultValue(100)
                 .HasComment("Radius in meters for geofence validation");
