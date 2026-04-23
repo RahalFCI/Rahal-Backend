@@ -18,6 +18,7 @@ namespace Places.Application.Mappers
                 Latitude = place.Latitude,
                 Longitude = place.Longitude,
                 GeoFenceRange = place.GeofenceRange,
+                Address = place.Address is not null ? MapAddressToDto(place.Address) : null,
                 CreatedAt = place.CreatedAt,
                 UpdatedAt = place.UpdatedAt
             };
@@ -33,7 +34,8 @@ namespace Places.Application.Mappers
                 TicketPrice = dto.TicketPrice,
                 Latitude = dto.Latitude,
                 Longitude = dto.Longitude,
-                GeofenceRange = dto.GeoFenceRange
+                GeofenceRange = dto.GeoFenceRange,
+                Address = dto.Address is not null ? MapDtoToAddress(dto.Address) : null
             };
         }
 
@@ -46,11 +48,34 @@ namespace Places.Application.Mappers
             place.Latitude = dto.Latitude;
             place.Longitude = dto.Longitude;
             place.GeofenceRange = dto.GeoFenceRange;
+            place.Address = dto.Address is not null ? MapDtoToAddress(dto.Address) : null;
         }
 
         public static IEnumerable<GetPlaceDto> ToGetDtos(IEnumerable<Place> places)
         {
             return places.Select(ToGetDto);
+        }
+
+        private static AddressDto MapAddressToDto(Address address)
+        {
+            return new AddressDto
+            {
+                AddressLine = address.AddressLine,
+                Government = address.Government,
+                City = address.City,
+                Country = address.Country
+            };
+        }
+
+        private static Address MapDtoToAddress(AddressDto addressDto)
+        {
+            return new Address
+            {
+                AddressLine = addressDto.AddressLine,
+                Government = addressDto.Government,
+                City = addressDto.City,
+                Country = addressDto.Country
+            };
         }
     }
 }

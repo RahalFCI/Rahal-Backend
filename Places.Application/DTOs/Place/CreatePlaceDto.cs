@@ -9,5 +9,6 @@ namespace Places.Application.DTOs.Place
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public int GeoFenceRange { get; set; }
+        public AddressDto? Address { get; set; }
     }
 }

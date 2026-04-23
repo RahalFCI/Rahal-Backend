@@ -30,6 +30,10 @@ namespace Places.Application.Validators
 
             RuleFor(x => x.GeoFenceRange)
                 .GreaterThan(0).WithMessage("Geofence range must be greater than 0");
+
+            RuleFor(x => x.Address)
+                .NotNull().WithMessage("Address is required")
+                .SetValidator(new AddressDtoValidator()!);
         }
     }
 }
