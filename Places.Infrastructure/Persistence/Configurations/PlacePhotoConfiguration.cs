@@ -4,11 +4,6 @@ using Places.Domain.Entities;
 
 namespace Places.Infrastructure.Persistence.Configuration
 {
-    /// <summary>
-    /// Entity configuration for PlacePhoto
-    /// Configures table mapping, indexes, and constraints
-    /// Note: PlacePhoto does not inherit from BaseEntity, so no soft delete filter is applied
-    /// </summary>
     public class PlacePhotoConfiguration : IEntityTypeConfiguration<PlacePhoto>
     {
         public void Configure(EntityTypeBuilder<PlacePhoto> builder)

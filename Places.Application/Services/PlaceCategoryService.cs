@@ -6,6 +6,7 @@ using Places.Application.DTOs.PlaceCategory;
 using Places.Application.Interfaces;
 using Places.Application.Mappers;
 using Places.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Places.Application.Services
 {
@@ -29,7 +30,7 @@ namespace Places.Application.Services
         {
             _logger.LogInformation("Fetching category {CategoryId}", id);
 
-            var category = await _categoryRepository.GetByIdAsync(id, p => p.Places, cancellationToken);
+            var category = await _categoryRepository.GetTable().Include(c => c.Places).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
             if (category is null)
             {
@@ -44,7 +45,7 @@ namespace Places.Application.Services
         {
             _logger.LogInformation("Fetching all categories");
 
-            var categories = await _categoryRepository.GetAllAsync(c => c.Places, cancellationToken);
+            var categories = await _categoryRepository.GetTable().Include(c => c.Places).ToListAsync(cancellationToken);
             var dtos = PlaceCategoryMapper.ToGetDtos(categories);
 
             _logger.LogInformation("Retrieved {CategoryCount} categories", categories.Count());
@@ -57,7 +58,8 @@ namespace Places.Application.Services
             _logger.LogInformation("Creating new category");
 
             var category = PlaceCategoryMapper.ToEntity(dto);
-            await _categoryRepository.AddAsync(category, cancellationToken);
+            _categoryRepository.Add(category);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Category created successfully with ID {CategoryId}", category.Id);
 
@@ -76,7 +78,7 @@ namespace Places.Application.Services
             }
 
             PlaceCategoryMapper.UpdateEntity(category, dto);
-            await _categoryRepository.UpdateAsync(category, cancellationToken);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Category {CategoryId} updated successfully", id);
 
@@ -94,14 +96,15 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var placesInCategory = await _placeRepository.FindAsync(p => p.PlaceCategoryId == id, cancellationToken);
+            var placesInCategory = await _placeRepository.GetTable().Where(p => p.PlaceCategoryId == id).ToListAsync(cancellationToken);
             if (placesInCategory.Any())
             {
                 _logger.LogWarning("Cannot delete category {CategoryId} with existing places", id);
-                return ApiResponse<string>.Failure(ErrorCode.ValidationError, "Cannot delete category with existing places");
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
 
-            await _categoryRepository.DeleteAsync(category, cancellationToken);
+            category.IsDeleted = true;
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Category {CategoryId} deleted successfully", id);
 

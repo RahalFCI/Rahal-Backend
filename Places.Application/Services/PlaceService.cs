@@ -111,7 +111,6 @@ namespace Places.Application.Services
             }
 
             PlaceMapper.UpdateEntity(place, dto);
-            _placeRepository.Update(place);
             await _placeRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Place {PlaceId} updated successfully", id);
@@ -130,7 +129,7 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            _placeRepository.Delete(place);
+            place.IsDeleted = true;
             await _placeRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Place {PlaceId} deleted successfully", id);

@@ -1,11 +1,9 @@
 ﻿using Places.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Shared.Domain.Entities;
 
 namespace Places.Domain.Entities
 {
-    public class CheckIn
+    public class CheckIn : BaseEntity
     {
         public Guid ExplorerId { get; set; }
         public Guid PlaceId { get; set; }

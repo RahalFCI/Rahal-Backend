@@ -2,11 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Places.Infrastructure.Persistence;
+using Places.Infrastructure.Search;
 using Shared.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
+using Shared.Infrastructure.Repositories;
 
 namespace Places.Infrastructure
 {
@@ -28,8 +26,9 @@ namespace Places.Infrastructure
                 )
             );
 
-            // Places module registration
             services.AddScoped<IDbInitializer, PlacesDBInitializer>();
+
+            services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
 
             return services;
         }

@@ -103,6 +103,9 @@ namespace Shared.Infrastructure
             // Register MeilisearchService as open generic
             services.AddScoped(typeof(ISearchService<>), typeof(MeilisearchService<>));
 
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+
             return services;
         }
 

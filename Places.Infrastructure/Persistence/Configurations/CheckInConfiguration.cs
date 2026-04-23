@@ -14,6 +14,9 @@ namespace Places.Infrastructure.Persistence.Configuration
             // Primary Key (composite)
             builder.HasKey(e => new { e.ExplorerId, e.PlaceId });
 
+            // Query filter for soft deletion
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
             // Domain Properties
             builder.Property(e => e.ExplorerId)
                 .IsRequired();

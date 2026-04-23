@@ -14,15 +14,6 @@ namespace Places.Application.Mappers
             };
         }
 
-        public static PlacePhoto ToEntity(AddPlacePhotoDto dto)
-        {
-            return new PlacePhoto
-            {
-                PlaceId = dto.PlaceId,
-                Url = dto.Url
-            };
-        }
-
         public static IEnumerable<GetPlacePhotoDto> ToGetDtos(IEnumerable<PlacePhoto> photos)
         {
             return photos.Select(ToGetDto);

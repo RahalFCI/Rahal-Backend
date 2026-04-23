@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Shared.Domain.Entities;
 
 namespace Places.Domain.Entities
 {
-    public class PlaceReview
+    public class PlaceReview : BaseEntity
     {
         public Guid ExplorerId { get; set; }
         public Guid PlaceId { get; set; }

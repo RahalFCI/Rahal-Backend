@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Shared.Domain.Entities;
 
 namespace Places.Domain.Entities
 {
-    public class PlacePhoto
+    public class PlacePhoto : BaseEntity
     {
         public Guid PlaceId { get; set; }
         public Place? Place { get; set; }
