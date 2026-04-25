@@ -137,6 +137,25 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Place deleted successfully");
         }
 
+        public async Task<ApiResponse<string>> DeletePlacePermanentlyAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Permanently deleting place {PlaceId}", id);
+
+            var place = await _placeRepository.GetByIdAsync(id, cancellationToken);
+            if (place is null)
+            {
+                _logger.LogWarning("Place {PlaceId} not found for permanent deletion", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            _placeRepository.Delete(place);
+            await _placeRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Place {PlaceId} permanently deleted", id);
+
+            return ApiResponse<string>.Success("Place permanently deleted");
+        }
+
         public async Task<ApiResponse<IEnumerable<GetPlaceDto>>> SearchPlacesByLocationAsync(double latitude, double longitude, int radiusInMeters, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Searching places near latitude {Latitude}, longitude {Longitude} with radius {Radius} meters", 

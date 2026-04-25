@@ -45,6 +45,10 @@ namespace Places.Infrastructure.Persistence.Configuration
                 address.Property(a => a.Government)
                     .HasMaxLength(200)
                     .IsRequired();
+
+                address.HasIndex(a => a.City);
+                address.HasIndex(a => a.Government);
+
             });
 
             // Large string mapped to TEXT type in database
@@ -110,11 +114,10 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.HasIndex(e => e.IsDeleted)
                 .HasDatabaseName("IX_Places_IsDeleted");
 
-            builder.HasIndex(e => e.Address!.City)
-                .HasDatabaseName("IX_Places_City");
+            builder.HasIndex(e => new { e.Name, e.Latitude, e.Longitude })
+                .IsUnique();
 
-            builder.HasIndex(e => e.Address!.Government)
-                .HasDatabaseName("IX_Places_Government");
+
         }
     }
 }

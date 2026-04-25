@@ -11,6 +11,7 @@ namespace Places.Application.Interfaces
         Task<ApiResponse<string>> CreatePlaceReviewAsync(CreatePlaceReviewDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdatePlaceReviewAsync(Guid explorerId, Guid placeId, Guid checkInId, UpdatePlaceReviewDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeletePlaceReviewAsync(Guid explorerId, Guid placeId, Guid checkInId, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeletePlaceReviewPermanentlyAsync(Guid explorerId, Guid placeId, Guid checkInId, CancellationToken cancellationToken = default);
         Task<ApiResponse<IEnumerable<GetPlaceReviewDto>>> GetVerifiedReviewsByPlaceIdAsync(Guid placeId, CancellationToken cancellationToken = default);
     }
 }

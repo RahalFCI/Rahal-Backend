@@ -11,7 +11,7 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.ToTable("PlacePhotos", "places");
 
             // Primary Key (composite)
-            builder.HasKey(e => new { e.PlaceId, e.Url });
+            builder.HasKey(e => e.Id);
 
             // Domain Properties
             builder.Property(e => e.PlaceId)

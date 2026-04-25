@@ -110,5 +110,35 @@ namespace Places.Application.Services
 
             return ApiResponse<string>.Success("Category deleted successfully");
         }
+
+        public async Task<ApiResponse<string>> DeletePlaceCategoryPermanentlyAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Permanently deleting category {CategoryId}", id);
+
+            var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+            if (category is null)
+            {
+                _logger.LogWarning("Category {CategoryId} not found for permanent deletion", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var placesInCategory = await _placeRepository.GetTable()
+                .IgnoreQueryFilters()
+                .Where(p => p.PlaceCategoryId == id)
+                .ToListAsync(cancellationToken);
+
+            if (placesInCategory.Any())
+            {
+                _logger.LogWarning("Cannot permanently delete category {CategoryId} with associated places", id);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            _categoryRepository.Delete(category);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Category {CategoryId} permanently deleted", id);
+
+            return ApiResponse<string>.Success("Category permanently deleted");
+        }
     }
 }

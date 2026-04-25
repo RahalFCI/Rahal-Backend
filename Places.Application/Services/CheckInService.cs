@@ -151,6 +151,28 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Check-in deleted successfully");
         }
 
+        public async Task<ApiResponse<string>> DeleteCheckInPermanentlyAsync(Guid explorerId, Guid placeId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Permanently deleting check-in for explorer {ExplorerId} at place {PlaceId}", explorerId, placeId);
+
+            var checkIn = await _checkInRepository.GetTable()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(c => c.ExplorerId == explorerId && c.PlaceId == placeId, cancellationToken);
+
+            if (checkIn is null)
+            {
+                _logger.LogWarning("Check-in not found for permanent deletion: explorer {ExplorerId} at place {PlaceId}", explorerId, placeId);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            _checkInRepository.Delete(checkIn);
+            await _checkInRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Check-in permanently deleted for explorer {ExplorerId} at place {PlaceId}", explorerId, placeId);
+
+            return ApiResponse<string>.Success("Check-in permanently deleted");
+        }
+
         public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetPendingCheckInsAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Fetching pending check-ins");

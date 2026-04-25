@@ -10,5 +10,6 @@ namespace Places.Application.Interfaces
         Task<ApiResponse<string>> CreatePlaceCategoryAsync(CreatePlaceCategoryDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdatePlaceCategoryAsync(Guid id, UpdatePlaceCategoryDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeletePlaceCategoryAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeletePlaceCategoryPermanentlyAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

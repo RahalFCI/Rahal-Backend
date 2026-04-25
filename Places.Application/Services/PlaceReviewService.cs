@@ -163,6 +163,28 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Review deleted successfully");
         }
 
+        public async Task<ApiResponse<string>> DeletePlaceReviewPermanentlyAsync(Guid explorerId, Guid placeId, Guid checkInId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Permanently deleting review for explorer {ExplorerId} on place {PlaceId}", explorerId, placeId);
+
+            var review = await _reviewRepository.GetTable()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(r => r.ExplorerId == explorerId && r.PlaceId == placeId && r.CheckInId == checkInId, cancellationToken);
+
+            if (review is null)
+            {
+                _logger.LogWarning("Review not found for permanent deletion: explorer {ExplorerId} on place {PlaceId}", explorerId, placeId);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            _reviewRepository.Delete(review);
+            await _reviewRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Review permanently deleted for explorer {ExplorerId} on place {PlaceId}", explorerId, placeId);
+
+            return ApiResponse<string>.Success("Review permanently deleted");
+        }
+
         public async Task<ApiResponse<IEnumerable<GetPlaceReviewDto>>> GetVerifiedReviewsByPlaceIdAsync(Guid placeId, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Fetching verified reviews for place {PlaceId}", placeId);

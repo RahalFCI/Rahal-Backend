@@ -23,6 +23,7 @@ namespace Users.Application.Interfaces
         Task<ApiResponse<TDto>> GetById(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdateUser(TDto user, IFormFile? profilePicture = null, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeleteUserPermanently(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> RestoreDeletedUser(Guid id, CancellationToken cancellationToken = default);
     }

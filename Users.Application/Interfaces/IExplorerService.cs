@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.DTOs.Admin;
-using Users.Application.DTOs.Vendor;
 
 namespace Users.Application.Interfaces
 {
-    internal interface IAdminService
+    internal interface IExplorerService
     {
         public ApiResponse<AdminDto> GetAllUsers();
         public Task<ApiResponse<AdminDto>> GetById(Guid id);

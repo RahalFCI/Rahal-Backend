@@ -41,7 +41,7 @@ namespace Rahal.Api.Extensions
 
         private static async Task MigrateAsync<TContext>(IServiceScope scope)
             where TContext : DbContext
-        {
+        { 
             var context = scope.ServiceProvider.GetRequiredService<TContext>();
             await context.Database.MigrateAsync();
         }

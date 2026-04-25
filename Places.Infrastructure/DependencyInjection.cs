@@ -26,7 +26,12 @@ namespace Places.Infrastructure
                 )
             );
 
+            services.AddScoped<DbContext, PlacesDbContext>();
+
+
             services.AddScoped<IDbInitializer, PlacesDBInitializer>();
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
 

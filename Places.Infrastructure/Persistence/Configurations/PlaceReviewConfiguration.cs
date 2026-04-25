@@ -12,7 +12,7 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.ToTable("PlaceReviews", "places");
 
             // Primary Key (composite)
-            builder.HasKey(e => new { e.ExplorerId, e.PlaceId, e.CheckInId });
+            builder.HasKey(e => e.Id);
 
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);

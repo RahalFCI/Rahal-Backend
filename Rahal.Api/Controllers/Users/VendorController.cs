@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -196,6 +197,25 @@ namespace Rahal.Api.Controllers.Users
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await _userService.DeleteUser(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
+
+            return NoContent();
+        }
+
+        [HttpDelete("permanent/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> DeletePermanentlyAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            if (GetCurrentUserId() != id)
+                return Forbid();
+
+            var result = await _userService.DeleteUserPermanently(id, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);

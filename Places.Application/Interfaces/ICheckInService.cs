@@ -11,6 +11,7 @@ namespace Places.Application.Interfaces
         Task<ApiResponse<string>> CreateCheckInAsync(CreateCheckInDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdateCheckInStatusAsync(Guid explorerId, Guid placeId, UpdateCheckInDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteCheckInAsync(Guid explorerId, Guid placeId, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeleteCheckInPermanentlyAsync(Guid explorerId, Guid placeId, CancellationToken cancellationToken = default);
         Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetPendingCheckInsAsync(CancellationToken cancellationToken = default);
     }
 }

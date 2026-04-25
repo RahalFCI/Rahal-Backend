@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Places.Domain.Entities;
+using Places.Domain.Enums;
 
 namespace Places.Infrastructure.Persistence.Configuration
 {
@@ -12,7 +13,7 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.ToTable("CheckIns", "places");
 
             // Primary Key (composite)
-            builder.HasKey(e => new { e.ExplorerId, e.PlaceId });
+            builder.HasKey(e => e.Id);
 
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
@@ -25,7 +26,7 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .IsRequired();
 
             builder.Property(e => e.ValidationStatus)
-                .HasDefaultValue(0)
+                .HasDefaultValue(CheckInValidationStatus.Pending)
                 .HasComment("Validation status of the check-in (Pending=0, Approved=1, Rejected=2)");
 
             // Foreign Key to Place

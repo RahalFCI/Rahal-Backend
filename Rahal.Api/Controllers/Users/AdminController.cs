@@ -208,6 +208,25 @@ namespace Rahal.Api.Controllers.Users
             return NoContent();
         }
 
+        [HttpDelete("permanent/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> DeletePermanentlyAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            if (GetCurrentUserId() != id)
+                return Forbid();
+
+            var result = await _userService.DeleteUserPermanently(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
+
+            return NoContent();
+        }
+
         [HttpPut("restore/{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
