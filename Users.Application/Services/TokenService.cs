@@ -44,7 +44,6 @@ namespace Users.Application.Services
                     ClaimValueTypes.Integer64),
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.EmailVerified, user.EmailConfirmed.ToString()),
             };
 
             claims.AddRange(role.Select(r => new Claim(ClaimTypes.Role, r)));

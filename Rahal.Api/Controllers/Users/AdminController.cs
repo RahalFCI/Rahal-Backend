@@ -157,7 +157,6 @@ namespace Rahal.Api.Controllers.Users
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -176,7 +175,6 @@ namespace Rahal.Api.Controllers.Users
 
         [HttpPut("password/{id}")]
         [Authorize(Roles = "Admin")]
-        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
