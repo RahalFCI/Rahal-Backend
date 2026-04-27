@@ -9,16 +9,16 @@ using Users.Application.Interfaces;
 
 namespace Users.Infrastructure.Persistence
 {
-    internal class UnitOfWork : IUnitOfWork
+    internal class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbContext, IAsyncDisposable
     {
-        private readonly UsersDbContext _context;
-        private readonly ILogger<UnitOfWork> _logger;
+        private readonly TContext _context;
+        private readonly ILogger<UnitOfWork<TContext>> _logger;
         private IDbContextTransaction? _transaction;
         private bool _disposed;
 
         public bool HasActiveTransaction => _transaction != null;
 
-        public UnitOfWork(UsersDbContext context, ILogger<UnitOfWork> logger)
+        public UnitOfWork(TContext context, ILogger<UnitOfWork<TContext>> logger)
         {
             _context = context;
             _logger = logger;
@@ -27,7 +27,7 @@ namespace Users.Infrastructure.Persistence
         public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(UnitOfWork));
+                throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
 
             if (_transaction != null)
             {
@@ -42,7 +42,7 @@ namespace Users.Infrastructure.Persistence
         public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(UnitOfWork));
+                throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
 
             if (_transaction == null)
                 throw new InvalidOperationException("No active transaction to commit.");
@@ -88,7 +88,7 @@ namespace Users.Infrastructure.Persistence
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(UnitOfWork));
+                throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
 
             try
             {

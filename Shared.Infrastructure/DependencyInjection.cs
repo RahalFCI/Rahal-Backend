@@ -15,6 +15,8 @@ using Shared.Infrastructure.Search;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Users.Application.Interfaces;
+using Users.Infrastructure.Persistence;
 
 namespace Shared.Infrastructure
 {
@@ -104,6 +106,9 @@ namespace Shared.Infrastructure
             services.AddScoped(typeof(ISearchService<>), typeof(MeilisearchService<>));
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            //Register Unit of Work
+            services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
 
 
             return services;

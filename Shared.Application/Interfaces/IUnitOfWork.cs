@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Users.Application.Interfaces
 {
-    public interface IUnitOfWork : IAsyncDisposable
+    public interface IUnitOfWork<TContext> where TContext : DbContext, IAsyncDisposable
     {
         Task BeginTransactionAsync(CancellationToken cancellationToken);
         Task CommitTransactionAsync(CancellationToken cancellationToken);
