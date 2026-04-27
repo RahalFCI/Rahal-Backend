@@ -8,19 +8,7 @@ using Users.Domain.Entities._Common;
 
 namespace Rahal.Api.Filters
 {
-    /// <summary>
-    /// Action filter that enforces email verification by checking:
-    /// 1. JWT claims for email_verified claim (fast, stateless)
-    /// 2. Database fallback if claim not found (safety check)
-    /// 3. Rejects request if neither check passes
-    /// 
-    /// Usage: Apply [RequireEmailVerified] attribute to controller or action
-    /// 
-    /// Response Codes:
-    /// - 200 OK: Email is verified (claim or database)
-    /// - 403 Forbidden: Email is NOT verified
-    /// - 500 Internal Server Error: Error checking database
-    /// </summary>
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
     public class RequireEmailVerifiedAttribute : Attribute, IAsyncActionFilter
     {

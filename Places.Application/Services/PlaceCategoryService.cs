@@ -89,21 +89,22 @@ namespace Places.Application.Services
         {
             _logger.LogInformation("Deleting category {CategoryId}", id);
 
-            var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
-            if (category is null)
+            var categoryExists = await _categoryRepository.GetTable().AnyAsync(e => e.Id == id, cancellationToken);
+            if (!categoryExists)
             {
                 _logger.LogWarning("Category {CategoryId} not found", id);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var placesInCategory = await _placeRepository.GetTable().Where(p => p.PlaceCategoryId == id).ToListAsync(cancellationToken);
-            if (placesInCategory.Any())
+            var placesInCategory = await _placeRepository.GetTable().Where(p => p.PlaceCategoryId == id).AnyAsync(cancellationToken);
+            if (placesInCategory)
             {
                 _logger.LogWarning("Cannot delete category {CategoryId} with existing places", id);
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
 
-            category.IsDeleted = true;
+            PlaceCategory category = new() { Id = id, IsDeleted = true };
+            _categoryRepository.SaveInclude(category, nameof(category.IsDeleted));
             await _categoryRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Category {CategoryId} deleted successfully", id);

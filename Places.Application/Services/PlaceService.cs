@@ -122,14 +122,15 @@ namespace Places.Application.Services
         {
             _logger.LogInformation("Deleting place {PlaceId}", id);
 
-            var place = await _placeRepository.GetByIdAsync(id, cancellationToken);
-            if (place is null)
+            var placeExists = await _placeRepository.GetTable().AnyAsync(e => e.Id == id, cancellationToken);
+            if (!placeExists)
             {
                 _logger.LogWarning("Place {PlaceId} not found", id);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            place.IsDeleted = true;
+            Place place = new Place() { Id = id, IsDeleted = true };
+            _placeRepository.SaveInclude(place, nameof(place.IsDeleted));
             await _placeRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Place {PlaceId} deleted successfully", id);
