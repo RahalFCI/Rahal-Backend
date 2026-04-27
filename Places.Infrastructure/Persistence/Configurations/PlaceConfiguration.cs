@@ -99,14 +99,8 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
-            builder.HasIndex(e => e.Name)
-                .HasDatabaseName("IX_Places_Name");
-
             builder.HasIndex(e => e.PlaceCategoryId)
                 .HasDatabaseName("IX_Places_PlaceCategoryId");
-
-            builder.HasIndex(e => new { e.Latitude, e.Longitude })
-                .HasDatabaseName("IX_Places_Coordinates");
 
             builder.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("IX_Places_CreatedAt");

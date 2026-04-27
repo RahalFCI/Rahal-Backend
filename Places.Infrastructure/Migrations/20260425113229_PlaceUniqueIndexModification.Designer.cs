@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Places.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Places.Infrastructure.Persistence;
 namespace Places.Infrastructure.Migrations
 {
     [DbContext(typeof(PlacesDbContext))]
-    partial class PlacesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425113229_PlaceUniqueIndexModification")]
+    partial class PlaceUniqueIndexModification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -138,6 +141,9 @@ namespace Places.Infrastructure.Migrations
 
                     b.HasIndex("PlaceCategoryId")
                         .HasDatabaseName("IX_Places_PlaceCategoryId");
+
+                    b.HasIndex("Latitude", "Longitude")
+                        .HasDatabaseName("IX_Places_Coordinates");
 
                     b.HasIndex("Name", "Latitude", "Longitude")
                         .IsUnique();
