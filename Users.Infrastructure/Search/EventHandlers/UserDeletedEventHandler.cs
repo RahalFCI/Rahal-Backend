@@ -5,11 +5,7 @@ using Users.Domain.Events;
 
 namespace Users.Infrastructure.Search.EventHandlers
 {
-    /// <summary>
-    /// Handles the UserDeletedEvent by removing the user from Meilisearch.
-    /// Implements INotificationHandler so it runs asynchronously after domain event is raised.
-    /// Errors do not propagate - search index failures don't block user deletion.
-    /// </summary>
+
     public class UserDeletedEventHandler : INotificationHandler<UserDeletedEvent>
     {
         private readonly ISearchService<UserSearchDocument> _searchService;
@@ -23,9 +19,7 @@ namespace Users.Infrastructure.Search.EventHandlers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Handles user deletion event by removing the user from the search index.
-        /// </summary>
+
         public async Task Handle(UserDeletedEvent notification, CancellationToken cancellationToken)
         {
             try

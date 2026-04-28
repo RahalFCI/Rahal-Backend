@@ -7,11 +7,7 @@ using Users.Domain.Events;
 
 namespace Users.Infrastructure.Search.EventHandlers
 {
-    /// <summary>
-    /// Handles the UserUpdatedEvent by updating the user in Meilisearch.
-    /// Implements INotificationHandler so it runs asynchronously after domain event is raised.
-    /// Errors do not propagate - search index failures don't block user updates.
-    /// </summary>
+
     public class UserUpdatedEventHandler : INotificationHandler<UserUpdatedEvent>
     {
         private readonly ISearchService<UserSearchDocument> _searchService;
@@ -28,9 +24,6 @@ namespace Users.Infrastructure.Search.EventHandlers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Handles user update event by fetching the updated user and re-indexing in Meilisearch.
-        /// </summary>
         public async Task Handle(UserUpdatedEvent notification, CancellationToken cancellationToken)
         {
             try

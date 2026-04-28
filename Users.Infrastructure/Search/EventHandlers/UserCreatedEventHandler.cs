@@ -7,11 +7,7 @@ using Users.Domain.Events;
 
 namespace Users.Infrastructure.Search.EventHandlers
 {
-    /// <summary>
-    /// Handles the UserCreatedEvent by indexing the new user in Meilisearch.
-    /// Implements INotificationHandler so it runs asynchronously after domain event is raised.
-    /// Errors do not propagate - search index failures don't block user creation.
-    /// </summary>
+
     public class UserCreatedEventHandler : INotificationHandler<UserCreatedEvent>
     {
         private readonly ISearchService<UserSearchDocument> _searchService;
@@ -28,9 +24,6 @@ namespace Users.Infrastructure.Search.EventHandlers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Handles user creation event by fetching the user and indexing them in Meilisearch.
-        /// </summary>
         public async Task Handle(UserCreatedEvent notification, CancellationToken cancellationToken)
         {
             try

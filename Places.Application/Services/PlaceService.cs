@@ -1,12 +1,14 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Shared.Application.DTOs;
-using Shared.Application.Interfaces;
-using Shared.Domain.Enums;
 using Places.Application.DTOs.Place;
 using Places.Application.Interfaces;
 using Places.Application.Mappers;
 using Places.Domain.Entities;
+using Places.Domain.Events;
+using Shared.Application.DTOs;
+using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 
 namespace Places.Application.Services
 {
@@ -14,15 +16,18 @@ namespace Places.Application.Services
     {
         private readonly IGenericRepository<Place> _placeRepository;
         private readonly IGenericRepository<PlaceCategory> _categoryRepository;
+        private readonly IMediator _mediator;
         private readonly ILogger<PlaceService> _logger;
 
         public PlaceService(
             IGenericRepository<Place> placeRepository,
             IGenericRepository<PlaceCategory> categoryRepository,
+            IMediator mediator,
             ILogger<PlaceService> logger)
         {
             _placeRepository = placeRepository;
             _categoryRepository = categoryRepository;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -89,6 +94,16 @@ namespace Places.Application.Services
 
             _logger.LogInformation("Place created successfully with ID {PlaceId}", place.Id);
 
+            try
+            {
+                await _mediator.Publish(new PlaceCreatedEvent(place.Id, place.Name, place.PlaceCategoryId), cancellationToken);
+                _logger.LogInformation("PlaceCreatedEvent published for place {PlaceId}", place.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PlaceCreatedEvent for place {PlaceId}. Place creation was successful but search index may not be updated.", place.Id);
+            }
+
             return ApiResponse<string>.Success($"Place created successfully. ID: {place.Id}");
         }
 
@@ -115,6 +130,16 @@ namespace Places.Application.Services
 
             _logger.LogInformation("Place {PlaceId} updated successfully", id);
 
+            try
+            {
+                await _mediator.Publish(new PlaceUpdatedEvent(place.Id, place.Name, place.PlaceCategoryId), cancellationToken);
+                _logger.LogInformation("PlaceUpdatedEvent published for place {PlaceId}", place.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PlaceUpdatedEvent for place {PlaceId}. Place update was successful but search index may not be updated.", place.Id);
+            }
+
             return ApiResponse<string>.Success("Place updated successfully");
         }
 
@@ -134,6 +159,16 @@ namespace Places.Application.Services
             await _placeRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Place {PlaceId} deleted successfully", id);
+
+            try
+            {
+                await _mediator.Publish(new PlaceDeletedEvent(place.Id), cancellationToken);
+                _logger.LogInformation("PlaceDeletedEvent published for place {PlaceId}", place.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PlaceDeletedEvent for place {PlaceId}. Place deletion was successful but search index may not be updated.", place.Id);
+            }
 
             return ApiResponse<string>.Success("Place deleted successfully");
         }

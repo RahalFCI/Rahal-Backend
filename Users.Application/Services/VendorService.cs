@@ -20,10 +20,7 @@ using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
-    /// <summary>
-    /// Vendor-specific user service
-    /// Handles CRUD operations for Vendor profiles
-    /// </summary>
+
     internal class VendorService : IUserService<VendorDto, VendorSummaryDto>
     {
         private readonly UserManager<User> _userManager;

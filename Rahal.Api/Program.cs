@@ -2,6 +2,7 @@ using ECommerce.API.Filters;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
@@ -48,6 +49,7 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(PlaceCreatedEventHandler).Assembly);
 });
 
 

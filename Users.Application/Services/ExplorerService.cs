@@ -20,10 +20,7 @@ using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
-    /// <summary>
-    /// Explorer-specific user service
-    /// Handles CRUD operations for Explorer profiles
-    /// </summary>
+
     internal class ExplorerService : IUserService<ExplorerDto, ExplorerSummaryDto>
     {
         private readonly UserManager<User> _userManager;

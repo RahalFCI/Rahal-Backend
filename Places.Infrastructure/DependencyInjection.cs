@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Places.Infrastructure.Persistence;
 using Places.Infrastructure.Search;
+using Places.Infrastructure.Search.EventHandlers;
 using Shared.Application.Interfaces;
 using Shared.Infrastructure.Repositories;
 
@@ -27,7 +29,6 @@ namespace Places.Infrastructure
             );
 
             services.AddScoped<DbContext, PlacesDbContext>();
-
 
             services.AddScoped<IDbInitializer, PlacesDBInitializer>();
 

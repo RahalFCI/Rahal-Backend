@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
-using Rahal.Api.Filters;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using Users.Application.DTOs.Auth;
