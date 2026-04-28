@@ -6,6 +6,7 @@ namespace Places.Application.Interfaces
     public interface ICheckInService
     {
         Task<ApiResponse<GetCheckInDto>> GetCheckInAsync(Guid explorerId, Guid placeId, CancellationToken cancellationToken = default);
+        Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetAllCheckInAsync(CancellationToken cancellationToken = default);
         Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetCheckInsByPlaceIdAsync(Guid placeId, CancellationToken cancellationToken = default);
         Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetCheckInsByExplorerIdAsync(Guid explorerId, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> CreateCheckInAsync(CreateCheckInDto dto, CancellationToken cancellationToken = default);

@@ -31,6 +31,7 @@ namespace Places.Application.Services
             _logger.LogInformation("Fetching check-in for explorer {ExplorerId} at place {PlaceId}", explorerId, placeId);
 
             var checkIn = await _checkInRepository.GetTable()
+                .AsNoTracking()
                 .Include(c => c.Place)
                 .FirstOrDefaultAsync(c => c.ExplorerId == explorerId && c.PlaceId == placeId, cancellationToken);
 
@@ -41,6 +42,21 @@ namespace Places.Application.Services
             }
 
             return ApiResponse<GetCheckInDto>.Success(CheckInMapper.ToGetDto(checkIn));
+        }
+
+        public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetAllCheckInAsync(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all check-ins");
+
+            var checkIns = await _checkInRepository.GetTable()
+                .AsNoTracking()
+                .Include(c => c.Place)
+                .Select(c => CheckInMapper.ToGetDto(c))
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation("Fetched {Count} check-ins", checkIns.Count);
+
+            return ApiResponse<IEnumerable<GetCheckInDto>>.Success(checkIns);
         }
 
         public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetCheckInsByPlaceIdAsync(Guid placeId, CancellationToken cancellationToken = default)
@@ -55,6 +71,7 @@ namespace Places.Application.Services
             }
 
             var checkIns = await _checkInRepository.GetTable()
+                .AsNoTracking()
                 .Where(c => c.PlaceId == placeId)
                 .Include(c => c.Place)
                 .ToListAsync(cancellationToken);
@@ -70,6 +87,7 @@ namespace Places.Application.Services
             _logger.LogInformation("Fetching check-ins for explorer {ExplorerId}", explorerId);
 
             var checkIns = await _checkInRepository.GetTable()
+                .AsNoTracking()
                 .Where(c => c.ExplorerId == explorerId)
                 .Include(c => c.Place)
                 .ToListAsync(cancellationToken);
@@ -178,6 +196,7 @@ namespace Places.Application.Services
             _logger.LogInformation("Fetching pending check-ins");
 
             var checkIns = await _checkInRepository.GetTable()
+                .AsNoTracking()
                 .Where(c => c.ValidationStatus == Places.Domain.Enums.CheckInValidationStatus.Pending)
                 .Include(c => c.Place)
                 .ToListAsync(cancellationToken);

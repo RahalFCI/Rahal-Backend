@@ -32,6 +32,15 @@ namespace Rahal.Api.Controllers.Places
             return Ok(result);
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllCheckInsAsync(CancellationToken cancellationToken)
+        {
+            var result = await _checkInService.GetAllCheckInAsync(cancellationToken);
+            return Ok(result);
+        }
+
         [HttpGet("place/{placeId}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
