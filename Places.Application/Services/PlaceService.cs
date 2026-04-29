@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Places.Application.DTOs.Place;
+using Places.Application.Helpers;
 using Places.Application.Interfaces;
 using Places.Application.Mappers;
 using Places.Domain.Entities;
@@ -197,38 +198,27 @@ namespace Places.Application.Services
             _logger.LogInformation("Searching places near latitude {Latitude}, longitude {Longitude} with radius {Radius} meters", 
                 latitude, longitude, radiusInMeters);
 
+            if (!GeoLocationHelper.IsValidCoordinate(latitude, longitude))
+            {
+                _logger.LogWarning("Invalid search coordinates: latitude {Latitude}, longitude {Longitude}", latitude, longitude);
+                return ApiResponse<IEnumerable<GetPlaceDto>>.Failure(ErrorCode.ValidationError);
+            }
+
             var places = await _placeRepository.GetTable().Include(p => p.PlaceCategory).ToListAsync(cancellationToken);
 
-            var nearbyPlaces = places.Where(p =>
-                CalculateDistance(p.Latitude, p.Longitude, latitude, longitude) <= radiusInMeters);
+            var nearbyPlaces = GeoLocationHelper.FilterByRadius(
+                places,
+                latitude,
+                longitude,
+                radiusInMeters,
+                p => p.Latitude,
+                p => p.Longitude);
 
             var dtos = PlaceMapper.ToGetDtos(nearbyPlaces);
 
             _logger.LogInformation("Found {PlaceCount} places within {Radius} meters", nearbyPlaces.Count(), radiusInMeters);
 
             return ApiResponse<IEnumerable<GetPlaceDto>>.Success(dtos);
-        }
-
-        private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
-        {
-            // Earth's radius in meters
-            const double R = 6371000;
-
-            // Convert coordinate differences from degrees to radians
-            var dLat = (lat2 - lat1) * Math.PI / 180;
-            var dLon = (lon2 - lon1) * Math.PI / 180;
-
-            // Haversine formula:
-            // a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)
-            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                    Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
-                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
-            // c = 2 * atan2(√a, √(1-a)) — angular distance in radians
-            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-            // Multiply angular distance by Earth's radius to get meters
-            return R * c;
         }
     }
 }
