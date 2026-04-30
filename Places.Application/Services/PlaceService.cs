@@ -210,7 +210,7 @@ namespace Places.Application.Services
                 .ToPagedResultAsync(request, cancellationToken);
 
             var nearbyPlaces = GeoLocationHelper.FilterByRadius(
-                pagedPlaces.Items,
+                pagedPlaces.Items!,
                 latitude,
                 longitude,
                 radiusInMeters,

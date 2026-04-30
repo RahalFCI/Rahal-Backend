@@ -7,6 +7,7 @@ using Shared.Domain.Enums;
 using Places.Application.DTOs.Place;
 using Places.Application.Interfaces;
 using Places.Application.DTOs.Location;
+using Shared.Application.Pagination;
 
 namespace Rahal.Api.Controllers.Places
 {
@@ -36,9 +37,9 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _placeService.GetAllPlacesAsync(cancellationToken);
+            var result = await _placeService.GetAllPlacesAsync(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 
@@ -46,9 +47,9 @@ namespace Rahal.Api.Controllers.Places
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetByCategoryAsync([FromRoute] Guid categoryId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByCategoryAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, [FromRoute] Guid categoryId, CancellationToken cancellationToken)
         {
-            var result = await _placeService.GetPlacesByCategoryIdAsync(categoryId, cancellationToken);
+            var result = await _placeService.GetPlacesByCategoryIdAsync(categoryId, offsetPaginationRequest, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -103,9 +104,9 @@ namespace Rahal.Api.Controllers.Places
         [HttpPost("search")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> SearchByLocationAsync([FromBody] LocationSearchRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> SearchByLocationAsync([FromBody] LocationSearchRequest request, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _placeService.SearchPlacesByLocationAsync(request.Latitude, request.Longitude, request.RadiusInMeters, cancellationToken);
+            var result = await _placeService.SearchPlacesByLocationAsync(request.Latitude, request.Longitude, request.RadiusInMeters, offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
     }

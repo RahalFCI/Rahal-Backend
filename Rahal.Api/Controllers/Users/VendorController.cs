@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.OAuth;
@@ -131,9 +132,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _userService.GetAllUsers(cancellationToken);
+            var result = await _userService.GetAllUsers(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 
@@ -142,9 +143,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllIncludingDeletedAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _userService.GetAllUsersIncludingDeleted(cancellationToken);
+            var result = await _userService.GetAllUsersIncludingDeleted(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 

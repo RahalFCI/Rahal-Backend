@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Rahal.Api.Controllers._Common;
-using Shared.Application.DTOs;
-using Shared.Domain.Enums;
 using Places.Application.DTOs.CheckIn;
 using Places.Application.Interfaces;
+using Rahal.Api.Controllers._Common;
+using Shared.Application.DTOs;
+using Shared.Application.Pagination;
+using Shared.Domain.Enums;
 
 namespace Rahal.Api.Controllers.Places
 {
@@ -35,9 +36,9 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllCheckInsAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllCheckInsAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _checkInService.GetAllCheckInAsync(cancellationToken);
+            var result = await _checkInService.GetAllCheckInAsync(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 
@@ -45,9 +46,9 @@ namespace Rahal.Api.Controllers.Places
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetCheckInsByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckInsByPlaceAsync([FromRoute] Guid placeId, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _checkInService.GetCheckInsByPlaceIdAsync(placeId, cancellationToken);
+            var result = await _checkInService.GetCheckInsByPlaceIdAsync(placeId, offsetPaginationRequest, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -59,9 +60,9 @@ namespace Rahal.Api.Controllers.Places
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetCheckInsByExplorerAsync([FromRoute] Guid explorerId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckInsByExplorerAsync([FromRoute] Guid explorerId, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _checkInService.GetCheckInsByExplorerIdAsync(explorerId, cancellationToken);
+            var result = await _checkInService.GetCheckInsByExplorerIdAsync(explorerId, offsetPaginationRequest, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -116,9 +117,9 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet("pending")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPendingAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPendingAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _checkInService.GetPendingCheckInsAsync(cancellationToken);
+            var result = await _checkInService.GetPendingCheckInsAsync(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
     }
