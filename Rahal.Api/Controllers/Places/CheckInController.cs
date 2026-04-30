@@ -69,14 +69,14 @@ namespace Rahal.Api.Controllers.Places
             return Ok(result);
         }
 
-        [HttpPost]
+        [HttpPost("{explorerId}")]
         [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateAsync([FromBody] CreateCheckInDto createCheckInDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAsync([FromRoute] Guid explorerId, [FromBody] CheckInRequestDto createCheckInDto, CancellationToken cancellationToken)
         {
-            var result = await _checkInService.CreateCheckInAsync(createCheckInDto, cancellationToken);
+            var result = await _checkInService.CheckInAsync(explorerId, createCheckInDto, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

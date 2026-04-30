@@ -18,16 +18,6 @@ namespace Places.Application.Mappers
             };
         }
 
-        public static CheckIn ToEntity(CreateCheckInDto dto)
-        {
-            return new CheckIn
-            {
-                ExplorerId = dto.ExplorerId,
-                PlaceId = dto.PlaceId,
-                ValidationStatus = CheckInValidationStatus.Pending
-            };
-        }
-
         public static void UpdateEntity(CheckIn checkIn, UpdateCheckInDto dto)
         {
             checkIn.ValidationStatus = dto.ValidationStatus;

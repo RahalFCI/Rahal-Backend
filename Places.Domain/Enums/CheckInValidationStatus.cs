@@ -7,7 +7,7 @@ namespace Places.Domain.Enums
     public enum CheckInValidationStatus
     {
         Pending,
-        Approved,
-        Rejected
+        Verified,
+        Failed
     }
 }

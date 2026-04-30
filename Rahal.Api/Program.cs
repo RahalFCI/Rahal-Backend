@@ -1,4 +1,5 @@
 using ECommerce.API.Filters;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -135,7 +136,11 @@ app.InitializeSearchIndexesAsync().GetAwaiter().GetResult();
 await app.ApplyMigrationsAsync();
 
 
-app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
+app.UseHsts();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseHttpLogging(); //Enable Http Logging

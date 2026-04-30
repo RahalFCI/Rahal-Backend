@@ -29,6 +29,16 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasDefaultValue(CheckInValidationStatus.Pending)
                 .HasComment("Validation status of the check-in (Pending=0, Approved=1, Rejected=2)");
 
+            builder.Property(e => e.RiskScore)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(e => e.Latitude)
+                .IsRequired();
+
+            builder.Property(e => e.Longitude)
+                .IsRequired();
+
             // Foreign Key to Place
             builder.HasOne(e => e.Place)
                 .WithMany()

@@ -21,7 +21,7 @@ namespace Places.Application
             services.AddScoped<IValidator<UpdatePlaceDto>, UpdatePlaceDtoValidator>();
             services.AddScoped<IValidator<CreatePlaceCategoryDto>, CreatePlaceCategoryDtoValidator>();
             services.AddScoped<IValidator<UpdatePlaceCategoryDto>, UpdatePlaceCategoryDtoValidator>();
-            services.AddScoped<IValidator<CreateCheckInDto>, CreateCheckInDtoValidator>();
+            services.AddScoped<IValidator<CheckInRequestDto>, CheckInRequestDtoValidator>();
             services.AddScoped<IValidator<CreatePlaceReviewDto>, CreatePlaceReviewDtoValidator>();
             services.AddScoped<IValidator<UpdatePlaceReviewDto>, UpdatePlaceReviewDtoValidator>();
             services.AddScoped<IValidator<AddressDto>, AddressDtoValidator>();

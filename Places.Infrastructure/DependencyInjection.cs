@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Places.Application.Interfaces;
 using Places.Infrastructure.Persistence;
 using Places.Infrastructure.Search;
 using Places.Infrastructure.Search.EventHandlers;
+using Places.Infrastructure.Services;
 using Shared.Application.Interfaces;
 using Shared.Infrastructure.Repositories;
 
@@ -35,6 +37,8 @@ namespace Places.Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
+
+            services.AddScoped<ICheckInValidatorService, GeoCheckInValidatorService>();
 
             return services;
         }

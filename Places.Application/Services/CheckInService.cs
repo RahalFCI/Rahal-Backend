@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Shared.Application.DTOs;
-using Shared.Application.Interfaces;
-using Shared.Domain.Enums;
 using Places.Application.DTOs.CheckIn;
+using Places.Application.Factories;
 using Places.Application.Interfaces;
 using Places.Application.Mappers;
 using Places.Domain.Entities;
+using Shared.Application.DTOs;
+using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 
 namespace Places.Application.Services
 {
@@ -14,15 +15,18 @@ namespace Places.Application.Services
     {
         private readonly IGenericRepository<CheckIn> _checkInRepository;
         private readonly IGenericRepository<Place> _placeRepository;
+        private readonly ICheckInValidatorService _validator;
         private readonly ILogger<CheckInService> _logger;
 
         public CheckInService(
             IGenericRepository<CheckIn> checkInRepository,
             IGenericRepository<Place> placeRepository,
+            ICheckInValidatorService validator,
             ILogger<CheckInService> logger)
         {
             _checkInRepository = checkInRepository;
             _placeRepository = placeRepository;
+            _validator = validator;
             _logger = logger;
         }
 
@@ -98,33 +102,47 @@ namespace Places.Application.Services
             return ApiResponse<IEnumerable<GetCheckInDto>>.Success(dtos);
         }
 
-        public async Task<ApiResponse<string>> CreateCheckInAsync(CreateCheckInDto dto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> CheckInAsync(
+            Guid explorerId,
+            CheckInRequestDto request,
+            CancellationToken ct = default)
         {
-            _logger.LogInformation("Creating check-in for explorer {ExplorerId} at place {PlaceId}", dto.ExplorerId, dto.PlaceId);
+            _logger.LogInformation("Processing check-in request for explorer {ExplorerId} at place {PlaceId}", 
+                explorerId, request.PlaceId);
 
-            var place = await _placeRepository.GetByIdAsync(dto.PlaceId, cancellationToken);
+            var place = await _placeRepository.GetByIdAsync(request.PlaceId, ct);
             if (place is null)
             {
-                _logger.LogWarning("Place {PlaceId} not found", dto.PlaceId);
+                _logger.LogWarning("Place {PlaceId} not found for check-in", request.PlaceId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var existingCheckIn = await _checkInRepository.GetTable()
-                .FirstOrDefaultAsync(c => c.ExplorerId == dto.ExplorerId && c.PlaceId == dto.PlaceId, cancellationToken);
+            var validationResult = await _validator.ValidateAsync(
+                request, explorerId, place, ct);
 
-            if (existingCheckIn is not null)
+            var checkIn = validationResult.IsValid
+                ? CheckInFactory.CreateVerified(
+                    explorerId, request.PlaceId,
+                    request.Latitude, request.Longitude,
+                    validationResult.RiskScore)
+                : CheckInFactory.CreateFailed(
+                    explorerId, request.PlaceId,
+                    request.Latitude, request.Longitude,
+                    validationResult.RiskScore);
+
+            _checkInRepository.Add(checkIn);
+
+            await _checkInRepository.SaveChangesAsync(ct);
+
+            if (!validationResult.IsValid)
             {
-                _logger.LogWarning("Check-in already exists for explorer {ExplorerId} at place {PlaceId}", dto.ExplorerId, dto.PlaceId);
-                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+                _logger.LogWarning("Check-in validation failed for explorer {ExplorerId}: errorCode={ErrorCode}", 
+                    explorerId, validationResult.ErrorCode);
+                return ApiResponse<string>.Failure(validationResult.ErrorCode!.Value);
             }
 
-            var checkIn = CheckInMapper.ToEntity(dto);
-            _checkInRepository.Add(checkIn);
-            await _checkInRepository.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Check-in created successfully for explorer {ExplorerId} at place {PlaceId}", dto.ExplorerId, dto.PlaceId);
-
-            return ApiResponse<string>.Success("Check-in created successfully");
+            _logger.LogInformation("Check-in successful for explorer {ExplorerId}", explorerId);
+            return ApiResponse<string>.Success("Checked in successfully");
         }
 
         public async Task<ApiResponse<string>> UpdateCheckInStatusAsync(Guid explorerId, Guid placeId, UpdateCheckInDto dto, CancellationToken cancellationToken = default)

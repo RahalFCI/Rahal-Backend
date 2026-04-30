@@ -9,5 +9,9 @@ namespace Places.Domain.Entities
         public Guid PlaceId { get; set; }
         public Place? Place { get; set; }
         public CheckInValidationStatus ValidationStatus { get; set; }
+        public int RiskScore { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+
     }
 }
