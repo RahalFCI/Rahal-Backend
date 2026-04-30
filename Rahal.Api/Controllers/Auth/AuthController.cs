@@ -63,7 +63,7 @@ namespace Rahal.Api.Controllers.Auth
             return Ok(result);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateNewAccessToken(TokenDto tokenDto)
         {

@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
-using Rahal.Api.Filters;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Application.Templates;
 using Shared.Domain.Enums;
 using System.Security.Claims;
@@ -136,9 +136,9 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _userService.GetAllUsers(cancellationToken);
+            var result = await _userService.GetAllUsers(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 
@@ -148,16 +148,15 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllIncludingDeletedAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
         {
-            var result = await _userService.GetAllUsersIncludingDeleted(cancellationToken);
+            var result = await _userService.GetAllUsersIncludingDeleted(offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
 
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -176,7 +175,6 @@ namespace Rahal.Api.Controllers.Users
 
         [HttpPut("password/{id}")]
         [Authorize(Roles = "Admin")]
-        [RequireEmailVerified]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -201,6 +199,25 @@ namespace Rahal.Api.Controllers.Users
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await _userService.DeleteUser(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
+
+            return NoContent();
+        }
+
+        [HttpDelete("permanent/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> DeletePermanentlyAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            if (GetCurrentUserId() != id)
+                return Forbid();
+
+            var result = await _userService.DeleteUserPermanently(id, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);

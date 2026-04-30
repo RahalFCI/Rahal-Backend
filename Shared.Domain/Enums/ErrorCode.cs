@@ -29,10 +29,15 @@ namespace Shared.Domain.Enums
         Forbidden = 40300,
         EmailNotVerified = 40302,
 
-
         // State / business rules
         InvalidOperation = 40910,
         BusinessRuleViolation = 42210,
+
+        // Location & Check-in errors
+        AlreadyCheckedIn = 42211,
+        UserNotAtLocation = 42212,
+        ImpossibleTravel = 42213,
+        LocationSpoofingDetected = 42214,
 
         // Infrastructure
         DatabaseError = 50010,

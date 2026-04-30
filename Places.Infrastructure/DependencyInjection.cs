@@ -1,10 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Places.Application.Interfaces;
 using Places.Infrastructure.Persistence;
+using Places.Infrastructure.Search;
+using Places.Infrastructure.Search.EventHandlers;
+using Places.Infrastructure.Services;
+using Shared.Application.Interfaces;
+using Shared.Infrastructure.Repositories;
 
 namespace Places.Infrastructure
 {
@@ -22,9 +26,19 @@ namespace Places.Infrastructure
             services.AddDbContext<PlacesDbContext>(options =>
                 options.UseNpgsql(
                     connectionstring,
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "places")
                 )
             );
+
+            services.AddScoped<DbContext, PlacesDbContext>();
+
+            services.AddScoped<IDbInitializer, PlacesDBInitializer>();
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
+
+            services.AddScoped<ICheckInValidatorService, GeoCheckInValidatorService>();
 
             return services;
         }

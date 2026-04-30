@@ -22,7 +22,7 @@ namespace Rewards.Infrastructure
             services.AddDbContext<RewardsDbContext>(options =>
                 options.UseNpgsql(
                     connectionstring,
-                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "users")
+                    b => b.MigrationsHistoryTable("__EFMigrationsHistory", "rewards")
                 )
             );
 

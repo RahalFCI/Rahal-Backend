@@ -71,7 +71,7 @@ namespace Users.Infrastructure
             services.AddScoped<SignInManager<User>>();
 
 
-            services.AddScoped<IDbInitializer, DBInitializer>();
+            services.AddScoped<IDbInitializer, UsersDBInitializer>();
 
             // Register Email Verification Repository
             services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
@@ -79,8 +79,7 @@ namespace Users.Infrastructure
             // Register Search Index Configuration
             services.AddScoped<ISearchIndexInitializer, UserIndexConfig>();
 
-            //Register Unit of Work
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 
 
             return services;

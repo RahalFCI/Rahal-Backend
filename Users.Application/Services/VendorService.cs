@@ -5,12 +5,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.DTOs._Common;
 using Users.Application.DTOs.Auth;
+using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.Vendor;
 using Users.Application.Interfaces;
 using Users.Domain.Entities;
@@ -20,10 +23,7 @@ using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
-    /// <summary>
-    /// Vendor-specific user service
-    /// Handles CRUD operations for Vendor profiles
-    /// </summary>
+
     internal class VendorService : IUserService<VendorDto, VendorSummaryDto>
     {
         private readonly UserManager<User> _userManager;
@@ -88,45 +88,71 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Vendor deleted successfully.");
         }
 
-        public async Task<ApiResponse<IEnumerable<VendorSummaryDto>>> GetAllUsers(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> DeleteUserPermanently(Guid id, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Vendors");
+            _logger.LogInformation("Permanent deletion initiated for vendor user {UserId}", id);
+
+            var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null || user.UserType != UserRoleEnum.Vendor)
+            {
+                _logger.LogWarning("Permanent vendor deletion failed: User {UserId} not found or not a Vendor", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Permanent vendor deletion failed: Could not delete user {UserId}. Errors: {Errors}",
+                    id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            // Publish UserDeletedEvent for search index cleanup
+            try
+            {
+                await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
+                _logger.LogInformation("UserDeletedEvent published for permanent deletion of user {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to publish UserDeletedEvent for user {UserId}. " +
+                    "Deletion succeeded but user may still be in search index.",
+                    id);
+                // Don't throw - search event failure shouldn't fail deletion
+            }
+
+            _logger.LogInformation("Vendor {UserId} permanently deleted", id);
+            return ApiResponse<string>.Success("Vendor permanently deleted.");
+        }
+
+        public async Task<ApiResponse<PagedResult<VendorSummaryDto>>> GetAllUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Vendors - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var vendors = await _userManager.Users
                 .Where(u => u.UserType == UserRoleEnum.Vendor)
-                .Include(u => u.VendorProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = vendors
-                .Where(u => u.VendorProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<VendorSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Vendors", summaries.Count);
 
-            return ApiResponse<IEnumerable<VendorSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<VendorSummaryDto>>.Success(vendors);
         }
 
-        public async Task<ApiResponse<IEnumerable<VendorSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<VendorSummaryDto>>> GetAllUsersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Vendors");
+            _logger.LogInformation("Fetching all Vendors - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var vendors = await _userManager.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Vendor)
-                .Include(u => u.VendorProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = vendors
-                .Where(u => u.VendorProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<VendorSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Vendors", summaries.Count);
 
-            return ApiResponse<IEnumerable<VendorSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<VendorSummaryDto>>.Success(vendors);
         }
 
         public async Task<ApiResponse<VendorDto>> GetById(Guid id, CancellationToken cancellationToken = default)

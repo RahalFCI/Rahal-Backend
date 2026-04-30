@@ -5,11 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.DTOs._Common;
+using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.Explorer;
 using Users.Application.Interfaces;
@@ -20,10 +23,7 @@ using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
-    /// <summary>
-    /// Explorer-specific user service
-    /// Handles CRUD operations for Explorer profiles
-    /// </summary>
+
     internal class ExplorerService : IUserService<ExplorerDto, ExplorerSummaryDto>
     {
         private readonly UserManager<User> _userManager;
@@ -88,45 +88,70 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Explorer deleted successfully.");
         }
 
-        public async Task<ApiResponse<IEnumerable<ExplorerSummaryDto>>> GetAllUsers(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> DeleteUserPermanently(Guid id, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Explorers");
+            _logger.LogInformation("Permanent deletion initiated for Explorer user {UserId}", id);
+
+            var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null || user.UserType != UserRoleEnum.Explorer)
+            {
+                _logger.LogWarning("Permanent Explorer deletion failed: User {UserId} not found or not an Explorer", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Permanent Explorer deletion failed: Could not delete user {UserId}. Errors: {Errors}",
+                    id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            // Publish UserDeletedEvent for search index cleanup
+            try
+            {
+                await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
+                _logger.LogInformation("UserDeletedEvent published for permanent deletion of user {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to publish UserDeletedEvent for user {UserId}. " +
+                    "Deletion succeeded but user may still be in search index.",
+                    id);
+                // Don't throw - search event failure shouldn't fail deletion
+            }
+
+            _logger.LogInformation("Explorer {UserId} permanently deleted", id);
+            return ApiResponse<string>.Success("Explorer permanently deleted.");
+        }
+
+        public async Task<ApiResponse<PagedResult<ExplorerSummaryDto>>> GetAllUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Explorers - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var explorers = await _userManager.Users
                 .Where(u => u.UserType == UserRoleEnum.Explorer)
-                .Include(u => u.ExplorerProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = explorers
-                .Where(u => u.ExplorerProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<ExplorerSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Explorers", summaries.Count);
 
-            return ApiResponse<IEnumerable<ExplorerSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<ExplorerSummaryDto>>.Success(explorers);
         }
 
-        public async Task<ApiResponse<IEnumerable<ExplorerSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<ExplorerSummaryDto>>> GetAllUsersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Explorers");
+            _logger.LogInformation("Fetching all Explorers including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var explorers = await _userManager.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Explorer)
-                .Include(u => u.ExplorerProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = explorers
-                .Where(u => u.ExplorerProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<ExplorerSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Explorers", summaries.Count);
-
-            return ApiResponse<IEnumerable<ExplorerSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<ExplorerSummaryDto>>.Success(explorers);
         }
 
         public async Task<ApiResponse<ExplorerDto>> GetById(Guid id, CancellationToken cancellationToken = default)

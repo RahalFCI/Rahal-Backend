@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Places.Infrastructure.Search;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
 using Shared.Application.DTOs.Search;
@@ -10,22 +11,22 @@ using Users.Infrastructure.Search;
 
 namespace Rahal.Api.Controllers.Search
 {
-    /// <summary>
-    /// Search controller for querying indexed documents via Meilisearch
-    /// Provides endpoints for full-text search across users and other entities
-    /// </summary>
+
     [ApiController]
     [Route("api/[controller]")]
     public class SearchController : CustomControllerBase
     {
         private readonly ISearchService<UserSearchDocument> _userSearchService;
+        private readonly ISearchService<PlaceSearchDocument> _placesSearchService;
         private readonly ILogger<SearchController> _logger;
 
         public SearchController(
             ISearchService<UserSearchDocument> userSearchService,
+            ISearchService<PlaceSearchDocument> placesSearchService,
             ILogger<SearchController> logger)
         {
             _userSearchService = userSearchService;
+            _placesSearchService = placesSearchService;
             _logger = logger;
         }
 
@@ -60,6 +61,77 @@ namespace Rahal.Api.Controllers.Search
 
                 _logger.LogInformation(
                     "User search completed: query='{Query}', found={HitCount} results out of {TotalHits}",
+                    searchRequest.Query, result.Hits.Count(), result.TotalHits);
+
+                // Return success response with pagination metadata
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        results = result.Hits,
+                        pagination = new
+                        {
+                            currentPage = result.Page,
+                            pageSize = result.PageSize,
+                            totalPages = result.TotalPages,
+                            totalResults = result.TotalHits,
+                            hasMore = result.HasMore
+                        }
+                    }
+                });
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogError(ex, "User search was cancelled");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    success = false,
+                    message = "Search service is temporarily unavailable"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during user search: {Message}", ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = false,
+                    message = "An error occurred while processing your search"
+                });
+            }
+        }
+
+        [HttpGet("places")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SearchPlaces(
+            [FromQuery] SearchRequestDto searchRequest,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Place search initiated: query='{Query}', page={Page}, pageSize={PageSize}",
+                searchRequest.Query, searchRequest.Page, searchRequest.PageSize);
+
+            try
+            {
+                // Create search options from request
+                var options = new SearchOptions
+                {
+                    Query = searchRequest.Query,
+                    Page = searchRequest.Page,
+                    PageSize = searchRequest.PageSize,
+                    Filter = searchRequest.Filter,
+                    SortBy = searchRequest.SortBy
+                };
+
+                // Perform search
+                var result = await _userSearchService.SearchAsync(
+                    searchRequest.Query,
+                    options,
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Place search completed: query='{Query}', found={HitCount} results out of {TotalHits}",
                     searchRequest.Query, result.Hits.Count(), result.TotalHits);
 
                 // Return success response with pagination metadata

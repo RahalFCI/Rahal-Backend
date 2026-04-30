@@ -36,7 +36,6 @@ namespace Users.Domain.Entities._Common
 
         public ExplorerProfile? ExplorerProfile { get; set; }
 
-
         public VendorProfile? VendorProfile { get; set; }
 
 

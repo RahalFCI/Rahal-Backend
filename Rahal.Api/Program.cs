@@ -1,7 +1,9 @@
 using ECommerce.API.Filters;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
@@ -48,6 +50,7 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(PlaceCreatedEventHandler).Assembly);
 });
 
 
@@ -55,7 +58,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
 
 //Inject services
-builder.Services.AddAllModules(builder.Configuration);
+builder.Services.AddAllModules(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers(
     options =>
@@ -92,6 +95,7 @@ builder.Host.UseSerilog((HostBuilderContext context, IServiceProvider services, 
 builder.Services.AddHttpContextAccessor();
 
 
+
 //Register OpenApi Document for internal and public APIs
 builder.Services.AddOpenApi("internal", options =>
 {
@@ -104,7 +108,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
@@ -133,7 +137,11 @@ app.InitializeSearchIndexesAsync().GetAwaiter().GetResult();
 await app.ApplyMigrationsAsync();
 
 
-app.UseHsts(); //Forces the browser to use HTTPS for all requests and responses
+app.UseHsts();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseHttpLogging(); //Enable Http Logging

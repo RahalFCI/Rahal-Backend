@@ -206,23 +206,6 @@ namespace Users.Application.Services
                             user.Id, user.Email);
                         }
 
-                        // Publish UserCreatedEvent for search indexing
-                        try
-                        {
-                            await _mediator.Publish(
-                                new UserCreatedEvent(user.Id, user.DisplayName, user.Email!),
-                                cancellationToken);
-                            _logger.LogInformation("UserCreatedEvent published for user {UserId}", user.Id);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, 
-                                "Failed to publish UserCreatedEvent for user {UserId}. " +
-                                "Registration succeeded but user may not be searchable until next sync.",
-                                user.Id);
-                            // Don't throw - search event failure shouldn't fail registration
-                        }
-
                         _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
                             user.Id, user.Email, user.UserType);
 

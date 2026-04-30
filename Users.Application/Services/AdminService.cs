@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,6 +19,7 @@ using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 using Users.Domain.Events;
+
 
 namespace Users.Application.Services
 {
@@ -88,45 +91,70 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Admin deleted successfully.");
         }
 
-        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsers(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> DeleteUserPermanently(Guid id, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Admins");
+            _logger.LogInformation("Permanent deletion initiated for admin user {UserId}", id);
+
+            var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null || user.UserType != UserRoleEnum.Admin)
+            {
+                _logger.LogWarning("Permanent admin deletion failed: User {UserId} not found or not an Admin", id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Permanent admin deletion failed: Could not delete user {UserId}. Errors: {Errors}",
+                    id, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            // Publish UserDeletedEvent for search index cleanup
+            try
+            {
+                await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
+                _logger.LogInformation("UserDeletedEvent published for permanent deletion of user {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to publish UserDeletedEvent for user {UserId}. " +
+                    "Deletion succeeded but user may still be in search index.",
+                    id);
+                // Don't throw - search event failure shouldn't fail deletion
+            }
+
+            _logger.LogInformation("Admin {UserId} permanently deleted", id);
+            return ApiResponse<string>.Success("Admin permanently deleted.");
+        }
+
+        public async Task<ApiResponse<PagedResult<AdminSummaryDto>>> GetAllUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Admins - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var admins = await _userManager.Users
                 .Where(u => u.UserType == UserRoleEnum.Admin)
-                .Include(u => u.AdminProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = admins
-                .Where(u => u.AdminProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<AdminSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
 
-            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<AdminSummaryDto>>.Success(admins);
         }
 
-        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<AdminSummaryDto>>> GetAllUsersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Admins");
+            _logger.LogInformation("Fetching all Admins including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var admins = await _userManager.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Admin)
-                .Include(u => u.AdminProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = admins
-                .Where(u => u.AdminProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<AdminSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
-
-            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<AdminSummaryDto>>.Success(admins);
         }
 
         public async Task<ApiResponse<AdminDto>> GetById(Guid id, CancellationToken cancellationToken = default)
