@@ -104,9 +104,9 @@ namespace Rahal.Api.Controllers.Places
         [HttpPost("search")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> SearchByLocationAsync([FromBody] LocationSearchRequest request, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> SearchByLocationAsync([FromQuery] LocationSearchRequest request, CancellationToken cancellationToken)
         {
-            var result = await _placeService.SearchPlacesByLocationAsync(request.Latitude, request.Longitude, request.RadiusInMeters, offsetPaginationRequest, cancellationToken);
+            var result = await _placeService.SearchPlacesByLocationAsync(request.Latitude, request.Longitude, request.RadiusInMeters, request.offsetPaginationRequest, cancellationToken);
             return Ok(result);
         }
     }
