@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,6 +19,7 @@ using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 using Users.Domain.Events;
+
 
 namespace Users.Application.Services
 {
@@ -128,45 +131,30 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Admin permanently deleted.");
         }
 
-        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsers(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<AdminSummaryDto>>> GetAllUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Admins");
+            _logger.LogInformation("Fetching all Admins - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var admins = await _userManager.Users
                 .Where(u => u.UserType == UserRoleEnum.Admin)
-                .Include(u => u.AdminProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = admins
-                .Where(u => u.AdminProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<AdminSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
 
-            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<AdminSummaryDto>>.Success(admins);
         }
 
-        public async Task<ApiResponse<IEnumerable<AdminSummaryDto>>> GetAllUsersIncludingDeleted(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<AdminSummaryDto>>> GetAllUsersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all Admins");
+            _logger.LogInformation("Fetching all Admins including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var admins = await _userManager.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.UserType == UserRoleEnum.Admin)
-                .Include(u => u.AdminProfile)
-                .ToListAsync(cancellationToken);
-
-            var summaries = admins
-                .Where(u => u.AdminProfile != null)
                 .Select(u => _mapper.ToSummary(u))
-                .Cast<AdminSummaryDto>()
-                .ToList();
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Successfully retrieved {Count} Admins", summaries.Count);
-
-            return ApiResponse<IEnumerable<AdminSummaryDto>>.Success(summaries);
+            return ApiResponse<PagedResult<AdminSummaryDto>>.Success(admins);
         }
 
         public async Task<ApiResponse<AdminDto>> GetById(Guid id, CancellationToken cancellationToken = default)

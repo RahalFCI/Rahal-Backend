@@ -9,7 +9,9 @@ using Places.Domain.Entities;
 using Places.Domain.Events;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 
 namespace Places.Application.Services
 {
@@ -47,35 +49,34 @@ namespace Places.Application.Services
             return ApiResponse<GetPlaceDto>.Success(PlaceMapper.ToGetDto(place));
         }
 
-        public async Task<ApiResponse<IEnumerable<GetPlaceDto>>> GetAllPlacesAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetPlaceDto>>> GetAllPlacesAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all places");
+            _logger.LogInformation("Fetching all places - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
-            var places = await _placeRepository.GetTable().Include(p => p.PlaceCategory).ToListAsync(cancellationToken);
-            var dtos = PlaceMapper.ToGetDtos(places);
+            var result = await _placeRepository.GetTable()
+                .Select(p => PlaceMapper.ToGetDto(p))
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Retrieved {PlaceCount} places", places.Count());
-
-            return ApiResponse<IEnumerable<GetPlaceDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetPlaceDto>>.Success(result);
         }
 
-        public async Task<ApiResponse<IEnumerable<GetPlaceDto>>> GetPlacesByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetPlaceDto>>> GetPlacesByCategoryIdAsync(Guid categoryId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching places for category {CategoryId}", categoryId);
+            _logger.LogInformation("Fetching places for category {CategoryId} - page {Page}, pageSize {PageSize}", categoryId, request.Page, request.PageSize);
 
             var category = await _categoryRepository.GetByIdAsync(categoryId, cancellationToken);
             if (category is null)
             {
                 _logger.LogWarning("Category {CategoryId} not found", categoryId);
-                return ApiResponse<IEnumerable<GetPlaceDto>>.Failure(ErrorCode.NotFound);
+                return ApiResponse<PagedResult<GetPlaceDto>>.Failure(ErrorCode.NotFound);
             }
 
-            var places = await _placeRepository.GetTable().Where(p => p.PlaceCategoryId == categoryId).Include(p => p.PlaceCategory).ToListAsync(cancellationToken);
-            var dtos = PlaceMapper.ToGetDtos(places);
+            var result = await _placeRepository.GetTable()
+                .Where(p => p.PlaceCategoryId == categoryId)
+                .Select(p => PlaceMapper.ToGetDto(p))
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Retrieved {PlaceCount} places for category {CategoryId}", places.Count(), categoryId);
-
-            return ApiResponse<IEnumerable<GetPlaceDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetPlaceDto>>.Success(result);
         }
 
         public async Task<ApiResponse<string>> CreatePlaceAsync(CreatePlaceDto dto, CancellationToken cancellationToken = default)
@@ -193,32 +194,32 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Place permanently deleted");
         }
 
-        public async Task<ApiResponse<IEnumerable<GetPlaceDto>>> SearchPlacesByLocationAsync(double latitude, double longitude, int radiusInMeters, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetPlaceDto>>> SearchPlacesByLocationAsync(double latitude, double longitude, int radiusInMeters, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Searching places near latitude {Latitude}, longitude {Longitude} with radius {Radius} meters", 
-                latitude, longitude, radiusInMeters);
+            _logger.LogInformation("Searching places near latitude {Latitude}, longitude {Longitude} with radius {Radius} meters - page {Page}, pageSize {PageSize}", 
+                latitude, longitude, radiusInMeters, request.Page, request.PageSize);
 
             if (!GeoLocationHelper.IsValidCoordinate(latitude, longitude))
             {
                 _logger.LogWarning("Invalid search coordinates: latitude {Latitude}, longitude {Longitude}", latitude, longitude);
-                return ApiResponse<IEnumerable<GetPlaceDto>>.Failure(ErrorCode.ValidationError);
+                return ApiResponse<PagedResult<GetPlaceDto>>.Failure(ErrorCode.ValidationError);
             }
 
-            var places = await _placeRepository.GetTable().Include(p => p.PlaceCategory).ToListAsync(cancellationToken);
+            var pagedPlaces = await _placeRepository.GetTable()
+                .Select(p => PlaceMapper.ToGetDto(p))
+                .ToPagedResultAsync(request, cancellationToken);
 
             var nearbyPlaces = GeoLocationHelper.FilterByRadius(
-                places,
+                pagedPlaces.Items,
                 latitude,
                 longitude,
                 radiusInMeters,
                 p => p.Latitude,
-                p => p.Longitude);
+                p => p.Longitude).ToList();
 
-            var dtos = PlaceMapper.ToGetDtos(nearbyPlaces);
+            _logger.LogInformation("Found {PlaceCount} places within {Radius} meters out of {TotalCount}", pagedPlaces.Items.Count(), radiusInMeters, pagedPlaces.TotalCount);
 
-            _logger.LogInformation("Found {PlaceCount} places within {Radius} meters", nearbyPlaces.Count(), radiusInMeters);
-
-            return ApiResponse<IEnumerable<GetPlaceDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetPlaceDto>>.Success(pagedPlaces);
         }
     }
 }

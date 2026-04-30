@@ -7,7 +7,9 @@ using Places.Application.Mappers;
 using Places.Domain.Entities;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using Shared.Infrastructure.Pagination;
 
 namespace Places.Application.Services
 {
@@ -48,58 +50,49 @@ namespace Places.Application.Services
             return ApiResponse<GetCheckInDto>.Success(CheckInMapper.ToGetDto(checkIn));
         }
 
-        public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetAllCheckInAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetCheckInDto>>> GetAllCheckInAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching all check-ins");
+            _logger.LogInformation("Fetching all check-ins - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var checkIns = await _checkInRepository.GetTable()
                 .AsNoTracking()
-                .Include(c => c.Place)
                 .Select(c => CheckInMapper.ToGetDto(c))
-                .ToListAsync(cancellationToken);
+                .ToPagedResultAsync(request, cancellationToken);
 
-            _logger.LogInformation("Fetched {Count} check-ins", checkIns.Count);
-
-            return ApiResponse<IEnumerable<GetCheckInDto>>.Success(checkIns);
+            return ApiResponse<PagedResult<GetCheckInDto>>.Success(checkIns);
         }
 
-        public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetCheckInsByPlaceIdAsync(Guid placeId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetCheckInDto>>> GetCheckInsByPlaceIdAsync(Guid placeId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching check-ins for place {PlaceId}", placeId);
+            _logger.LogInformation("Fetching check-ins for place {PlaceId} - page {Page}, pageSize {PageSize}", placeId, request.Page, request.PageSize);
 
             var place = await _placeRepository.GetByIdAsync(placeId, cancellationToken);
             if (place is null)
             {
                 _logger.LogWarning("Place {PlaceId} not found", placeId);
-                return ApiResponse<IEnumerable<GetCheckInDto>>.Failure(ErrorCode.NotFound);
+                return ApiResponse<PagedResult<GetCheckInDto>>.Failure(ErrorCode.NotFound);
             }
 
             var checkIns = await _checkInRepository.GetTable()
                 .AsNoTracking()
                 .Where(c => c.PlaceId == placeId)
-                .Include(c => c.Place)
-                .ToListAsync(cancellationToken);
+                .Select(c => CheckInMapper.ToGetDto(c))
+                .ToPagedResultAsync(request, cancellationToken);
 
-            var dtos = CheckInMapper.ToGetDtos(checkIns);
-            _logger.LogInformation("Retrieved {CheckInCount} check-ins for place {PlaceId}", checkIns.Count(), placeId);
-
-            return ApiResponse<IEnumerable<GetCheckInDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetCheckInDto>>.Success(checkIns);
         }
 
-        public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetCheckInsByExplorerIdAsync(Guid explorerId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetCheckInDto>>> GetCheckInsByExplorerIdAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching check-ins for explorer {ExplorerId}", explorerId);
+            _logger.LogInformation("Fetching check-ins for explorer {ExplorerId} - page {Page}, pageSize {PageSize}", explorerId, request.Page, request.PageSize);
 
             var checkIns = await _checkInRepository.GetTable()
                 .AsNoTracking()
                 .Where(c => c.ExplorerId == explorerId)
-                .Include(c => c.Place)
-                .ToListAsync(cancellationToken);
+                .Select(c => CheckInMapper.ToGetDto(c))
+                .ToPagedResultAsync(request, cancellationToken);
 
-            var dtos = CheckInMapper.ToGetDtos(checkIns);
-            _logger.LogInformation("Retrieved {CheckInCount} check-ins for explorer {ExplorerId}", checkIns.Count(), explorerId);
-
-            return ApiResponse<IEnumerable<GetCheckInDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetCheckInDto>>.Success(checkIns);
         }
 
         public async Task<ApiResponse<string>> CheckInAsync(
@@ -209,21 +202,17 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Check-in permanently deleted");
         }
 
-        public async Task<ApiResponse<IEnumerable<GetCheckInDto>>> GetPendingCheckInsAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetCheckInDto>>> GetPendingCheckInsAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching pending check-ins");
+            _logger.LogInformation("Fetching pending check-ins - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
 
             var checkIns = await _checkInRepository.GetTable()
                 .AsNoTracking()
                 .Where(c => c.ValidationStatus == Places.Domain.Enums.CheckInValidationStatus.Pending)
-                .Include(c => c.Place)
-                .ToListAsync(cancellationToken);
+                .Select(c => CheckInMapper.ToGetDto(c))
+                .ToPagedResultAsync(request, cancellationToken);
 
-            var dtos = CheckInMapper.ToGetDtos(checkIns);
-            _logger.LogInformation("Retrieved {CheckInCount} pending check-ins", checkIns.Count());
-
-            return ApiResponse<IEnumerable<GetCheckInDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetCheckInDto>>.Success(checkIns);
         }
     }
 }
-
