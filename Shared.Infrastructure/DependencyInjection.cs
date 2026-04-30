@@ -1,6 +1,7 @@
 ﻿using Meilisearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -22,12 +23,16 @@ namespace Shared.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment hostEnvironment)
         {
             services.Configure<MailSettings>(
             configuration.GetSection(MailSettings.SectionName));
 
-            services.AddTransient<IEmailService, SmtpEmailService>();
+            if(hostEnvironment.IsDevelopment())
+                services.AddTransient<IEmailService, LoggingEmailService>();
+            else
+                services.AddTransient<IEmailService, SmtpEmailService>();
+
 
             // Register file storage service
             services.AddScoped<IFileStorageService, LocalFileStorageService>();

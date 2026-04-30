@@ -22,7 +22,7 @@ namespace Shared.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddAllModules(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddAllModules(this IServiceCollection services, IConfiguration configuration, IHostEnvironment Environment)
         {
             //Users Module
             services.AddUsersApplication(configuration);
@@ -50,7 +50,7 @@ namespace Shared.Infrastructure
             
             //Shared Module
             services.AddSharedApplication(configuration);
-            services.AddSharedInfrastructure(configuration);
+            services.AddSharedInfrastructure(configuration, Environment);
 
             return services;
         }

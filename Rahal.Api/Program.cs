@@ -58,7 +58,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("RedisSettings"));
 
 //Inject services
-builder.Services.AddAllModules(builder.Configuration);
+builder.Services.AddAllModules(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers(
     options =>
@@ -93,6 +93,7 @@ builder.Host.UseSerilog((HostBuilderContext context, IServiceProvider services, 
 
 // Required to access HttpContext in services
 builder.Services.AddHttpContextAccessor();
+
 
 
 //Register OpenApi Document for internal and public APIs
