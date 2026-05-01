@@ -139,7 +139,7 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
 
@@ -147,7 +147,7 @@ namespace Users.Application.Services
             if (existingUser != null)
             {
                 _logger.LogWarning("Registration failed: Email {Email} is already registered", user.Email);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
             }
 
             try
@@ -167,7 +167,7 @@ namespace Users.Application.Services
                 {
                     _logger.LogError("Registration failed: Could not create user {Email}. Errors: {Errors}",
                         user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
-                    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
                 }
 
                 var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
@@ -184,12 +184,8 @@ namespace Users.Application.Services
                     }
 
                     await _userManager.DeleteAsync(user);
-                    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidRequest);
+                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
                 }
-
-                var roles = new List<string> { user.UserType.ToString() };
-
-                var authResponse = _tokenService.GenerateToken(user, roles, null);
 
                 // Send verification OTP
                 var otpResult = await _emailVerificationService.SendVerificationOtpAsync(user, cancellationToken);
@@ -209,7 +205,7 @@ namespace Users.Application.Services
                         _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
                             user.Id, user.Email, user.UserType);
 
-                        return ApiResponse<AuthResponseDto?>.Success(authResponse);
+                        return ApiResponse<string>.Success("User registered successfully");
                     }
                     catch (Exception ex)
                     {

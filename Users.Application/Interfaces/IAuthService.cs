@@ -15,7 +15,7 @@ namespace Users.Application.Interfaces
     /// </summary>
     public interface IAuthService
     {
-        Task<ApiResponse<AuthResponseDto?>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default);
         Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto, CancellationToken cancellationToken = default);
         Task LogoutAsync(CancellationToken cancellationToken = default);
     }
