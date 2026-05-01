@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Places.Application.DTOs.PlaceCategory;
 using Places.Application.Interfaces;

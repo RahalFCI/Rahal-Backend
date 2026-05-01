@@ -28,10 +28,7 @@ namespace Shared.Infrastructure
             services.Configure<MailSettings>(
             configuration.GetSection(MailSettings.SectionName));
 
-            if(hostEnvironment.IsDevelopment())
-                services.AddTransient<IEmailService, LoggingEmailService>();
-            else
-                services.AddTransient<IEmailService, SmtpEmailService>();
+            services.AddTransient<IEmailService, SmtpEmailService>();
 
 
             // Register file storage service

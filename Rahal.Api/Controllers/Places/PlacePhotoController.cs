@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Places.Application.DTOs.PlacePhoto;
 using Places.Application.Interfaces;
@@ -22,7 +23,7 @@ namespace Rahal.Api.Controllers.Places
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetPhotosByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPhotosByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken = default)
         {
             var result = await _photoService.GetPhotosByPlaceIdAsync(placeId, cancellationToken);
 

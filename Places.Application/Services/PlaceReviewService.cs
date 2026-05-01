@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Places.Application.DTOs.PlaceReview;
 using Places.Application.Interfaces;

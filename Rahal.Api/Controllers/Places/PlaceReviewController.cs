@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.DTOs;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Places.Application.DTOs.PlaceReview;
 using Places.Application.Interfaces;
@@ -36,7 +37,7 @@ namespace Rahal.Api.Controllers.Places
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetReviewsByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetReviewsByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken = default)
         {
             var result = await _reviewService.GetReviewsByPlaceIdAsync(placeId, cancellationToken);
 
@@ -50,7 +51,7 @@ namespace Rahal.Api.Controllers.Places
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetVerifiedReviewsByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetVerifiedReviewsByPlaceAsync([FromRoute] Guid placeId, CancellationToken cancellationToken = default)
         {
             var result = await _reviewService.GetVerifiedReviewsByPlaceIdAsync(placeId, cancellationToken);
 
@@ -64,7 +65,7 @@ namespace Rahal.Api.Controllers.Places
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetReviewsByExplorerAsync([FromRoute] Guid explorerId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetReviewsByExplorerAsync([FromRoute] Guid explorerId, CancellationToken cancellationToken = default)
         {
             var result = await _reviewService.GetReviewsByExplorerIdAsync(explorerId, cancellationToken);
 
