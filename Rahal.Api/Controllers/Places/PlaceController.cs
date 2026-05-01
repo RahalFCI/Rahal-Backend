@@ -37,9 +37,10 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _placeService.GetAllPlacesAsync(offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _placeService.GetAllPlacesAsync(request, cancellationToken);
             return Ok(result);
         }
 
@@ -47,9 +48,10 @@ namespace Rahal.Api.Controllers.Places
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetByCategoryAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, [FromRoute] Guid categoryId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByCategoryAsync([FromRoute] Guid categoryId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _placeService.GetPlacesByCategoryIdAsync(categoryId, offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _placeService.GetPlacesByCategoryIdAsync(categoryId, request, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);

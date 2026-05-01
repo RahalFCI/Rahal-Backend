@@ -36,9 +36,10 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllCheckInsAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllCheckInsAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _checkInService.GetAllCheckInAsync(offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _checkInService.GetAllCheckInAsync(request, cancellationToken);
             return Ok(result);
         }
 
@@ -46,9 +47,10 @@ namespace Rahal.Api.Controllers.Places
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetCheckInsByPlaceAsync([FromRoute] Guid placeId, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckInsByPlaceAsync([FromRoute] Guid placeId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _checkInService.GetCheckInsByPlaceIdAsync(placeId, offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _checkInService.GetCheckInsByPlaceIdAsync(placeId, request, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -60,9 +62,10 @@ namespace Rahal.Api.Controllers.Places
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetCheckInsByExplorerAsync([FromRoute] Guid explorerId, [FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCheckInsByExplorerAsync([FromRoute] Guid explorerId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _checkInService.GetCheckInsByExplorerIdAsync(explorerId, offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _checkInService.GetCheckInsByExplorerIdAsync(explorerId, request, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -117,9 +120,10 @@ namespace Rahal.Api.Controllers.Places
         [HttpGet("pending")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPendingAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPendingAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _checkInService.GetPendingCheckInsAsync(offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _checkInService.GetPendingCheckInsAsync(request, cancellationToken);
             return Ok(result);
         }
     }

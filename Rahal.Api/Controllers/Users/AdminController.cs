@@ -136,9 +136,10 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.GetAllUsers(offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllUsers(request, cancellationToken);
             return Ok(result);
         }
 
@@ -148,9 +149,10 @@ namespace Rahal.Api.Controllers.Users
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAllIncludingDeletedAsync([FromBody] OffsetPaginationRequest offsetPaginationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllIncludingDeletedAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _userService.GetAllUsersIncludingDeleted(offsetPaginationRequest, cancellationToken);
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllUsersIncludingDeleted(request, cancellationToken);
             return Ok(result);
         }
 
