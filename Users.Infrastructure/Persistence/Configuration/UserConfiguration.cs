@@ -31,6 +31,19 @@ namespace Users.Infrastructure.Persistence.Configuration
             builder.Property(e => e.RefreshToken)
                 .HasMaxLength(500);
 
+            // Audit Properties (inherited from BaseEntity)
+            builder.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+
+            builder.Property(e => e.UpdatedAt)
+                .ValueGeneratedOnUpdate();
+
+            builder.Property(e => e.DeletedAt);
+
+            builder.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(e => e.UserType)
                 .HasDatabaseName("IX_UserType");

@@ -32,6 +32,19 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasDefaultValue(0)
                 .HasComment("Rating value (typically 1-5)");
 
+            // Audit Properties (inherited from BaseEntity)
+            builder.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+
+            builder.Property(e => e.UpdatedAt)
+                .ValueGeneratedOnUpdate();
+
+            builder.Property(e => e.DeletedAt);
+
+            builder.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
             // Large string mapped to TEXT type in database
             builder.Property(e => e.Comment)
                 .IsRequired()

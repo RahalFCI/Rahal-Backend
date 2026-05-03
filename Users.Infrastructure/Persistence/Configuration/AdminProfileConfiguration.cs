@@ -15,6 +15,19 @@ namespace Users.Infrastructure.Persistence.Configuration
 
             builder.HasKey(e => e.Id);
 
+            // Audit Properties (inherited from BaseEntity)
+            builder.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+
+            builder.Property(e => e.UpdatedAt)
+                .ValueGeneratedOnUpdate();
+
+            builder.Property(e => e.DeletedAt);
+
+            builder.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
             // Foreign key to User
             builder.HasOne(e => e.User)
                 .WithOne(u => u.AdminProfile)
