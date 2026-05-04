@@ -15,5 +15,6 @@ namespace Gamification.Domain.Entities
         public ChallengeType Type { get; set; }
         public int MinimumLevelRequired { get; set; }
         public int XpReward{ get; set; }
+        public IEnumerable<CheckInChallenge> CheckInChallenges { get; set; } = new List<CheckInChallenge>();
     }
 }

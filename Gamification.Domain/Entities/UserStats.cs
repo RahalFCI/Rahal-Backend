@@ -12,7 +12,7 @@ namespace Gamification.Domain.Entities
         public int TotalAchievementCount { get; set; } = 0;
         public int TotalChallengeCount { get; set; } = 0;
         public int TotalBadgeCount { get; set; } = 0;
-        public int LongestStreak { get; set; } = 0
+        public int LongestStreak { get; set; } = 0;
 
     }
 }

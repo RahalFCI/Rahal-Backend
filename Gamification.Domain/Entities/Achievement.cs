@@ -15,5 +15,6 @@ namespace Gamification.Domain.Entities
         public Guid AchievementCriteriaTypeId { get; set; } = Guid.Empty;
         public AchievementCriteriaType? AchievementCriteriaType { get; set; }
         public int CriteriaThreshold { get; set; } = 0;
+        public IEnumerable<ExplorerAchievement> ExplorerAchievements { get; set; } = new List<ExplorerAchievement>();
     }
 }
