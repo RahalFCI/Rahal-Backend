@@ -18,7 +18,7 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
 
-            builder.Property(e => e.ExplorerProfileId)
+            builder.Property(e => e.ExplorerId)
                 .IsRequired();
 
             builder.Property(e => e.AchievementId)
@@ -48,7 +48,7 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasDefaultValue(false);
 
             // Indexes
-            builder.HasIndex(e => e.ExplorerProfileId)
+            builder.HasIndex(e => e.ExplorerId)
                 .HasDatabaseName("IX_ExplorerAchievements_ExplorerProfileId");
 
             builder.HasIndex(e => e.AchievementId)
