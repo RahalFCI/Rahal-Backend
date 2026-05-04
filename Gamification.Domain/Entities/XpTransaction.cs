@@ -11,7 +11,7 @@ namespace Gamification.Domain.Entities
     {
         public Guid ExplorerProfileId { get; set; } = Guid.Empty;
         public int Amount { get; set; } = 0;
-        public TransactionSource Source { get; set; }
+        public XpSourceType Source { get; set; }
         public Guid ReferenceId { get; set; } = Guid.Empty;
     }
 }

@@ -9,7 +9,7 @@ namespace Gamification.Domain.Entities
     public class CheckInChallenge : BaseEntity
     {
         public Guid ChallengeId { get; set; } = Guid.Empty;
-        public Challenge? Challenge { get; set; }
+        public virtual Challenge? Challenge { get; set; }
         public Guid CheckInId { get; set; } = Guid.Empty;
         public string ProofUrl { get; set; } = string.Empty;
         public ChallengeValidationStatus ValidationStatus { get; set; }

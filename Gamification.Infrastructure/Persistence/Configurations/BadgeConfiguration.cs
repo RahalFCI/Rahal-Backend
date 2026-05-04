@@ -1,9 +1,6 @@
 ﻿using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
@@ -13,21 +10,23 @@ namespace Gamification.Infrastructure.Persistence.Configurations
         {
             builder.ToTable("Badges", "gamification");
 
-            // Primary Key (composite)
             builder.HasKey(e => e.Id);
 
-            // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
 
             builder.Property(e => e.Name)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(e => e.Description)
+                .IsRequired()
+                .HasMaxLength(500);
 
             builder.Property(e => e.ImageUrl)
                 .IsRequired();
 
             // Large string mapped to TEXT type in database
             builder.Property(e => e.Description)
-                .IsRequired()
                 .HasColumnType("text");
 
             // Audit Properties (inherited from BaseEntity)
@@ -42,6 +41,13 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             builder.Property(e => e.IsDeleted)
                 .HasDefaultValue(false);
+
+            builder.HasIndex(e => e.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_Badges_Name");
+
+            builder.HasIndex(e => e.IsDeleted)
+                .HasDatabaseName("IX_Badges_IsDeleted");
         }
     }
 }

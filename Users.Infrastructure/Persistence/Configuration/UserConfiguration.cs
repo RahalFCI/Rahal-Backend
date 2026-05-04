@@ -32,12 +32,6 @@ namespace Users.Infrastructure.Persistence.Configuration
                 .HasMaxLength(500);
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
-
-            builder.Property(e => e.UpdatedAt)
-                .ValueGeneratedOnUpdate();
 
             builder.Property(e => e.DeletedAt);
 
