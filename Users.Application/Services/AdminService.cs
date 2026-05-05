@@ -162,7 +162,7 @@ namespace Users.Application.Services
             _logger.LogInformation("Admin retrieval initiated for user {UserId}", id);
 
             var user = await _userManager.Users
-                .Include(u => u.AdminProfile)
+                .Include(u => u.Admin)
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
             if(user is null || user.UserType != UserRoleEnum.Admin)

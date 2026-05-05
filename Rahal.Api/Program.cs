@@ -1,5 +1,6 @@
 using ECommerce.API.Filters;
 using Gamification.Application.CQRS.Commands.Achievement;
+using Gamification.Application.CQRS.Handlers.Achievements.Commands;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;

@@ -108,11 +108,6 @@ namespace Users.Application
             services.AddScoped<IUserFactory<RegisterVendorDto, Users.Domain.Entities._Common.User>, VendorUserFactory>();
             services.AddScoped<IUserFactory<RegisterAdminDto, Users.Domain.Entities._Common.User>, AdminUserFactory>();
 
-            // Register Mappers
-            services.AddScoped<IUserMapper<ExplorerDto, ExplorerSummaryDto>, ExplorerMapper>();
-            services.AddScoped<IUserMapper<VendorDto, VendorSummaryDto>, VendorMapper>();
-            services.AddScoped<IUserMapper<AdminDto, AdminSummaryDto>, AdminMapper>();
-
             // Register Type-Specific User Services
             services.AddScoped<IUserService<ExplorerDto, ExplorerSummaryDto>, ExplorerService>();
             services.AddScoped<IUserService<VendorDto, VendorSummaryDto>, VendorService>();
