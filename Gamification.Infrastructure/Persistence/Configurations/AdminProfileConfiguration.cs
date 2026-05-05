@@ -1,21 +1,22 @@
+using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Users.Domain.Entities;
 
-namespace Users.Infrastructure.Persistence.Configuration
+namespace Gamification.Infrastructure.Persistence.Configurations
 {
-
     public class AdminProfileConfiguration : IEntityTypeConfiguration<AdminProfile>
     {
         public void Configure(EntityTypeBuilder<AdminProfile> builder)
         {
-            builder.ToTable("AdminProfiles", "users");
-
-            builder.HasQueryFilter(e => !e.IsDeleted);
+            builder.ToTable("AdminProfiles", "gamification");
 
             builder.HasKey(e => e.Id);
 
-            // Audit Properties (inherited from BaseEntity)
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+            builder.Property(e => e.UserId)
+                .IsRequired();
+
             builder.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .ValueGeneratedOnAdd();
@@ -28,19 +29,12 @@ namespace Users.Infrastructure.Persistence.Configuration
             builder.Property(e => e.IsDeleted)
                 .HasDefaultValue(false);
 
-            // Foreign key to User
-            builder.HasOne(e => e.User)
-                .WithOne(u => u.AdminProfile)
-                .HasForeignKey<AdminProfile>(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-            // Indexes
             builder.HasIndex(e => e.UserId)
-                .IsUnique();
+                .IsUnique()
+                .HasDatabaseName("IX_AdminProfiles_UserId");
+
+            builder.HasIndex(e => e.IsDeleted)
+                .HasDatabaseName("IX_AdminProfiles_IsDeleted");
         }
     }
 }

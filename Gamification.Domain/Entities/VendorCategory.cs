@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Domain.Entities
+namespace Gamification.Domain.Entities
 {
     public class VendorCategory : BaseEntity
     {

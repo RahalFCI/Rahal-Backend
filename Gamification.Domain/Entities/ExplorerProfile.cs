@@ -1,37 +1,23 @@
+using Gamification.Domain.Enums;
 using Shared.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Users.Domain.Entities._Common;
-using Users.Domain.Enums;
+using Shared.Domain.Enums;
 
-namespace Users.Domain.Entities
+namespace Gamification.Domain.Entities
 {
-
-
     public class ExplorerProfile : BaseEntity
     {
-
         public required Guid UserId { get; set; }
-
-
-        public required User User { get; set; }
-
 
         public required GenderEnum Gender { get; set; }
 
         public required DateOnly BirthDate { get; set; }
 
-
         public string Bio { get; set; } = string.Empty;
-
 
         public required string CountryCode { get; set; }
 
-
         public int AvailableXp { get; set; } = 0;
 
- 
         public int CumulativeXp { get; set; } = 0;
 
         public int Level { get; set; } = 1;
@@ -40,15 +26,9 @@ namespace Users.Domain.Entities
 
         public bool IsPublic { get; set; } = true;
 
-
         public bool IsPremium { get; set; } = false;
 
-        public int? PlanTierId { get; set; }
-
-
-
-
-        // public PlanTier? PlanTier { get; set; } TODO: uncomment
+        public Guid PlanTierId { get; set; } = Guid.Empty;
 
         public int Age
         {
@@ -63,4 +43,3 @@ namespace Users.Domain.Entities
         }
     }
 }
-

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Domain.Enums
+namespace Shared.Domain.Enums
 {
     public enum GenderEnum
     {

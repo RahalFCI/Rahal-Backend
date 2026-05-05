@@ -9,6 +9,7 @@ using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
 using Shared.Application.Settings;
+using Shared.Domain.Events;
 using Shared.Infrastructure;
 using StackExchange.Redis;
 using System.Security.Claims;
@@ -53,7 +54,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(PlaceCreatedEventHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(CreateAchievementCommandHandler).Assembly);
-
+    cfg.RegisterServicesFromAssembly(typeof(ExplorerProfileCreatedEvent).Assembly);
 });
 
 

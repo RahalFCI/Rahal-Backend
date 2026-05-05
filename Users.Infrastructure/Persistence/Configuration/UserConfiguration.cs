@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Users.Domain.Entities;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
@@ -15,8 +14,6 @@ namespace Users.Infrastructure.Persistence.Configuration
 
             builder.HasQueryFilter(e => !e.IsDeleted);
 
-
-            // Properties
             builder.Property(e => e.DisplayName)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -31,33 +28,13 @@ namespace Users.Infrastructure.Persistence.Configuration
             builder.Property(e => e.RefreshToken)
                 .HasMaxLength(500);
 
-            // Audit Properties (inherited from BaseEntity)
-
             builder.Property(e => e.DeletedAt);
 
             builder.Property(e => e.IsDeleted)
                 .HasDefaultValue(false);
 
-            // Indexes
             builder.HasIndex(e => e.UserType)
                 .HasDatabaseName("IX_UserType");
-
-            // Navigation properties
-            builder.HasOne(e => e.ExplorerProfile)
-                .WithOne(p => p.User)
-                .HasForeignKey<ExplorerProfile>(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasOne(e => e.VendorProfile)
-                .WithOne(p => p.User)
-                .HasForeignKey<VendorProfile>(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasOne(e => e.AdminProfile)
-                .WithOne(p => p.User)
-                .HasForeignKey<AdminProfile>(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

@@ -20,6 +20,11 @@ namespace Gamification.Infrastructure.Persistence
         public DbSet<ExplorerAchievement> ExplorerAchievement { get; set; }
         public DbSet<UserStats> UserStats { get; set; }
         public DbSet<XpTransaction> XpTransaction { get; set; }
+        public DbSet<ExplorerProfile> ExplorerProfiles { get; set; }
+        public DbSet<VendorProfile> VendorProfiles { get; set; }
+        public DbSet<AdminProfile> AdminProfiles { get; set; }
+        public DbSet<VendorCategory> VendorCategories { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
