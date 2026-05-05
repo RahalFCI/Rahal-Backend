@@ -1,7 +1,7 @@
 using FluentValidation;
 using Gamification.Application.DTOs.CheckInChallenge;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.CheckInChallenge
 {
     public class CreateCheckInChallengeDtoValidator : AbstractValidator<CreateCheckInChallengeDto>
     {

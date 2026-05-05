@@ -1,7 +1,7 @@
 using FluentValidation;
 using Gamification.Application.DTOs.Badge;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.Badge
 {
     public class UpdateBadgeDtoValidator : AbstractValidator<UpdateBadgeDto>
     {

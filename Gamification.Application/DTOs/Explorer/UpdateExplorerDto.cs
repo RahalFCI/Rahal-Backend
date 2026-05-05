@@ -2,13 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs._Common;
-using Users.Domain.Enums;
-namespace Users.Application.DTOs.Explorer
+
+namespace Gamification.Application.DTOs.Explorer
 {
-    public record ExplorerDto(
+    public record UpdateExplorerDto(
+        Guid UserId,
         DateOnly BirthDate,
-        GenderEnum gender,
+        GenderEnum Gender,
         string Bio,
         string CountryCode,
         int AvailableXp,
@@ -17,9 +17,9 @@ namespace Users.Application.DTOs.Explorer
         bool IsPublic,
         bool IsPremium
         //TODO: Add Plan Tier
-        ) : BaseUserDto
+        )
     {
-        public ExplorerDto() : this(default, default, string.Empty, string.Empty, default, default, default, default, default)
+        public UpdateExplorerDto() : this(default, default, default, string.Empty, string.Empty, default, default, default, default, default)
         {
         }
     }

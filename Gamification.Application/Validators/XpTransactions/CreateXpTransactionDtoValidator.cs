@@ -1,7 +1,7 @@
 using FluentValidation;
 using Gamification.Application.DTOs.XpTransaction;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.XpTransactions
 {
     public class CreateXpTransactionDtoValidator : AbstractValidator<CreateXpTransactionDto>
     {

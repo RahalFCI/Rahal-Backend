@@ -1,7 +1,7 @@
 using FluentValidation;
 using Gamification.Application.DTOs.UserStats;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.UserStat
 {
     public class CreateUserStatsDtoValidator : AbstractValidator<CreateUserStatsDto>
     {

@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Gamification.Application.Strategies;
 using Gamification.Application.Strategies.Implementations;
-using Gamification.Application.Validators;
+using Gamification.Application.Validators.Achievement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

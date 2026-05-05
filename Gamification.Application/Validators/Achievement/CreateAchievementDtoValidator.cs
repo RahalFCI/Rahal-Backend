@@ -1,7 +1,7 @@
 using FluentValidation;
 using Gamification.Application.DTOs.Achievement;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.Achievement
 {
     public class CreateAchievementDtoValidator : AbstractValidator<CreateAchievementDto>
     {

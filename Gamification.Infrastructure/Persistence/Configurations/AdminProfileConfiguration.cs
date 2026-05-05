@@ -10,7 +10,7 @@ namespace Gamification.Infrastructure.Persistence.Configurations
         {
             builder.ToTable("AdminProfiles", "gamification");
 
-            builder.HasKey(e => e.Id);
+            builder.HasKey(e => e.UserId);
 
             builder.HasQueryFilter(e => !e.IsDeleted);
 

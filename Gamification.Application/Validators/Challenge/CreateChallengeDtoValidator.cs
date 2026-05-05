@@ -1,12 +1,15 @@
 using FluentValidation;
 using Gamification.Application.DTOs.Challenge;
 
-namespace Gamification.Application.Validators
+namespace Gamification.Application.Validators.Challenge
 {
-    public class UpdateChallengeDtoValidator : AbstractValidator<UpdateChallengeDto>
+    public class CreateChallengeDtoValidator : AbstractValidator<CreateChallengeDto>
     {
-        public UpdateChallengeDtoValidator()
+        public CreateChallengeDtoValidator()
         {
+            RuleFor(x => x.PlaceId)
+                .NotEmpty().WithMessage("Place ID is required");
+
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Challenge name is required")
                 .MaximumLength(200).WithMessage("Challenge name cannot exceed 200 characters");
@@ -14,6 +17,9 @@ namespace Gamification.Application.Validators
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Challenge description is required")
                 .MaximumLength(500).WithMessage("Challenge description cannot exceed 500 characters");
+
+            RuleFor(x => x.Type)
+                .NotEmpty().WithMessage("Challenge type is required");
 
             RuleFor(x => x.Difficulty)
                 .NotEmpty().WithMessage("Challenge difficulty is required");

@@ -13,10 +13,7 @@ using Users.Domain.Events;
 
 namespace Users.Application.Services
 {
-    /// <summary>
-    /// Single instance authentication service for all user types
-    /// Handles login, logout, and registration regardless of user type
-    /// </summary>
+
     internal class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
