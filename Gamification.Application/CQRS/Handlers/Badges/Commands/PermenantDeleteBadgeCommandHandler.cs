@@ -12,16 +12,19 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
-    public class DeleteBadgeCommandHandler : IRequestHandler<DeleteBadgeCommand, ApiResponse<string>>
+    public class PermenantDeleteBadgeCommandHandler : IRequestHandler<DeleteBadgeCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Badge> _repository;
-        private readonly ILogger<DeleteBadgeCommandHandler> _logger;
+        private readonly IFileStorageService _fileStorageService;
+        private readonly ILogger<PermenantDeleteBadgeCommandHandler> _logger;
 
-        public DeleteBadgeCommandHandler(
+        public PermenantDeleteBadgeCommandHandler(
             IGenericRepository<Badge> repository,
-            ILogger<DeleteBadgeCommandHandler> logger)
+            IFileStorageService fileStorageService,
+            ILogger<PermenantDeleteBadgeCommandHandler> logger)
         {
             _repository = repository;
+            _fileStorageService = fileStorageService;
             _logger = logger;
         }
 
@@ -29,20 +32,20 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
         {
             _logger.LogInformation("Deleting badge {BadgeId}", request.Id);
 
-            var badgeExists = await _repository.GetTable().Where(b => b.Id == request.Id).AnyAsync(cancellationToken);
-            if (!badgeExists)
+            var badge = await _repository.GetTable().Where(b => b.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
+            if (badge is null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Id);
                 return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
             }
 
-            Badge badge = new Badge()
+            if (badge.ImageUrl is not null)
             {
-                Id = request.Id,
-                IsDeleted = true
-            };
+                await _fileStorageService.DeleteAsync(badge.ImageUrl, cancellationToken);
+                _logger.LogInformation("Badge {BadgeId} Image deleted successfully", badge.Id);
+            }
 
-            _repository.SaveInclude(badge, nameof(badge.IsDeleted));
+            _repository.Delete(badge);
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Badge {BadgeId} deleted successfully", request.Id);

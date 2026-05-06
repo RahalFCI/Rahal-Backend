@@ -1,49 +1,50 @@
 ﻿using Gamification.Application.CQRS.Commands.Achievement;
+using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
+using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
-    public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, string>
+    public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
-        private readonly IGenericRepository<Domain.Entities.Badge> _badgeRepository;
-        private readonly IGenericRepository<Domain.Entities.AchievementCriteriaType> _criteriaTypeRepository;
+        private readonly IMediator _mediator;
         private readonly ILogger<CreateAchievementCommandHandler> _logger;
 
         public CreateAchievementCommandHandler(
             IGenericRepository<Domain.Entities.Achievement> repository,
-            IGenericRepository<Domain.Entities.Badge> badgeRepository,
-            IGenericRepository<Domain.Entities.AchievementCriteriaType> criteriaTypeRepository,
+            IMediator mediator,
             ILogger<CreateAchievementCommandHandler> logger)
         {
             _repository = repository;
-            _badgeRepository = badgeRepository;
-            _criteriaTypeRepository = criteriaTypeRepository;
+            _mediator = mediator;
             _logger = logger;
         }
 
-        public async Task<string> Handle(CreateAchievementCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating achievement {AchievementTitle}", request.Dto.Title);
 
-            var badge = await _badgeRepository.GetByIdAsync(request.Dto.BadgeId, cancellationToken);
+            var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId), cancellationToken);
             if (badge is null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
-                return "Badge not found";
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var criteriaType = await _criteriaTypeRepository.GetByIdAsync(request.Dto.CriteriaTypeId, cancellationToken);
-            if (criteriaType is null)
+            var criteriaType = await _mediator.Send(new GetAchievementCriteriaTypeByIdQuery(request.Dto.CriteriaTypeId), cancellationToken);
+            if (!criteriaType.IsSuccess)
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);
-                return "Criteria type not found";
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
             var achievement = AchievementMapper.ToEntity(request.Dto);
@@ -52,7 +53,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 
             _logger.LogInformation("Achievement {AchievementId} created successfully", achievement.Id);
 
-            return $"Achievement created successfully. ID: {achievement.Id}";
+            return ApiResponse<string>.Success($"Achievement created successfully. ID: {achievement.Id}");
         }
     }
 }

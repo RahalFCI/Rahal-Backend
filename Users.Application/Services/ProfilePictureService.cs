@@ -40,7 +40,7 @@ namespace Users.Application.Services
                     return null;
                 }
 
-                var profilePictureUrl = await _fileStorageService.UploadAsync(profilePicture);
+                var profilePictureUrl = await _fileStorageService.UploadAsync(profilePicture, cancellationToken);
                 
                 _logger.LogInformation("Profile picture successfully uploaded to {Url}", profilePictureUrl);
                 return profilePictureUrl;
@@ -62,7 +62,7 @@ namespace Users.Application.Services
                     return;
                 }
 
-                await _fileStorageService.DeleteAsync(profilePictureUrl);
+                await _fileStorageService.DeleteAsync(profilePictureUrl, cancellationToken);
                 
                 _logger.LogInformation("Profile picture successfully deleted from {Url}", profilePictureUrl);
             }

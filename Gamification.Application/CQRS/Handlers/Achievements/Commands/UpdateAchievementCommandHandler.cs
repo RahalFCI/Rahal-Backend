@@ -2,14 +2,16 @@
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
-    public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, string>
+    public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
         private readonly IGenericRepository<Domain.Entities.Badge> _badgeRepository;
@@ -28,7 +30,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             _logger = logger;
         }
 
-        public async Task<string> Handle(UpdateAchievementCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(UpdateAchievementCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating achievement {AchievementId}", request.Id);
 
@@ -36,21 +38,21 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             if (achievement is null)
             {
                 _logger.LogWarning("Achievement {AchievementId} not found", request.Id);
-                return "Achievement not found";
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
             var badge = await _badgeRepository.GetByIdAsync(request.Dto.BadgeId, cancellationToken);
             if (badge is null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
-                return "Badge not found";
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
             var criteriaType = await _criteriaTypeRepository.GetByIdAsync(request.Dto.CriteriaTypeId, cancellationToken);
             if (criteriaType is null)
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);
-                return "Criteria type not found";
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
             AchievementMapper.UpdateEntity(achievement, request.Dto);
@@ -59,7 +61,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 
             _logger.LogInformation("Achievement {AchievementId} updated successfully", request.Id);
 
-            return "Achievement updated successfully";
+            return ApiResponse<string>.Success("Achievement updated successfully");
         }
     }
 }

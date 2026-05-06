@@ -40,6 +40,10 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.IsDeleted)
                 .HasDefaultValue(false);
 
+            //Indexes
+            builder.HasIndex(e => e.Name)
+                .IsUnique();
+
 
 
 

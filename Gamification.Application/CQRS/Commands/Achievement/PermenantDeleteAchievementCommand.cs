@@ -6,6 +6,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.Achievement
 {
-    public record DeleteAchievementCommand(Guid Id) : IRequest<ApiResponse<string>>;
-
+    public record PermenantDeleteAchievementCommand(Guid Id) : IRequest<ApiResponse<string>>;
 }

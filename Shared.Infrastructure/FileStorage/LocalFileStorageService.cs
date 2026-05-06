@@ -39,7 +39,7 @@ namespace Shared.Infrastructure.FileStorage
             }
         }
 
-        public async Task<string> UploadAsync(IFormFile file)
+        public async Task<string> UploadAsync(IFormFile file, CancellationToken cancellationToken)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace Shared.Infrastructure.FileStorage
             }
         }
 
-        public async Task DeleteAsync(string fileUrl)
+        public async Task DeleteAsync(string fileUrl, CancellationToken cancellationToken)
         {
             try
             {

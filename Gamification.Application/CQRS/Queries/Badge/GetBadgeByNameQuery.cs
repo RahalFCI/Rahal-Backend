@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Commands.Badges
+namespace Gamification.Application.CQRS.Queries.Badge
 {
-    public record CreateBadgeCommand(CreateBadgeDto Dto) : IRequest<ApiResponse<string>>;
+    public record GetBadgeByNameQuery(string Name) : IRequest<ApiResponse<GetBadgeDto>>;
 
 }

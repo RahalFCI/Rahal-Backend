@@ -84,7 +84,7 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var photoUrl = await _fileStorageService.UploadAsync(photo);
+            var photoUrl = await _fileStorageService.UploadAsync(photo, cancellationToken);
             _logger.LogInformation("Photo successfully uploaded to {Url}", photoUrl);
 
             var photoInstance = new PlacePhoto
@@ -113,7 +113,7 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var deletion = _fileStorageService.DeleteAsync(url);
+            var deletion = _fileStorageService.DeleteAsync(url, cancellationToken);
 
             if (deletion is null)
                 return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);

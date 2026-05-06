@@ -14,10 +14,6 @@ namespace Gamification.Application.Validators.Badge
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Badge description is required")
                 .MaximumLength(500).WithMessage("Badge description cannot exceed 500 characters");
-
-            RuleFor(x => x.ImageUrl)
-                .NotEmpty().WithMessage("Badge image URL is required")
-                .MaximumLength(500).WithMessage("Badge image URL cannot exceed 500 characters");
         }
     }
 }

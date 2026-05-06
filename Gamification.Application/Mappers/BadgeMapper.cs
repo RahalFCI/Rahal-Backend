@@ -24,7 +24,6 @@ namespace Gamification.Application.Mappers
             {
                 Name = dto.Name,
                 Description = dto.Description,
-                ImageUrl = dto.ImageUrl
             };
         }
 
@@ -32,7 +31,6 @@ namespace Gamification.Application.Mappers
         {
             badge.Name = dto.Name;
             badge.Description = dto.Description;
-            badge.ImageUrl = dto.ImageUrl;
         }
 
         public static IEnumerable<GetBadgeDto> ToGetDtos(IEnumerable<Badge?> badges)
