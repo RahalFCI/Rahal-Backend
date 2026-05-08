@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Gamification.Application.DTOs.Explorer;
+using Shared.Application.Validators;
 using System;
 using System.Collections.Generic;
 using System.Text;

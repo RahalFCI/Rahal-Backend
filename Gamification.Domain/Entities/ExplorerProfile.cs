@@ -6,15 +6,15 @@ namespace Gamification.Domain.Entities
 {
     public class ExplorerProfile : BaseEntity
     {
-        public required Guid UserId { get; set; }
+        public Guid UserId { get; set; }
 
-        public required GenderEnum Gender { get; set; }
+        public GenderEnum Gender { get; set; }
 
-        public required DateOnly BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
 
         public string Bio { get; set; } = string.Empty;
 
-        public required string CountryCode { get; set; }
+        public string CountryCode { get; set; } = string.Empty;
 
         public int AvailableXp { get; set; } = 0;
 

@@ -1,0 +1,55 @@
+﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
+using Gamification.Application.Mappers;
+using Gamification.Domain.Entities;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
+using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
+{
+    public class CreateExplorerProfileCommandHandler : IRequestHandler<CreateExplorerProfileCommand, ApiResponse<Guid>>
+    {
+        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly ILogger<CreateExplorerProfileCommandHandler> _logger;
+
+        public CreateExplorerProfileCommandHandler(IGenericRepository<ExplorerProfile> repository, ILogger<CreateExplorerProfileCommandHandler> logger)
+        {
+            _repository = repository;
+            _logger = logger;
+        }
+
+        public async Task<ApiResponse<Guid>> Handle(CreateExplorerProfileCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                _logger.LogError("Creating explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
+                var explorerProfile = ExplorerProfileMapper.ToEntity(request.ExplorerProfileDto);
+
+                var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.ExplorerProfileDto.UserId).FirstOrDefaultAsync(cancellationToken);
+                if (existingExplorer is not null)
+                {
+                    _logger.LogError("Explorer profile already exists for user {UserId}", request.ExplorerProfileDto.UserId);
+                    return ApiResponse<Guid>.Failure(ErrorCode.AlreadyExists);
+                }
+
+                _repository.Add(explorerProfile);
+                await _repository.SaveChangesAsync();
+
+                _logger.LogError("Created explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
+
+                return ApiResponse<Guid>.Success(explorerProfile.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating explorer profile");
+                return ApiResponse<Guid>.Failure(ErrorCode.InvalidOperation);
+            }
+        }
+    }
+}
