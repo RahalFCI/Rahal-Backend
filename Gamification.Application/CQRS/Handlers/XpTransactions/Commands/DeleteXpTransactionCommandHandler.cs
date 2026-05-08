@@ -1,0 +1,56 @@
+﻿using Gamification.Application.CQRS.Commands.XpTransactions;
+using Gamification.Application.CQRS.Handlers.XpTransactions.Commands;
+using Gamification.Application.Strategies;
+using Gamification.Domain.Entities;
+using Gamification.Domain.Enums;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
+using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
+{
+    public class DeleteXpTransactionCommandHandler : IRequestHandler<DeleteXpTransactionCommand, ApiResponse<string>>
+    {
+        private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly ILogger<DeleteXpTransactionCommandHandler> _logger;
+
+        public DeleteXpTransactionCommandHandler(
+            IGenericRepository<XpTransaction> repository,
+            ILogger<DeleteXpTransactionCommandHandler> logger)
+        {
+            _repository = repository;
+            _logger = logger;
+        }
+
+        public async Task<ApiResponse<string>> Handle(DeleteXpTransactionCommand request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Deleting XP transaction {TransactionId}", request.Id);
+
+            var transactionExists = await _repository.GetTable().Where(t => t.Id == request.Id).AnyAsync(cancellationToken);
+            if (!transactionExists)
+            {
+                _logger.LogWarning("XP transaction {TransactionId} not found", request.Id);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            XpTransaction transaction = new XpTransaction
+            {
+                Id = request.Id,
+                IsDeleted = true
+            };
+
+            _repository.SaveInclude(transaction, nameof(transaction.IsDeleted));
+            await _repository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("XP transaction {TransactionId} deleted", request.Id);
+            return ApiResponse<string>.Success("XP transaction deleted successfully");
+        }
+    }
+}
+            

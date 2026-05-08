@@ -4,6 +4,7 @@ using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Queries
 {
-    public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, IEnumerable<GetBadgeDto>>
+    public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, ApiResponse<IEnumerable<GetBadgeDto>>>
     {
         private readonly IGenericRepository<Badge> _repository;
         private readonly ILogger<GetAllBadgesQueryHandler> _logger;
@@ -24,7 +25,7 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Queries
             _logger = logger;
         }
 
-        public async Task<IEnumerable<GetBadgeDto>> Handle(GetAllBadgesQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<IEnumerable<GetBadgeDto>>> Handle(GetAllBadgesQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching all badges");
 
@@ -33,7 +34,7 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Queries
 
             _logger.LogInformation("Retrieved {Count} badges", badges.Count());
 
-            return dtos;
+            return ApiResponse<IEnumerable<GetBadgeDto>>.Success(dtos);
         }
     }
 }

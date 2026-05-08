@@ -9,18 +9,15 @@ namespace Gamification.Application.Strategies.Implementations
     public class ChallengeXpStrategy : IXpCalculationStrategy
     {
         private readonly IGenericRepository<Domain.Entities.Challenge> _challengeRepository;
-        private readonly IGenericRepository<Domain.Entities.CheckInChallenge> _checkInChallengeRepository;
         private readonly ILogger<ChallengeXpStrategy> _logger;
 
         public XpSourceType SourceType => XpSourceType.Challenge;
 
         public ChallengeXpStrategy(
             IGenericRepository<Domain.Entities.Challenge> challengeRepository,
-            IGenericRepository<Domain.Entities.CheckInChallenge> checkInChallengeRepository,
             ILogger<ChallengeXpStrategy> logger)
         {
             _challengeRepository = challengeRepository;
-            _checkInChallengeRepository = checkInChallengeRepository;
             _logger = logger;
         }
 

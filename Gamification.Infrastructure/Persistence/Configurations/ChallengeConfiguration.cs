@@ -65,6 +65,7 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("IX_Challenges_Type");
 
             builder.HasIndex(e => e.Name)
+                .IsUnique()
                 .HasDatabaseName("IX_Challenges_Name");
         }
     }

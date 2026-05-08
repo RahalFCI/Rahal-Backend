@@ -1,4 +1,5 @@
-﻿using Gamification.Application.CQRS.Commands.Challenge;
+﻿using Gamification.Application.CQRS.Commands.Badges;
+using Gamification.Application.CQRS.Commands.Challenge;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,36 +13,31 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
-    public class DeleteChallengeCommandHandler : IRequestHandler<DeleteChallengeCommand, ApiResponse<string>>
+    public class PermenantDeleteChallengeCommandHandler : IRequestHandler<PermenantDeleteChallengeCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Challenge> _repository;
-        private readonly ILogger<DeleteChallengeCommandHandler> _logger;
+        private readonly ILogger<PermenantDeleteChallengeCommandHandler> _logger;
 
-        public DeleteChallengeCommandHandler(
+        public PermenantDeleteChallengeCommandHandler(
             IGenericRepository<Challenge> repository,
-            ILogger<DeleteChallengeCommandHandler> logger)
+            ILogger<PermenantDeleteChallengeCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(DeleteChallengeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(PermenantDeleteChallengeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting challenge {ChallengeId}", request.Id);
 
-            var challengeExists = await _repository.GetTable().Where(c => c.Id == request.Id).AnyAsync(cancellationToken);
-            if (!challengeExists)
+            var challenge = await _repository.GetTable().Where(c => c.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
+            if (challenge is null)
             {
                 _logger.LogWarning("Challenge {ChallengeId} not found", request.Id);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
             }
 
-            Challenge challenge = new() {
-                Id = request.Id,
-                IsDeleted = true
-            };
-
-            _repository.SaveInclude(challenge, nameof(challenge.IsDeleted));
+            _repository.Delete(challenge);
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Challenge {ChallengeId} deleted successfully", request.Id);

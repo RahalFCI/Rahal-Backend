@@ -30,6 +30,7 @@ namespace Gamification.Domain.Entities
 
         public Guid PlanTierId { get; set; } = Guid.Empty;
 
+        public UserStats? Stats { get; set; }
         public int Age
         {
             get

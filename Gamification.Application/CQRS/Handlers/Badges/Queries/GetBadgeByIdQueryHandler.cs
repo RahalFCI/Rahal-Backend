@@ -4,14 +4,16 @@ using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Queries
 {
-    public class GetBadgeByIdQueryHandler : IRequestHandler<GetBadgeByIdQuery, GetBadgeDto?>
+    public class GetBadgeByIdQueryHandler : IRequestHandler<GetBadgeByIdQuery, ApiResponse<GetBadgeDto>>
     {
         private readonly IGenericRepository<Badge> _repository;
         private readonly ILogger<GetBadgeByIdQueryHandler> _logger;
@@ -24,7 +26,7 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Queries
             _logger = logger;
         }
 
-        public async Task<GetBadgeDto?> Handle(GetBadgeByIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetBadgeDto>> Handle(GetBadgeByIdQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching badge {BadgeId}", request.Id);
 
@@ -32,10 +34,10 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Queries
             if (badge is null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Id);
-                return null;
+                return ApiResponse<GetBadgeDto>.Failure(ErrorCode.NotFound);
             }
 
-            return BadgeMapper.ToGetDto(badge);
+            return ApiResponse<GetBadgeDto>.Success(BadgeMapper.ToGetDto(badge));
         }
     }
 }

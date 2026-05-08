@@ -6,6 +6,6 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.Challenge
 {
-    public record DeleteChallengeCommand(Guid Id) : IRequest<ApiResponse<string>>;
+    public record PermenantDeleteChallengeCommand(Guid Id) : IRequest<ApiResponse<string>>;
 
 }

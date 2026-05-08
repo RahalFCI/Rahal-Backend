@@ -42,6 +42,12 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.ExplorerProfileId)
                 .IsRequired();
 
+            // Relationships
+            builder.HasOne(e => e.ExplorerProfile)
+                .WithOne(c => c.Stats)
+                .HasForeignKey<UserStats>(e => e.ExplorerProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Audit Properties (inherited from BaseEntity)
             builder.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")

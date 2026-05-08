@@ -10,6 +10,7 @@ using Shared.Application.Settings;
 using Shared.Application.Settings.ReslilienceSettings;
 using Shared.Infrastructure.Email;
 using Shared.Infrastructure.FileStorage;
+using Shared.Infrastructure.Persistence;
 using Shared.Infrastructure.Repositories;
 using Shared.Infrastructure.Resilience;
 using Shared.Infrastructure.Search;
@@ -17,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.Interfaces;
-using Users.Infrastructure.Persistence;
 
 namespace Shared.Infrastructure
 {

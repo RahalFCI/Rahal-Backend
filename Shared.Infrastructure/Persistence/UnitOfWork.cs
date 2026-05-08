@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Text;
 using Users.Application.Interfaces;
 
-namespace Users.Infrastructure.Persistence
+namespace Shared.Infrastructure.Persistence
 {
-    internal class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbContext, IAsyncDisposable
+    public class UnitOfWork<TContext> where TContext : DbContext, IAsyncDisposable
     {
         private readonly TContext _context;
         private readonly ILogger<UnitOfWork<TContext>> _logger;

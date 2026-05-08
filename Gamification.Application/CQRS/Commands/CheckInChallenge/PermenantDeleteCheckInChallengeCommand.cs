@@ -6,6 +6,6 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.CheckInChallenge
 {
-    public record DeleteCheckInChallengeCommand(Guid Id) : IRequest<ApiResponse<string>>;
+    public record PermenantDeleteCheckInChallengeCommand(Guid Id) : IRequest<ApiResponse<string>>;
 
 }

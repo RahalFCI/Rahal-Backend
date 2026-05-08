@@ -4,6 +4,7 @@ using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
 {
-    public class GetAllUserStatsQueryHandler : IRequestHandler<GetAllUserStatsQuery, IEnumerable<GetUserStatsDto>>
+    public class GetAllUserStatsQueryHandler : IRequestHandler<GetAllUserStatsQuery, ApiResponse<IEnumerable<GetUserStatsDto>>>
     {
         private readonly IGenericRepository<UserStats> _repository;
         private readonly ILogger<GetAllUserStatsQueryHandler> _logger;
@@ -24,7 +25,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
             _logger = logger;
         }
 
-        public async Task<IEnumerable<GetUserStatsDto>> Handle(GetAllUserStatsQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<IEnumerable<GetUserStatsDto>>> Handle(GetAllUserStatsQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching all user stats");
 
@@ -33,7 +34,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
 
             _logger.LogInformation("Retrieved {Count} user stats records", statsList.Count());
 
-            return dtos;
+            return ApiResponse<IEnumerable<GetUserStatsDto>>.Success(dtos);
         }
     }
 }

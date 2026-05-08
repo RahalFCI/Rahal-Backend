@@ -1,7 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.CheckInChallenge;
 using Gamification.Domain.Entities;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -12,37 +11,31 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 {
-    public class DeleteCheckInChallengeCommandHandler : IRequestHandler<DeleteCheckInChallengeCommand, ApiResponse<string>>
+    public class PermenantDeleteCheckInChallengeCommandHandler : IRequestHandler<PermenantDeleteCheckInChallengeCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<CheckInChallenge> _repository;
-        private readonly ILogger<DeleteCheckInChallengeCommandHandler> _logger;
+        private readonly ILogger<PermenantDeleteCheckInChallengeCommandHandler> _logger;
 
-        public DeleteCheckInChallengeCommandHandler(
+        public PermenantDeleteCheckInChallengeCommandHandler(
             IGenericRepository<CheckInChallenge> repository,
-            ILogger<DeleteCheckInChallengeCommandHandler> logger)
+            ILogger<PermenantDeleteCheckInChallengeCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(DeleteCheckInChallengeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(PermenantDeleteCheckInChallengeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting check-in challenge {CheckInChallengeId}", request.Id);
 
-            var checkInChallengeExists = await _repository.GetTable().Where(c => c.Id == request.Id).AnyAsync(cancellationToken);
-            if (!checkInChallengeExists)
+            var checkInChallenge = await _repository.GetByIdAsync(request.Id, cancellationToken);
+            if (checkInChallenge is null)
             {
                 _logger.LogWarning("Check-in challenge {CheckInChallengeId} not found", request.Id);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            CheckInChallenge checkInChallenge = new CheckInChallenge
-            {
-                Id = request.Id,
-                IsDeleted = true
-            };
-
-            _repository.SaveInclude(checkInChallenge, nameof(CheckInChallenge.IsDeleted));
+            _repository.Delete(checkInChallenge);
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Check-in challenge {CheckInChallengeId} deleted successfully", request.Id);

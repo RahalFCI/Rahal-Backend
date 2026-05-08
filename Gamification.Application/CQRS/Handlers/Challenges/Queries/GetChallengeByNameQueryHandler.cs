@@ -3,6 +3,7 @@ using Gamification.Application.DTOs.Challenge;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -13,27 +14,27 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
 {
-    public class GetChallengeByIdQueryHandler : IRequestHandler<GetChallengeByIdQuery, ApiResponse<GetChallengeDto>>
+    public class GetChallengeByNameQueryHandler : IRequestHandler<GetChallengeByNameQuery, ApiResponse<GetChallengeDto>>
     {
         private readonly IGenericRepository<Challenge> _repository;
-        private readonly ILogger<GetChallengeByIdQueryHandler> _logger;
+        private readonly ILogger<GetChallengeByNameQueryHandler> _logger;
 
-        public GetChallengeByIdQueryHandler(
+        public GetChallengeByNameQueryHandler(
             IGenericRepository<Challenge> repository,
-            ILogger<GetChallengeByIdQueryHandler> logger)
+            ILogger<GetChallengeByNameQueryHandler> logger)
         {
             _repository = repository;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<GetChallengeDto>> Handle(GetChallengeByIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetChallengeDto>> Handle(GetChallengeByNameQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching challenge {ChallengeId}", request.Id);
+            _logger.LogInformation("Fetching challenge {ChallengeName}", request.Name);
 
-            var challenge = await _repository.GetByIdAsync(request.Id, cancellationToken);
+            var challenge = await _repository.GetTable().Where(c => c.Name == request.Name).FirstOrDefaultAsync(cancellationToken);
             if (challenge is null)
             {
-                _logger.LogWarning("Challenge {ChallengeId} not found", request.Id);
+                _logger.LogWarning("Challenge {ChallengeName} not found", request.Name);
                 return ApiResponse<GetChallengeDto>.Failure(ErrorCode.NotFound);
             }
 

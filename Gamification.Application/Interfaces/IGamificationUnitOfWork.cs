@@ -1,11 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Application.Interfaces
+namespace Gamification.Application.Interfaces
 {
-    public interface IUnitOfWork<TContext> where TContext : DbContext, IAsyncDisposable
+    public interface IGamificationUnitOfWork
     {
         Task BeginTransactionAsync(CancellationToken cancellationToken);
         Task CommitTransactionAsync(CancellationToken cancellationToken);

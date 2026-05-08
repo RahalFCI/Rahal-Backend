@@ -7,6 +7,6 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Queries.Challenge
 {
-    public record GetChallengesByPlaceIdQuery(Guid PlaceId) : IRequest<ApiResponse<IEnumerable<GetChallengeDto>>>;
+    public record GetChallengeByNameQuery(string Name) : IRequest<ApiResponse<GetChallengeDto>>;
 
 }

@@ -1,15 +1,18 @@
-﻿using Gamification.Application.CQRS.Handlers.UserStat.Commands;
+﻿using Gamification.Application.CQRS.Commands.UserStats;
 using Gamification.Application.Mappers;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Commands.UserStats
+namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
-    public class CreateUserStatsCommandHandler : IRequestHandler<CreateUserStatsCommand, string>
+    public class CreateUserStatsCommandHandler : IRequestHandler<CreateUserStatsCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
         private readonly ILogger<CreateUserStatsCommandHandler> _logger;
@@ -22,9 +25,16 @@ namespace Gamification.Application.CQRS.Commands.UserStats
             _logger = logger;
         }
 
-        public async Task<string> Handle(CreateUserStatsCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(CreateUserStatsCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating user stats for explorer {ExplorerId}", request.Dto.ExplorerId);
+
+            var existingStats = await _repository.GetTable().Where(us => us.ExplorerProfileId == request.Dto.ExplorerId).AnyAsync(cancellationToken);
+            if(existingStats)
+            {
+                _logger.LogInformation("User stats for explorer {ExplorerId} already exists", request.Dto.ExplorerId);
+                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+            }
 
             var userStats = UserStatsMapper.ToEntity(request.Dto);
             _repository.Add(userStats);
@@ -33,7 +43,7 @@ namespace Gamification.Application.CQRS.Commands.UserStats
             _logger.LogInformation("User stats {UserStatsId} created successfully for explorer {ExplorerId}",
                 userStats.Id, request.Dto.ExplorerId);
 
-            return $"User stats created successfully. ID: {userStats.Id}";
+            return ApiResponse<string>.Success($"User stats created successfully. ID: {userStats.Id}");
         }
     }
 }
