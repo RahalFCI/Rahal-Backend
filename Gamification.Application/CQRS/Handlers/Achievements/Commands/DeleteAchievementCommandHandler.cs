@@ -39,10 +39,11 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             Achievement achievement = new Achievement()
             {
                 Id = request.Id,
+                DeletedAt = DateTime.UtcNow,
                 IsDeleted = true
             };
 
-            _repository.SaveInclude(achievement, nameof(achievement.IsDeleted));
+            _repository.SaveInclude(achievement, nameof(achievement.IsDeleted), nameof(achievement.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Achievement {AchievementId} deleted successfully", request.Id);

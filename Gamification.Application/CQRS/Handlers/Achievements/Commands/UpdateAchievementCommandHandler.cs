@@ -1,4 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.Achievement;
+using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
+using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -14,19 +16,16 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
     public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
-        private readonly IGenericRepository<Domain.Entities.Badge> _badgeRepository;
-        private readonly IGenericRepository<Domain.Entities.AchievementCriteriaType> _criteriaTypeRepository;
+        private readonly IMediator _mediator;
         private readonly ILogger<UpdateAchievementCommandHandler> _logger;
 
         public UpdateAchievementCommandHandler(
             IGenericRepository<Domain.Entities.Achievement> repository,
-            IGenericRepository<Domain.Entities.Badge> badgeRepository,
-            IGenericRepository<Domain.Entities.AchievementCriteriaType> criteriaTypeRepository,
+            IMediator mediator,
             ILogger<UpdateAchievementCommandHandler> logger)
         {
             _repository = repository;
-            _badgeRepository = badgeRepository;
-            _criteriaTypeRepository = criteriaTypeRepository;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -41,14 +40,14 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var badge = await _badgeRepository.GetByIdAsync(request.Dto.BadgeId, cancellationToken);
+            var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId), cancellationToken);
             if (badge is null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var criteriaType = await _criteriaTypeRepository.GetByIdAsync(request.Dto.CriteriaTypeId, cancellationToken);
+            var criteriaType = await _mediator.Send(new GetAchievementCriteriaTypeByIdQuery(request.Dto.CriteriaTypeId), cancellationToken);
             if (criteriaType is null)
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);

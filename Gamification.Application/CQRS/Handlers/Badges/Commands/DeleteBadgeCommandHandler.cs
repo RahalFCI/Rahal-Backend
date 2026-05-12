@@ -39,10 +39,11 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
             Badge badge = new Badge()
             {
                 Id = request.Id,
+                DeletedAt = DateTime.UtcNow,
                 IsDeleted = true
             };
 
-            _repository.SaveInclude(badge, nameof(badge.IsDeleted));
+            _repository.SaveInclude(badge, nameof(badge.IsDeleted), nameof(badge.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Badge {BadgeId} deleted successfully", request.Id);

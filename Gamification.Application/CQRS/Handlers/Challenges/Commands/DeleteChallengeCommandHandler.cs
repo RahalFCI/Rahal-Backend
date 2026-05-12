@@ -38,10 +38,11 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 
             Challenge challenge = new() {
                 Id = request.Id,
+                DeletedAt = DateTime.UtcNow,
                 IsDeleted = true
             };
 
-            _repository.SaveInclude(challenge, nameof(challenge.IsDeleted));
+            _repository.SaveInclude(challenge, nameof(challenge.IsDeleted), nameof(challenge.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Challenge {ChallengeId} deleted successfully", request.Id);

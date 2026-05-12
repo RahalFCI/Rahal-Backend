@@ -40,10 +40,11 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
                 VendorProfile vendorProfile = new VendorProfile
                 {
                     UserId = request.Id,
+                    DeletedAt = DateTime.UtcNow,
                     IsDeleted = true
                 };
 
-                _repository.SaveInclude(vendorProfile, nameof(vendorProfile.IsDeleted));
+                _repository.SaveInclude(vendorProfile, nameof(vendorProfile.IsDeleted), nameof(vendorProfile.DeletedAt));
                 await _repository.SaveChangesAsync();
 
                 _logger.LogError("Deleted vendor profile for user {UserId}", request.Id);

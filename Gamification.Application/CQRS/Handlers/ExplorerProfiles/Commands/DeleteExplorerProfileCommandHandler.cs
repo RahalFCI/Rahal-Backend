@@ -41,10 +41,11 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 
                 ExplorerProfile explorerProfile = new ExplorerProfile { 
                     UserId = request.Id,
+                    DeletedAt = DateTime.UtcNow,
                     IsDeleted = true
                 };
 
-                _repository.SaveInclude(explorerProfile, nameof(explorerProfile.IsDeleted));
+                _repository.SaveInclude(explorerProfile, nameof(explorerProfile.IsDeleted), nameof(explorerProfile.DeletedAt));
                 await _repository.SaveChangesAsync();
 
                 _logger.LogError("Deleted explorer profile for user {UserId}", request.Id);

@@ -39,10 +39,11 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
             CheckInChallenge checkInChallenge = new CheckInChallenge
             {
                 Id = request.Id,
+                DeletedAt = DateTime.UtcNow,
                 IsDeleted = true
             };
 
-            _repository.SaveInclude(checkInChallenge, nameof(CheckInChallenge.IsDeleted));
+            _repository.SaveInclude(checkInChallenge, nameof(CheckInChallenge.IsDeleted), nameof(CheckInChallenge.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Check-in challenge {CheckInChallengeId} deleted successfully", request.Id);

@@ -42,10 +42,11 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
             XpTransaction transaction = new XpTransaction
             {
                 Id = request.Id,
+                DeletedAt = DateTime.UtcNow,
                 IsDeleted = true
             };
 
-            _repository.SaveInclude(transaction, nameof(transaction.IsDeleted));
+            _repository.SaveInclude(transaction, nameof(transaction.IsDeleted), nameof(transaction.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("XP transaction {TransactionId} deleted", request.Id);
