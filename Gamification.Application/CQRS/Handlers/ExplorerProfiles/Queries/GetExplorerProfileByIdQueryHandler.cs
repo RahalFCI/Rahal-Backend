@@ -13,7 +13,7 @@ using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {
-    internal class GetExplorerProfileByIdQueryHandler : IRequestHandler<GetExplorerProfileByIdQuery, ApiResponse<GetExplorerDto>>
+    public class GetExplorerProfileByIdQueryHandler : IRequestHandler<GetExplorerProfileByIdQuery, ApiResponse<GetExplorerDto>>
     {
         private readonly IGenericRepository<ExplorerProfile> _repository;
         private readonly ILogger<GetExplorerProfileByIdQueryHandler> _logger;
