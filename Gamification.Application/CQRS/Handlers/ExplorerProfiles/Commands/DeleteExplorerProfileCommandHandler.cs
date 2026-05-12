@@ -15,7 +15,7 @@ using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
-    public class DeleteExplorerProfileCommandHandler : IRequestHandler<DeleteXpTransactionCommand, ApiResponse<string>>
+    public class DeleteExplorerProfileCommandHandler : IRequestHandler<DeleteExplorerProfileCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<ExplorerProfile> _repository;
         private readonly ILogger<DeleteExplorerProfileCommandHandler> _logger;
@@ -26,7 +26,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(DeleteXpTransactionCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(DeleteExplorerProfileCommand request, CancellationToken cancellationToken)
         {
             try
             {

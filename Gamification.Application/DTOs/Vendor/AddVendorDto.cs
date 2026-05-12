@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Text;
 
 
-namespace Users.Application.DTOs.Vendor
+namespace Gamification.Application.DTOs.Vendor
 {
     public record AddVendorDto(
         Guid UserId,

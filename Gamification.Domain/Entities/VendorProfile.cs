@@ -6,15 +6,15 @@ namespace Gamification.Domain.Entities
     {
         public required Guid UserId { get; set; }
 
-        public required string CountryCode { get; set; }
+        public string CountryCode { get; set; } = string.Empty;
 
-        public required string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
-        public required string AddressUrl { get; set; }
+        public string AddressUrl { get; set; } = string.Empty;
 
-        public required Dictionary<DayOfWeek, string> WorkingHours { get; set; }
+        public Dictionary<DayOfWeek, string> WorkingHours { get; set; } = new Dictionary<DayOfWeek, string>();
 
-        public required Guid CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
 
         public VendorCategory? Category { get; set; }
 

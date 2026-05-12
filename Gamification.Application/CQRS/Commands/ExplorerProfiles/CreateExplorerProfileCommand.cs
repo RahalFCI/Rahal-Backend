@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.DTOs.Explorer;
+using Gamification.Application.DTOs.Vendor;
 using MediatR;
 using Shared.Application.DTOs;
 using System;
@@ -7,7 +8,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.ExplorerProfiles
 {
-    public record CreateExplorerProfileCommand(AddExplorerDto ExplorerProfileDto) : IRequest<ApiResponse<Guid>>
-    {
-    }
+    public record CreateExplorerProfileCommand(AddExplorerDto ExplorerProfileDto) : IRequest<ApiResponse<Guid>>;
 }

@@ -1,9 +1,9 @@
 using FluentValidation;
+using Gamification.Application.DTOs.Vendor;
 using Shared.Application.Validators;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs.Vendor;
 
 namespace Gamification.Application.Validators.Vendor
 {
