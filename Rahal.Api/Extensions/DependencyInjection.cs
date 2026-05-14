@@ -1,13 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Gamification.Application;
+﻿using Gamification.Application;
 using Gamification.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Payment.Application;
 using Payment.Infrastructure;
 using Places.Application;
 using Places.Infrastructure;
+using Rahal.Api.Filters;
 using Rewards.Application;
 using Rewards.Infrastructure;
+using Shared.Application;
 using SocialMedia.Application;
 using SocialMedia.Infrastructure;
 using System;
@@ -16,7 +18,6 @@ using System.Reflection;
 using System.Text;
 using Users.Application;
 using Users.Infrastructure;
-using Shared.Application;
 
 namespace Shared.Infrastructure
 {
@@ -24,6 +25,9 @@ namespace Shared.Infrastructure
     {
         public static IServiceCollection AddAllModules(this IServiceCollection services, IConfiguration configuration, IHostEnvironment Environment)
         {
+            services.AddScoped<ProfileSetupRequiredFilter>();
+
+
             //Users Module
             services.AddUsersApplication(configuration);
             services.AddUsersInfrastructure(configuration);

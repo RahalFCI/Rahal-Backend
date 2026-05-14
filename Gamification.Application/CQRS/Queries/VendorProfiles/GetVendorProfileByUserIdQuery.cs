@@ -7,6 +7,6 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Queries.VendorProfiles
 {
-    public record GetVendorProfileByIdQuery(Guid Id) : IRequest<ApiResponse<GetVendorDto>>;
+    public record GetVendorProfileByUserIdQuery(Guid Id) : IRequest<ApiResponse<GetVendorDto>>;
 
 }

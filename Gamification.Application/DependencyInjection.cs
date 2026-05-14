@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Strategies;
 using Gamification.Application.Strategies.Implementations;
+using Gamification.Application.Utils;
 using Gamification.Application.Validators.Achievement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,8 @@ namespace Gamification.Application
             services.AddScoped<IXpCalculationStrategy, ChallengeXpStrategy>();
             services.AddScoped<IXpCalculationStrategy, SocialMediaXpStrategy>();
             services.AddScoped<IXpCalculationStrategy, BonusXpStrategy>();
+
+            services.AddScoped<IProfileChecker, ProfileChecker>();
 
 
 

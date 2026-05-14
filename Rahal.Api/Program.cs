@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
+using Rahal.Api.Filters;
 using Rahal.Api.Middlewares;
 using Serilog;
 using Shared.Application.Services;
@@ -72,6 +73,7 @@ builder.Services.AddControllers(
     options =>
     {
         options.Filters.Add<ValidationActionFilter>();
+
     })
     .AddJsonOptions(options =>
     {
