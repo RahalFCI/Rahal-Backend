@@ -135,6 +135,42 @@ namespace Users.Application.Services
 
             return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
         }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllExplorersUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Explorer)
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllVendorsUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Vendor)
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllAdminsUsers(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Admin)
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
 
         public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllUsersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
@@ -142,6 +178,42 @@ namespace Users.Application.Services
 
             var users = await _userManager.Users
                 .IgnoreQueryFilters()
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllExplorersIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.UserType == UserRoleEnum.Explorer)
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllVendorsIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.UserType == UserRoleEnum.Vendor)
+                .Select(u => MappingExtension.UserToDto(u))
+                .ToPagedResultAsync(request, cancellationToken);
+
+            return ApiResponse<PagedResult<BaseUserDto>>.Success(users);
+        }
+        public async Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllAdminsIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching all Users including deleted - page {Page}, pageSize {PageSize}", request.Page, request.PageSize);
+
+            var users = await _userManager.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.UserType == UserRoleEnum.Admin)
                 .Select(u => MappingExtension.UserToDto(u))
                 .ToPagedResultAsync(request, cancellationToken);
 

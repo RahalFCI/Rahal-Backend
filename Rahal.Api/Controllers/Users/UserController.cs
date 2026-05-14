@@ -7,7 +7,6 @@ using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Users.Application.DTOs._Common;
 using Users.Application.DTOs.Auth;
-using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
 using Users.Application.Interfaces;
@@ -128,6 +127,42 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
+        [HttpGet]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllExplorersAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllUsers(request, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllVendorsAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllUsers(request, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllAdminsAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllUsers(request, cancellationToken);
+            return Ok(result);
+        }
+
 
         [HttpGet("include-deleted")]
         [Authorize(Roles = "Admin")]
@@ -138,6 +173,42 @@ namespace Rahal.Api.Controllers.Users
         {
             var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
             var result = await _userService.GetAllUsersIncludingDeleted(request, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("explorers-include-deleted")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllExplorersIncludingDeletedAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllExplorersIncludingDeleted(request, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("vendors-include-deleted")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllVendorsIncludingDeletedAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllVendorsIncludingDeleted(request, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("admins-include-deleted")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllAdminsIncludingDeletedAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
+            var result = await _userService.GetAllAdminsIncludingDeleted(request, cancellationToken);
             return Ok(result);
         }
 
