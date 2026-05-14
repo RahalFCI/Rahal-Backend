@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Users.Application.DTOs.Explorer
+namespace Gamification.Application.DTOs.Explorer
 {
     public record GetExplorerDto(
         Guid UserId,

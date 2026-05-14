@@ -4,7 +4,6 @@ using Gamification.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.Mappers
 {

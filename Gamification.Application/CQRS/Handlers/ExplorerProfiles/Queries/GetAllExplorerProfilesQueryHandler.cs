@@ -2,6 +2,7 @@
 using Gamification.Application.CQRS.Queries.Challenge;
 using Gamification.Application.CQRS.Queries.ExplorerProfiles;
 using Gamification.Application.DTOs.Challenge;
+using Gamification.Application.DTOs.Explorer;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -11,7 +12,6 @@ using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {

@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="CQRS\Handlers\NewFolder\" />
+  </ItemGroup>
+
 </Project>
