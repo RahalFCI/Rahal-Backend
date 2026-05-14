@@ -31,19 +31,21 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 _logger.LogError("Creating explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
                 var explorerProfile = ExplorerProfileMapper.ToEntity(request.ExplorerProfileDto);
 
-                var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.ExplorerProfileDto.UserId).FirstOrDefaultAsync(cancellationToken);
-                if (existingExplorer is not null)
+                var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.ExplorerProfileDto.UserId).AnyAsync(cancellationToken);
+                if (!existingExplorer)
                 {
                     _logger.LogError("Explorer profile already exists for user {UserId}", request.ExplorerProfileDto.UserId);
                     return ApiResponse<Guid>.Failure(ErrorCode.AlreadyExists);
                 }
+
+                explorerProfile.ProfilePictureURL = request.ProfilePictureUrl;
 
                 _repository.Add(explorerProfile);
                 await _repository.SaveChangesAsync();
 
                 _logger.LogError("Created explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
 
-                return ApiResponse<Guid>.Success(explorerProfile.Id);
+                return ApiResponse<Guid>.Success(explorerProfile.UserId);
             }
             catch (Exception ex)
             {

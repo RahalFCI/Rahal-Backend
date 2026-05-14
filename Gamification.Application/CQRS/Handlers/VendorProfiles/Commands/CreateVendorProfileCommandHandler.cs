@@ -33,19 +33,21 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
                 _logger.LogError("Creating vendor profile for user {UserId}", request.VendorProfileDto.UserId);
                 var vendorProfile = VendorProfileMapper.ToEntity(request.VendorProfileDto);
 
-                var existingVendor = await _repository.GetTable().Where(x => x.UserId == request.VendorProfileDto.UserId).FirstOrDefaultAsync(cancellationToken);
-                if (existingVendor is not null)
+                var existingVendor = await _repository.GetTable().Where(x => x.UserId == request.VendorProfileDto.UserId).AnyAsync(cancellationToken);
+                if (!existingVendor)
                 {
                     _logger.LogError("Vendor profile already exists for user {UserId}", request.VendorProfileDto.UserId);
                     return ApiResponse<Guid>.Failure(ErrorCode.AlreadyExists);
                 }
+
+                vendorProfile.ProfilePictureURL = request.ProfilePictureUrl;
 
                 _repository.Add(vendorProfile);
                 await _repository.SaveChangesAsync();
 
                 _logger.LogError("Created vendor profile for user {UserId}", request.VendorProfileDto.UserId);
 
-                return ApiResponse<Guid>.Success(vendorProfile.Id);
+                return ApiResponse<Guid>.Success(vendorProfile.UserId);
             }
             catch (Exception ex)
             {

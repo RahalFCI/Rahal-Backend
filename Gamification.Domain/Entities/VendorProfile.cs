@@ -4,6 +4,10 @@ namespace Gamification.Domain.Entities
 {
     public class VendorProfile : BaseEntity
     {
+        public string DisplayName { get; set; } = string.Empty;
+
+        public string ProfilePictureURL { get; set; } = string.Empty;
+
         public required Guid UserId { get; set; }
 
         public string CountryCode { get; set; } = string.Empty;

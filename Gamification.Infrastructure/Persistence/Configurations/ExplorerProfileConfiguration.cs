@@ -14,6 +14,13 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             builder.HasQueryFilter(e => !e.IsDeleted);
 
+            builder.Property(e => e.DisplayName)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(e => e.ProfilePictureURL)
+                .HasMaxLength(500);
+
             builder.Property(e => e.UserId)
                 .IsRequired();
 

@@ -27,18 +27,15 @@ namespace Users.Application.Services
     internal class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
-        private readonly IProfilePictureService _profilePictureService;
         private readonly IMediator _mediator;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             UserManager<User> userManager,
-            IProfilePictureService profilePictureService,
             IMediator mediator,
             ILogger<UserService> logger)
         {
             _userManager = userManager;
-            _profilePictureService = profilePictureService;
             _mediator = mediator;
             _logger = logger;
         }
@@ -264,7 +261,7 @@ namespace Users.Application.Services
             return ApiResponse<string>.Success("Password updated successfully");
         }
 
-        public async Task<ApiResponse<string>> UpdateUser(BaseUserDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> UpdateUser(BaseUserDto userDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("User update initiated for user {UserId}", userDto.Id);
 
@@ -286,18 +283,7 @@ namespace Users.Application.Services
 
             try
             {
-                // Handle profile picture update if provided
-                if (profilePicture != null && profilePicture.Length > 0)
-                {
-                    _logger.LogInformation("Updating profile picture for User {UserId}", userDto.Id);
-                    var profilePictureUrl = await _profilePictureService.UpdateProfilePictureAsync(
-                        profilePicture, 
-                        user.ProfilePictureURL, 
-                        cancellationToken);
-                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
-                    _logger.LogInformation("Profile picture successfully updated for User {UserId}", userDto.Id);
-                }
-
+               
                 // Update User entity
                 user.DisplayName = userDto.Name;
                 user.Email = userDto.Email;
@@ -305,11 +291,7 @@ namespace Users.Application.Services
                 user.UserName = userDto.Email;
                 user.NormalizedUserName = userDto.Email.ToUpper();
                 user.PhoneNumber = userDto.PhoneNumber;
-                if (profilePicture == null || profilePicture.Length == 0)
-                {
-                    user.ProfilePictureURL = userDto.ProfilePictureUrl ?? string.Empty;
-                }
-
+               
                 var result = await _userManager.UpdateAsync(user);
 
                 if (!result.Succeeded)

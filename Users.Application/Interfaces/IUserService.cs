@@ -21,7 +21,7 @@ namespace Users.Application.Interfaces
         Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllVendorsIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResult<BaseUserDto>>> GetAllAdminsIncludingDeleted(OffsetPaginationRequest request, CancellationToken cancellationToken = default);
         Task<ApiResponse<BaseUserDto>> GetById(Guid id, CancellationToken cancellationToken = default);
-        Task<ApiResponse<string>> UpdateUser(BaseUserDto user, IFormFile? profilePicture = null, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> UpdateUser(BaseUserDto user, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteUser(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteUserPermanently(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdatePassword(Guid id, UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken = default);

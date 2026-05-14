@@ -5,7 +5,6 @@ using Gamification.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.Mappers
 {
@@ -16,6 +15,8 @@ namespace Gamification.Application.Mappers
             return new GetVendorDto
             {
                 UserId = vendorProfile.UserId,
+                DisplayName = vendorProfile.DisplayName,
+                ProfilePictureUrl = vendorProfile.ProfilePictureURL,
                 Address = vendorProfile.Address,
                 AddressUrl = vendorProfile.AddressUrl,
                 WorkingHours = vendorProfile.WorkingHours,
@@ -30,6 +31,8 @@ namespace Gamification.Application.Mappers
             return new VendorProfile
             {
                 UserId = dto.UserId,
+                DisplayName = dto.DisplayName,
+                ProfilePictureURL = dto.ProfilePictureUrl,
                 Address = dto.Address,
                 AddressUrl = dto.AddressUrl,
                 WorkingHours = dto.WorkingHours,
@@ -43,6 +46,8 @@ namespace Gamification.Application.Mappers
             return new VendorProfile
             {
                 UserId = dto.UserId,
+                DisplayName = dto.DisplayName,
+                ProfilePictureURL = dto.ProfilePictureUrl,
                 Address = dto.Address,
                 AddressUrl = dto.AddressUrl,
                 WorkingHours = dto.WorkingHours,

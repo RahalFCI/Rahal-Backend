@@ -8,5 +8,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.ExplorerProfiles
 {
-    public record CreateExplorerProfileCommand(AddExplorerDto ExplorerProfileDto) : IRequest<ApiResponse<Guid>>;
+    public record CreateExplorerProfileCommand(AddExplorerDto ExplorerProfileDto, string ProfilePictureUrl) : IRequest<ApiResponse<Guid>>;
 }

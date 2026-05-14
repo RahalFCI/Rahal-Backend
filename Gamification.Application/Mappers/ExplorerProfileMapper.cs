@@ -14,6 +14,8 @@ namespace Gamification.Application.Mappers
             return new GetExplorerDto
             {
                 UserId = explorerProfile.UserId,
+                DisplayName = explorerProfile.DisplayName,
+                ProfilePictureUrl = explorerProfile.ProfilePictureURL,
                 AvailableXp = explorerProfile.AvailableXp,
                 Bio = explorerProfile.Bio,
                 BirthDate = explorerProfile.BirthDate,
@@ -31,6 +33,8 @@ namespace Gamification.Application.Mappers
             return new ExplorerProfile
             {
                 UserId = dto.UserId,
+                DisplayName= dto.DisplayName,
+                ProfilePictureURL = dto.ProfilePictureUrl,
                 BirthDate = dto.BirthDate,
                 Gender = dto.Gender,
                 Bio = dto.Bio,
@@ -46,6 +50,8 @@ namespace Gamification.Application.Mappers
             return new ExplorerProfile
             {
                 UserId = dto.UserId,
+                DisplayName = dto.DisplayName,
+                ProfilePictureURL= dto.ProfilePictureUrl,
                 BirthDate = dto.BirthDate,
                 Gender = dto.Gender,
                 Bio = dto.Bio,

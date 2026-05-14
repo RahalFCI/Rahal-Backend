@@ -18,9 +18,6 @@ namespace Users.Infrastructure.Persistence.Configuration
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(e => e.ProfilePictureURL)
-                .HasMaxLength(500);
-
             builder.Property(e => e.UserType)
                 .IsRequired()
                 .HasConversion<int>();

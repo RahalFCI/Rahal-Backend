@@ -8,5 +8,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.VendorProfiles
 {
-    public record CreateVendorProfileCommand(AddVendorDto VendorProfileDto) : IRequest<ApiResponse<Guid>>;
+    public record CreateVendorProfileCommand(AddVendorDto VendorProfileDto, string ProfilePictureUrl) : IRequest<ApiResponse<Guid>>;
 }

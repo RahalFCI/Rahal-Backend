@@ -21,8 +21,8 @@ namespace Gamification.Application.Utils
         {
             return role switch
             {
-                "Explorer" => (await _mediator.Send(new GetExplorerProfileByUserIdQuery(userId))).IsSuccess,
-                "Vendor" => (await _mediator.Send(new GetVendorProfileByUserIdQuery(userId))).IsSuccess,
+                "Explorer" => (await _mediator.Send(new GetExplorerProfileByIdQuery(userId))).IsSuccess,
+                "Vendor" => (await _mediator.Send(new GetVendorProfileByIdQuery(userId))).IsSuccess,
                 "Admin" => true, // admins have no profile requirement
                 _ => false
             };

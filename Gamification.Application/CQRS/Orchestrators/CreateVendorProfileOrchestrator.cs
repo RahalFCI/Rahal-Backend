@@ -1,4 +1,4 @@
-﻿using Gamification.Application.DTOs.Explorer;
+﻿using Gamification.Application.DTOs.Vendor;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Shared.Application.DTOs;
@@ -8,5 +8,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Orchestrators
 {
-    public record CreateExplorerProfileWithUserStatsOrchestrator(AddExplorerDto explorerDto, IFormFile? ProfilePicture) : IRequest<ApiResponse<Guid>>;
+    public record CreateVendorProfileOrchestrator(AddVendorDto addVendorDto, IFormFile? profilePicture) : IRequest<ApiResponse<Guid>>
+    {
+    }
 }

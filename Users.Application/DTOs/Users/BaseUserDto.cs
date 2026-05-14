@@ -9,10 +9,9 @@ namespace Users.Application.DTOs._Common
         string Name,
         string Email,
         string PhoneNumber,
-        string ProfilePictureUrl,
         UserRoleEnum Role)
     {
-        public BaseUserDto() : this(default, string.Empty, string.Empty, string.Empty, string.Empty, default) { }
+        public BaseUserDto() : this(default, string.Empty, string.Empty, string.Empty, default) { }
 
     }
 }

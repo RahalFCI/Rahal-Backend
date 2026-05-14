@@ -24,7 +24,6 @@ namespace Users.Application.Services
         private readonly ITokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IEmailVerificationService _emailVerificationService;
-        private readonly IProfilePictureService _profilePictureService;
         private readonly IMediator _mediator;
         private readonly ILogger<AuthService> _logger;
 
@@ -34,7 +33,6 @@ namespace Users.Application.Services
             ITokenService tokenService,
             ICurrentUserService currentUserService,
             IEmailVerificationService emailVerificationService,
-            IProfilePictureService profilePictureService,
             IMediator mediator,
             ILogger<AuthService> logger)
         {
@@ -43,7 +41,6 @@ namespace Users.Application.Services
             _tokenService = tokenService;
             _currentUserService = currentUserService;
             _emailVerificationService = emailVerificationService;
-            _profilePictureService = profilePictureService;
             _mediator = mediator;
             _logger = logger;
         }
@@ -139,7 +136,7 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default)
         {
             var user = MappingExtension.CreateUser(userDto);
 
@@ -154,15 +151,7 @@ namespace Users.Application.Services
 
             try
             {
-                // Handle profile picture upload if provided
-                if (profilePicture != null && profilePicture.Length > 0)
-                {
-                    _logger.LogInformation("Uploading profile picture for user registration");
-                    var profilePictureUrl = await _profilePictureService.UploadProfilePictureAsync(profilePicture, cancellationToken);
-                    user.ProfilePictureURL = profilePictureUrl ?? string.Empty;
-                    _logger.LogInformation("Profile picture successfully uploaded to {Url}", profilePictureUrl);
-                }
-
+                
                 var result = await _userManager.CreateAsync(user, Password);
 
                 if (!result.Succeeded)
@@ -179,11 +168,6 @@ namespace Users.Application.Services
                     _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
                         user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
 
-                    // Delete uploaded picture if role assignment fails
-                    if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
-                    {
-                        await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
-                    }
 
                     await _userManager.DeleteAsync(user);
                     return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
@@ -212,20 +196,6 @@ namespace Users.Application.Services
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
-
-                        // Clean up uploaded picture if an exception occurs
-                        if (!string.IsNullOrWhiteSpace(user.ProfilePictureURL))
-                        {
-                            try
-                            {
-                                await _profilePictureService.DeleteProfilePictureAsync(user.ProfilePictureURL, cancellationToken);
-                            }
-                            catch (Exception deleteEx)
-                            {
-                                _logger.LogError(deleteEx, "Failed to delete uploaded picture during rollback");
-                            }
-                        }
-
                         throw;
                     }
         }

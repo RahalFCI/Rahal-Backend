@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
+using Gamification.Application.CQRS.Commands.ProfilePictures;
 using Gamification.Application.CQRS.Commands.UserStats;
 using Gamification.Application.CQRS.Orchestrators;
 using Gamification.Application.DTOs.Explorer;
@@ -35,14 +36,21 @@ namespace Gamification.Application.CQRS.Handlers.Orchestrators
                 _logger.LogError("Started profile creation orchestration for user {UserId}", request.explorerDto.UserId);
                 await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-                var profileResult = await _mediator.Send(new CreateExplorerProfileCommand(request.explorerDto), cancellationToken);
+                var profilePictureResult = await _mediator.Send(new UploadPorfilePictureCommand(request.ProfilePicture), cancellationToken);
+                if (profilePictureResult.IsSuccess)
+                    _logger.LogError("Failed to upload explorer profile picture with error code {ErrorCode}", profilePictureResult.errorCode);
+
+                _logger.LogError("Uploaded explorer profile picture with error code {ErrorCode}", profilePictureResult.errorCode);
+
+
+                var profileResult = await _mediator.Send(new CreateExplorerProfileCommand(request.explorerDto, profilePictureResult.Data!), cancellationToken);
 
                 if (!profileResult.IsSuccess)
                 {
                     _logger.LogError("Failed to create explorer profile for user {UserId} with error code {ErrorCode}", request.explorerDto.UserId, profileResult.errorCode);
                     await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     return ApiResponse<Guid>.Failure(profileResult.errorCode);
-                }
+                } 
 
 
                 var userStatsResult = await _mediator.Send(new CreateUserStatsCommand(new CreateUserStatsDto() { ExplorerId = profileResult.Data }), cancellationToken);

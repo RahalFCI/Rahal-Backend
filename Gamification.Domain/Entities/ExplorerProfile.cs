@@ -6,6 +6,8 @@ namespace Gamification.Domain.Entities
 {
     public class ExplorerProfile : BaseEntity
     {
+        public string DisplayName { get; set; } = string.Empty;
+        public string ProfilePictureURL { get; set; } = string.Empty;
         public Guid UserId { get; set; }
 
         public GenderEnum Gender { get; set; }

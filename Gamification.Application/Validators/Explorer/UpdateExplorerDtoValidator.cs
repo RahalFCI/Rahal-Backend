@@ -14,6 +14,12 @@ namespace Gamification.Application.Validators.Explorer
             RuleFor(x => x.UserId)
                 .NotEqual(Guid.Empty).WithMessage("Explorer ID must be a valid GUID");
 
+            RuleFor(x => x.DisplayName)
+                .MaximumLength(100).WithMessage("Display name must not exceed 100 characters");
+
+            RuleFor(x => x.ProfilePictureUrl)
+                .MaximumLength(100).WithMessage("Profile picture URL must not exceed 100 characters");
+
             RuleFor(x => x.Bio)
                 .MaximumLength(500).WithMessage("Bio must not exceed 500 characters");
 

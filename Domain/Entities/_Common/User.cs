@@ -11,8 +11,6 @@ namespace Users.Domain.Entities._Common
 
         public string DisplayName { get; set; } = string.Empty;
 
-        public string ProfilePictureURL { get; set; } = string.Empty;
-
         public UserRoleEnum UserType { get; set; }
 
         public string? RefreshToken { get; set; }
