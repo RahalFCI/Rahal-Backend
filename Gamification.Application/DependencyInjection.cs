@@ -4,6 +4,7 @@ using Gamification.Application.Strategies.Implementations;
 using Gamification.Application.Validators.Achievement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Application.Interfaces;
 
 namespace Gamification.Application
 {
@@ -21,6 +22,8 @@ namespace Gamification.Application
             services.AddScoped<IXpCalculationStrategy, ChallengeXpStrategy>();
             services.AddScoped<IXpCalculationStrategy, SocialMediaXpStrategy>();
             services.AddScoped<IXpCalculationStrategy, BonusXpStrategy>();
+
+
 
             return services;
         }

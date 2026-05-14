@@ -1,4 +1,5 @@
 ﻿using Gamification.Domain.Entities;
+using Gamification.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -25,11 +26,10 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(e => e.CheckInId)
-                .HasDefaultValue(0)
                 .IsRequired();
 
             builder.Property(e => e.ValidationStatus)
-                .HasDefaultValue(0)
+                .HasDefaultValue(ChallengeValidationStatus.Pending)
                 .IsRequired();
 
             // Relationships

@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Interfaces;
-using Users.Domain.Events;
+using Shared.Domain.Events.Users;
 
 namespace Users.Infrastructure.Search.EventHandlers
 {

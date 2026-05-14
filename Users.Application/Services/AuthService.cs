@@ -10,6 +10,9 @@ using Users.Application.Interfaces;
 using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 using Users.Domain.Events;
+using Users.Application.DTOs._Common;
+using Users.Application.Mappers;
+using Users.Application.DTOs.Register;
 
 namespace Users.Application.Services
 {
@@ -136,8 +139,10 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<string>> RegisterAsync(User user, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
+            var user = MappingExtension.CreateUser(userDto);
+
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
 
             var existingUser = await _userManager.FindByEmailAsync(user.Email!);
@@ -224,5 +229,29 @@ namespace Users.Application.Services
                         throw;
                     }
         }
+
+        public async Task<ApiResponse<string>> DeleteUserWithoutProfileAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Deleting user {UserId} without profile", userId);
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                _logger.LogWarning("User {UserId} not found for deletion", userId);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Failed to delete user {UserId}. Errors: {Errors}",
+                    userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            _logger.LogInformation("User {UserId} deleted successfully", userId);
+            return ApiResponse<string>.Success("User deleted successfully");
+        }
     }
 }
+

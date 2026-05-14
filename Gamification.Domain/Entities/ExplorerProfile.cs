@@ -28,7 +28,7 @@ namespace Gamification.Domain.Entities
 
         public bool IsPremium { get; set; } = false;
 
-        public Guid PlanTierId { get; set; } = Guid.Empty;
+        public Guid? PlanTierId { get; set; } = Guid.Empty;
 
         public UserStats? Stats { get; set; }
         public int Age

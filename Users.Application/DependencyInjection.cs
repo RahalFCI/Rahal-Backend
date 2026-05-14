@@ -9,15 +9,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using Users.Application.DTOs.Admin;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.EmailVerification;
-using Users.Application.DTOs.Explorer;
 using Users.Application.DTOs.OAuth;
 using Users.Application.DTOs.Register;
-using Users.Application.DTOs.Vendor;
-using Users.Application.EventHandlers;
-using Users.Application.Factory;
 using Users.Application.Interfaces;
 using Users.Application.Mappers;
 using Users.Application.Services;
@@ -68,16 +63,8 @@ namespace Users.Application
 
             services.AddAuthorization();
 
-            // Register Fluent Validation
-            services.AddValidatorsFromAssemblyContaining<RegisterExplorerDtoValidator>();
+            services.AddValidatorsFromAssemblyContaining<AuthRequestDtoValidator>();
 
-            // Register DTO Validators
-            services.AddScoped<IValidator<RegisterExplorerDto>, RegisterExplorerDtoValidator>();
-            services.AddScoped<IValidator<RegisterVendorDto>, RegisterVendorDtoValidator>();
-            services.AddScoped<IValidator<RegisterAdminDto>, RegisterAdminDtoValidator>();
-            services.AddScoped<IValidator<ExplorerDto>, ExplorerDtoValidator>();
-            services.AddScoped<IValidator<VendorDto>, VendorDtoValidator>();
-            services.AddScoped<IValidator<AdminDto>, AdminDtoValidator>();
             services.AddScoped<IValidator<AuthRequestDto>, AuthRequestDtoValidator>();
             services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordDtoValidator>();
             services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
@@ -86,34 +73,19 @@ namespace Users.Application
             services.AddScoped<IValidator<VerifyOtpRequest>, VerifyOtpValidator>();
             services.AddScoped<IValidator<ResendOtpRequest>, ResendOtpValidator>();
 
-            // Register Single Auth Service
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
 
-            // Register Password Reset Service
             services.AddScoped<IPasswordResetService, PasswordResetService>();
 
-            // Register Email Verification Service
             services.AddScoped<IEmailVerificationService, EmailVerificationService>();
 
-            // Register Profile Picture Service
             services.AddScoped<IProfilePictureService, ProfilePictureService>();
 
-            // Register Google OAuth Services
             services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
             services.AddScoped<IOAuthGoogleService, GoogleAuthService>();
             services.AddScoped<IOAuthGoogleFacade, GoogleOAuthFacade>();
 
-            // Register Factories (now return User instead of specific types)
-            services.AddScoped<IUserFactory<RegisterExplorerDto, Users.Domain.Entities._Common.User>, ExplorerUserFactory>();
-            services.AddScoped<IUserFactory<RegisterVendorDto, Users.Domain.Entities._Common.User>, VendorUserFactory>();
-            services.AddScoped<IUserFactory<RegisterAdminDto, Users.Domain.Entities._Common.User>, AdminUserFactory>();
-
-            // Register Type-Specific User Services
-            services.AddScoped<IUserService<ExplorerDto, ExplorerSummaryDto>, ExplorerService>();
-            services.AddScoped<IUserService<VendorDto, VendorSummaryDto>, VendorService>();
-            services.AddScoped<IUserService<AdminDto, AdminSummaryDto>, AdminService>();
-
-            // Register Token Service
             services.AddScoped<ITokenService, TokenService>();
 
 
@@ -121,3 +93,4 @@ namespace Users.Application
         }
     }
 }
+

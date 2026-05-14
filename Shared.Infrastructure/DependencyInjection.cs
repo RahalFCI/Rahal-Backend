@@ -109,9 +109,6 @@ namespace Shared.Infrastructure
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-            //Register Unit of Work
-            services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
-
 
             return services;
         }

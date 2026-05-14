@@ -28,7 +28,7 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Queries
 
         public async Task<ApiResponse<IEnumerable<GetXpTransactionDto>>> Handle(GetXpTransactionsByExplorerIdQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching XP transactions for explorer {ExplorerId}", request.ExplorerId)
+            _logger.LogInformation("Fetching XP transactions for explorer {ExplorerId}", request.ExplorerId);
 
             var transactions = await _repository.GetTable()
                 .Where(t => t.ExplorerProfileId == request.ExplorerId)

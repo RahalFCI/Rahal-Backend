@@ -14,7 +14,7 @@ namespace Gamification.Domain.Entities
         public int TotalChallengeCount { get; set; } = 0;
         public int TotalBadgeCount { get; set; } = 0;
         public int LongestStreak { get; set; } = 0;
-        public DateTime? LastActivityDate { get; private set; }
+        public DateTime? LastActivityDate { get; set; }
 
 
     }

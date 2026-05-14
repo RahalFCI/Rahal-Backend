@@ -1,10 +1,10 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Places.Domain.Events;
 using Places.Infrastructure.Search;
 using Places.Infrastructure.Persistence;
 using Shared.Application.Interfaces;
+using Places.Application.Events;
 
 namespace Places.Infrastructure.Search.EventHandlers
 {

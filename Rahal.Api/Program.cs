@@ -1,6 +1,8 @@
 using ECommerce.API.Filters;
 using Gamification.Application.CQRS.Commands.Achievement;
 using Gamification.Application.CQRS.Handlers.Achievements.Commands;
+using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+using MediatR;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -9,8 +11,8 @@ using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Middlewares;
 using Serilog;
+using Shared.Application.Services;
 using Shared.Application.Settings;
-using Shared.Domain.Events;
 using Shared.Infrastructure;
 using StackExchange.Redis;
 using System.Security.Claims;
@@ -55,7 +57,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(PlaceCreatedEventHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(CreateAchievementCommandHandler).Assembly);
-    cfg.RegisterServicesFromAssembly(typeof(ExplorerProfileCreatedEvent).Assembly);
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehaviorService<,>));
+
 });
 
 
