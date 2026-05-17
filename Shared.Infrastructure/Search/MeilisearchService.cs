@@ -222,8 +222,14 @@ namespace Shared.Infrastructure.Search
         {
             var index = _client.Index(_indexName);
 
+            SearchQuery SearchQuery = new SearchQuery
+            {
+                Limit = searchOptions.PageSize,
+                Filter = searchOptions.Filter,
+            };
+
             // Perform the search with query string
-            var result = await index.SearchAsync<T>(query, cancellationToken: cancellationToken);
+            var result = await index.SearchAsync<T>(query, SearchQuery, cancellationToken: cancellationToken);
 
             // Get total hits
             long totalHits = 0;

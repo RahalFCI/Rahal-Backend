@@ -24,8 +24,9 @@ namespace Users.Infrastructure.Search
         [JsonPropertyName("isVerified")]
         public bool IsVerified { get; set; }
 
-        [JsonPropertyName("profilePictureUrl")]
-        public string ProfilePictureUrl { get; set; } = string.Empty;
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
+
 
     }
 }

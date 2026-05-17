@@ -16,7 +16,7 @@ namespace Users.Infrastructure.Search
                 FullName = user.DisplayName ?? string.Empty,
                 Email = user.Email ?? string.Empty,
                 IsVerified = user.EmailConfirmed,
-                ProfilePictureUrl = user.ProfilePictureURL ?? string.Empty
+                Role = user.UserType.ToString()
             };
         }
         public static IEnumerable<UserSearchDocument> ToSearchDocuments(this IEnumerable<User> users)
