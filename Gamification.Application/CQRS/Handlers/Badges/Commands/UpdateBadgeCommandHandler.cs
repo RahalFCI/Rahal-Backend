@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.CQRS.Commands.Badges;
+using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -16,21 +17,29 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
     {
         private readonly IGenericRepository<Badge> _repository;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IMediator _mediator;
         private readonly ILogger<UpdateBadgeCommandHandler> _logger;
 
         public UpdateBadgeCommandHandler(
             IGenericRepository<Badge> repository,
             IFileStorageService fileStorageService,
+            IMediator mediator,
             ILogger<UpdateBadgeCommandHandler> logger)
         {
             _repository = repository;
             _fileStorageService = fileStorageService;
+            _mediator = mediator;
             _logger = logger;
         }
 
         public async Task<ApiResponse<string>> Handle(UpdateBadgeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating badge {BadgeId}", request.Id);
+
+            var existingBadge = await _mediator.Send(new GetBadgeByNameQuery(request.Dto.Name));
+
+            if (existingBadge.IsSuccess)
+                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
 
             var badge = await _repository.GetByIdAsync(request.Id, cancellationToken);
             if (badge is null)

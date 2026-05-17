@@ -7,6 +7,7 @@ namespace Gamification.Domain.Entities
         public Guid AchievementId { get; set; }
         public virtual Achievement? Achievement { get; set; }
         public Guid ExplorerId { get; set; }
+        public ExplorerProfile? Profile { get; set; }
         public DateTime EarnedAt { get; set; }
         public bool IsNotified { get; set; }
     }

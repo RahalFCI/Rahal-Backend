@@ -64,6 +64,9 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(e => e.AchievementCriteriaTypeId)
                 .HasDatabaseName("IX_Achievements_AchievementCriteriaTypeId");
+
+            builder.HasIndex(e => e.Title)
+                .IsUnique();
         }
     }
 }

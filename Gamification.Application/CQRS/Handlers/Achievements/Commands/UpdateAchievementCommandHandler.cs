@@ -3,6 +3,7 @@ using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.Mappers;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -41,7 +42,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             }
 
             var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId), cancellationToken);
-            if (badge is null)
+            if (!badge.IsSuccess)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
@@ -52,6 +53,13 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            var existingAchievement = await _repository.GetTable().Where(a => a.Title == request.Dto.Title).AnyAsync(cancellationToken);
+            if (existingAchievement)
+            {
+                _logger.LogWarning("Achievement with title {AchievementTitle} already exists", request.Dto.Title);
+                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
             }
 
             AchievementMapper.UpdateEntity(achievement, request.Dto);

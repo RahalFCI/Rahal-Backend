@@ -36,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
             _logger.LogInformation("Creating check-in challenge for challenge {ChallengeId}", request.Dto.ChallengeId);
 
             var challenge = await _mediator.Send(new GetChallengeByIdQuery(request.Dto.ChallengeId), cancellationToken);
-            if (challenge is null)
+            if (!challenge.IsSuccess)
             {
                 _logger.LogWarning("Challenge {ChallengeId} not found", request.Dto.ChallengeId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
