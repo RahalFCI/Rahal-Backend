@@ -1,10 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Gamification.Infrastructure.Persistence;
+using Gamification.Infrastructure.Search.Explorer;
+using Gamification.Infrastructure.Search.Vendor;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Gamification.Infrastructure.Persistence;
 
 namespace Gamification.Infrastructure
 {
@@ -25,6 +28,10 @@ namespace Gamification.Infrastructure
                     b => b.MigrationsHistoryTable("__EFMigrationsHistory", "gamification")
                 )
             );
+
+            // Register Search Index Configuration
+            services.AddScoped<ISearchIndexInitializer, ExplorerIndexConfig>();
+            services.AddScoped<ISearchIndexInitializer, VendorIndexConfig>();
 
             return services;
         }
