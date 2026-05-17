@@ -7,13 +7,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
 {
-    public class GetChallengesByPlaceIdQueryHandler : IRequestHandler<GetChallengesByPlaceIdQuery, ApiResponse<IEnumerable<GetChallengeDto>>>
+    public class GetChallengesByPlaceIdQueryHandler : IRequestHandler<GetChallengesByPlaceIdQuery, ApiResponse<PagedResult<GetChallengeDto>>>
     {
         private readonly IGenericRepository<Challenge> _repository;
         private readonly ILogger<GetChallengesByPlaceIdQueryHandler> _logger;
@@ -26,19 +28,18 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetChallengeDto>>> Handle(GetChallengesByPlaceIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetChallengeDto>>> Handle(GetChallengesByPlaceIdQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching challenges for place {PlaceId}", request.PlaceId);
+            _logger.LogInformation("Fetching challenges for place {PlaceId} - page {Page}, pageSize {PageSize}", request.PlaceId, request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var challenges = await _repository.GetTable()
+            var result = await _repository.GetTable()
                 .Where(c => c.PlaceId == request.PlaceId)
-                .ToListAsync(cancellationToken);
+                .Select(c => ChallengeMapper.ToGetDto(c))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            var dtos = ChallengeMapper.ToGetDtos(challenges);
+            _logger.LogInformation("Retrieved {Count} challenges for place {PlaceId} out of {TotalCount}", result.Items.Count(), request.PlaceId, result.TotalCount);
 
-            _logger.LogInformation("Retrieved {Count} challenges for place {PlaceId}", challenges.Count(), request.PlaceId);
-
-            return ApiResponse<IEnumerable<GetChallengeDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetChallengeDto>>.Success(result);
         }
     }
 }

@@ -8,13 +8,15 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
 {
-    public class GetAllVendorsProfilesQueryHandler : IRequestHandler<GetAllVendorsProfilesQuery, ApiResponse<IEnumerable<GetVendorDto>>>
+    public class GetAllVendorsProfilesQueryHandler : IRequestHandler<GetAllVendorsProfilesQuery, ApiResponse<PagedResult<GetVendorDto>>>
     {
         private readonly IGenericRepository<VendorProfile> _repository;
         private readonly ILogger<GetAllVendorsProfilesQueryHandler> _logger;
@@ -27,16 +29,17 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetVendorDto>>> Handle(GetAllVendorsProfilesQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetVendorDto>>> Handle(GetAllVendorsProfilesQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all vendors");
+            _logger.LogInformation("Fetching all vendors - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var vendorProfiles = await _repository.GetAllAsync(cancellationToken: cancellationToken);
-            var dtos = VendorProfileMapper.ToGetDtos(vendorProfiles);
+            var result = await _repository.GetTable()
+                .Select(v => VendorProfileMapper.ToGetDto(v))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} vendor profiles", vendorProfiles.Count());
+            _logger.LogInformation("Retrieved {Count} vendor profiles out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            return ApiResponse<IEnumerable<GetVendorDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetVendorDto>>.Success(result);
         }
     }
 }

@@ -6,13 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
 {
-    public class GetCheckInChallengesByChallengeIdQueryHandler : IRequestHandler<GetCheckInChallengesByChallengeIdQuery, ApiResponse<IEnumerable<GetCheckInChallengeDto>>>
+    public class GetCheckInChallengesByChallengeIdQueryHandler : IRequestHandler<GetCheckInChallengesByChallengeIdQuery, ApiResponse<PagedResult<GetCheckInChallengeDto>>>
     {
         private readonly IGenericRepository<Domain.Entities.CheckInChallenge> _repository;
         private readonly ILogger<GetCheckInChallengesByChallengeIdQueryHandler> _logger;
@@ -25,21 +27,20 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetCheckInChallengeDto>>> Handle(GetCheckInChallengesByChallengeIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetCheckInChallengeDto>>> Handle(GetCheckInChallengesByChallengeIdQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching check-in challenges for challenge {ChallengeId}", request.ChallengeId);
+            _logger.LogInformation("Fetching check-in challenges for challenge {ChallengeId} - page {Page}, pageSize {PageSize}", request.ChallengeId, request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var checkInChallenges = await _repository.GetTable()
+            var result = await _repository.GetTable()
                 .Where(c => c.ChallengeId == request.ChallengeId)
                 .Include(c => c.Challenge)
-                .ToListAsync(cancellationToken);
+                .Select(c => CheckInChallengeMapper.ToGetDto(c))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            var dtos = CheckInChallengeMapper.ToGetDtos(checkInChallenges);
+            _logger.LogInformation("Retrieved {Count} check-in challenges for challenge {ChallengeId} out of {TotalCount}",
+                result.Items.Count(), request.ChallengeId, result.TotalCount);
 
-            _logger.LogInformation("Retrieved {Count} check-in challenges for challenge {ChallengeId}",
-                checkInChallenges.Count(), request.ChallengeId);
-
-            return ApiResponse<IEnumerable<GetCheckInChallengeDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetCheckInChallengeDto>>.Success(result);
         }
     }
 }

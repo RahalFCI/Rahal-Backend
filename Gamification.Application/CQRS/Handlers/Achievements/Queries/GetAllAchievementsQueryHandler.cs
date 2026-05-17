@@ -4,14 +4,17 @@ using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
 {
-    public class GetAllAchievementsQueryHandler : IRequestHandler<GetAllAchievementsQuery, IEnumerable<GetAchievementDto>>
+    public class GetAllAchievementsQueryHandler : IRequestHandler<GetAllAchievementsQuery, ApiResponse<PagedResult<GetAchievementDto>>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<GetAllAchievementsQueryHandler> _logger;
@@ -24,20 +27,19 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
             _logger = logger;
         }
 
-        public async Task<IEnumerable<GetAchievementDto>> Handle(GetAllAchievementsQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetAchievementDto>>> Handle(GetAllAchievementsQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all achievements");
+            _logger.LogInformation("Fetching all achievements - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var achievements = await _repository.GetTable()
+            var result = await _repository.GetTable()
                 .Include(a => a.Badge)
                 .Include(a => a.AchievementCriteriaType)
-                .ToListAsync(cancellationToken);
+                .Select(a => AchievementMapper.ToGetDto(a))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            var dtos = AchievementMapper.ToGetDtos(achievements);
+            _logger.LogInformation("Retrieved {Count} achievements out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            _logger.LogInformation("Retrieved {Count} achievements", achievements.Count());
-
-            return dtos;
+            return ApiResponse<PagedResult<GetAchievementDto>>.Success(result);
         }
     }
 }

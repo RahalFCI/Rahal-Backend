@@ -7,13 +7,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Queries
 {
-    public class GetXpTransactionsByExplorerIdQueryHandler : IRequestHandler<GetXpTransactionsByExplorerIdQuery, ApiResponse<IEnumerable<GetXpTransactionDto>>>
+    public class GetXpTransactionsByExplorerIdQueryHandler : IRequestHandler<GetXpTransactionsByExplorerIdQuery, ApiResponse<PagedResult<GetXpTransactionDto>>>
     {
         private readonly IGenericRepository<Domain.Entities.XpTransaction> _repository;
         private readonly ILogger<GetXpTransactionsByExplorerIdQueryHandler> _logger;
@@ -26,19 +28,18 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetXpTransactionDto>>> Handle(GetXpTransactionsByExplorerIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetXpTransactionDto>>> Handle(GetXpTransactionsByExplorerIdQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching XP transactions for explorer {ExplorerId}", request.ExplorerId);
+            _logger.LogInformation("Fetching XP transactions for explorer {ExplorerId} - page {Page}, pageSize {PageSize}", request.ExplorerId, request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var transactions = await _repository.GetTable()
+            var result = await _repository.GetTable()
                 .Where(t => t.ExplorerProfileId == request.ExplorerId)
-                .ToListAsync(cancellationToken);
+                .Select(t => XpTransactionMapper.ToGetDto(t))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            var dtos = XpTransactionMapper.ToGetDtos(transactions);
+            _logger.LogInformation("Retrieved {Count} transactions for explorer {ExplorerId} out of {TotalCount}", result.Items.Count(), request.ExplorerId, result.TotalCount);
 
-            _logger.LogInformation("Retrieved {Count} transactions for explorer {ExplorerId}", transactions.Count(), request.ExplorerId);
-
-            return ApiResponse<IEnumerable<GetXpTransactionDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetXpTransactionDto>>.Success(result);
         }
     }
 }

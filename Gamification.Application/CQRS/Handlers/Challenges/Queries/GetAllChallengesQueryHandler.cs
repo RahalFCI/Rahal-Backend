@@ -6,13 +6,15 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
 {
-    public class GetAllChallengesQueryHandler : IRequestHandler<GetAllChallengesQuery, ApiResponse<IEnumerable<GetChallengeDto>>>
+    public class GetAllChallengesQueryHandler : IRequestHandler<GetAllChallengesQuery, ApiResponse<PagedResult<GetChallengeDto>>>
     {
         private readonly IGenericRepository<Challenge> _repository;
         private readonly ILogger<GetAllChallengesQueryHandler> _logger;
@@ -25,16 +27,17 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetChallengeDto>>> Handle(GetAllChallengesQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetChallengeDto>>> Handle(GetAllChallengesQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all challenges");
+            _logger.LogInformation("Fetching all challenges - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var challenges = await _repository.GetAllAsync(cancellationToken: cancellationToken);
-            var dtos = ChallengeMapper.ToGetDtos(challenges);
+            var result = await _repository.GetTable()
+                .Select(c => ChallengeMapper.ToGetDto(c))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} challenges", challenges.Count());
+            _logger.LogInformation("Retrieved {Count} challenges out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            return ApiResponse<IEnumerable<GetChallengeDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetChallengeDto>>.Success(result);
         }
     }
 }

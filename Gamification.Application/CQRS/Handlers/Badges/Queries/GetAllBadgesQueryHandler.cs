@@ -6,13 +6,15 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Queries
 {
-    public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, ApiResponse<IEnumerable<GetBadgeDto>>>
+    public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, ApiResponse<PagedResult<GetBadgeDto>>>
     {
         private readonly IGenericRepository<Badge> _repository;
         private readonly ILogger<GetAllBadgesQueryHandler> _logger;
@@ -25,16 +27,17 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetBadgeDto>>> Handle(GetAllBadgesQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetBadgeDto>>> Handle(GetAllBadgesQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all badges");
+            _logger.LogInformation("Fetching all badges - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var badges = await _repository.GetAllAsync(cancellationToken: cancellationToken);
-            var dtos = BadgeMapper.ToGetDtos(badges);
+            var result = await _repository.GetTable()
+                .Select(b => BadgeMapper.ToGetDto(b))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} badges", badges.Count());
+            _logger.LogInformation("Retrieved {Count} badges out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            return ApiResponse<IEnumerable<GetBadgeDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetBadgeDto>>.Success(result);
         }
     }
 }
