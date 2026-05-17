@@ -42,6 +42,8 @@ namespace Gamification.Application.CQRS.Handlers.Orchestrators
                 if (!profileResult.IsSuccess)
                 {
                     _logger.LogError("Failed to create vendor profile for user {UserId} with error code {ErrorCode}", request.addVendorDto.UserId, profileResult.errorCode);
+                    await _mediator.Send(new DeleteProfilePictureCommand(profilePictureResult.Data!), cancellationToken);
+                    _logger.LogError("Deleted uploaded profile picture for user {UserId} due to profile creation failure", request.addVendorDto.UserId);
                     return ApiResponse<Guid>.Failure(profileResult.errorCode);
                 }
 
