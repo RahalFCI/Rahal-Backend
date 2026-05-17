@@ -89,7 +89,6 @@ namespace Users.Application.Services
                     UserName = googleUserInfo.Email,
                     DisplayName = $"{googleUserInfo.FirstName} {googleUserInfo.LastName}".Trim(),
                     UserType = UserRoleEnum.Explorer,
-                    ProfilePictureURL = googleUserInfo.PictureUrl ?? string.Empty,
                     EmailConfirmed = true, // Auto-confirm for OAuth users
                 };
 

@@ -13,7 +13,6 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Users.Application.DTOs.Explorer;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {

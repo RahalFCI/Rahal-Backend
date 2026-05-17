@@ -31,7 +31,6 @@ namespace Users.Application.Mappers
             Name = user.DisplayName,
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber ?? string.Empty,
-            ProfilePictureUrl = user.ProfilePictureURL ?? string.Empty,
             Role = user.UserType,
         };
 
