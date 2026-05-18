@@ -18,18 +18,29 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Queries
     internal class GetAllVendorCategoriesQueryHandler : IRequestHandler<GetAllVendorCategoriesQuery, ApiResponse<IEnumerable<GetVendorCategoryDto>>>
     {
         private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<GetAllVendorCategoriesQueryHandler> _logger;
 
-        public GetAllVendorCategoriesQueryHandler(IGenericRepository<VendorCategory> repository, ILogger<GetAllVendorCategoriesQueryHandler> logger)
+        public GetAllVendorCategoriesQueryHandler(IGenericRepository<VendorCategory> repository, ICacheService cacheService, ILogger<GetAllVendorCategoriesQueryHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
         public async Task<ApiResponse<IEnumerable<GetVendorCategoryDto>>> Handle(GetAllVendorCategoriesQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all vendor categories");
+            _logger.LogInformation("Fetching all vendor categories from cache");
+
+            var cached = await _cacheService.GetAsync<IEnumerable<GetVendorCategoryDto>>("vendor-categories:all");
+            if (cached is not null) return ApiResponse<IEnumerable<GetVendorCategoryDto>>.Success(cached);
+
+            _logger.LogInformation("Failed to fetch all vendor categories from cache");
+            _logger.LogInformation("Fetching all vendor categories from database");
 
             var categories = await _repository.GetAllAsync(cancellationToken);
+
+            await _cacheService.SetAsync("vendor-categories:all", categories, TimeSpan.FromHours(1));
+            _logger.LogInformation("Cached all vendor categories");
 
             var categoryDtos = VendorCategoryMapper.ToGetDtos(categories);
             return ApiResponse<IEnumerable<GetVendorCategoryDto>>.Success(categoryDtos);

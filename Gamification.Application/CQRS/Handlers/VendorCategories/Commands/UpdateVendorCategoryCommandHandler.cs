@@ -15,13 +15,16 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
     internal class UpdateVendorCategoryCommandHandler : IRequestHandler<UpdateVendorCategoryCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<UpdateVendorCategoryCommandHandler> _logger;
 
         public UpdateVendorCategoryCommandHandler(
             IGenericRepository<VendorCategory> repository,
+            ICacheService cacheService,
             ILogger<UpdateVendorCategoryCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -39,6 +42,8 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
             VendorCategory category = new VendorCategory() {Id = request.CategoryId, CategoryName = request.CategoryName };
             _repository.SaveInclude(category, nameof(category.CategoryName));
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("vendor-categories:all");
 
             _logger.LogInformation("Category {CategoryId} updated successfully", category.Id);
 

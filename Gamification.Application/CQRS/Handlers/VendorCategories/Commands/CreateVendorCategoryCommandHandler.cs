@@ -1,6 +1,5 @@
 ﻿using Gamification.Application.CQRS.Commands.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Commands.VendorCategories;
-using Gamification.Application.CQRS.Queries.AchievementCriteriaType;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -18,13 +17,16 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
     public class CreateVendorCategoryCommandHandler : IRequestHandler<CreateVendorCategoryCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<CreateVendorCategoryCommandHandler> _logger;
 
         public CreateVendorCategoryCommandHandler(
             IGenericRepository<VendorCategory> repository,
+            ICacheService cacheService,
             ILogger<CreateVendorCategoryCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -42,6 +44,8 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
             VendorCategory category = new VendorCategory() { CategoryName = request.CategoryName };
             _repository.Add(category);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("vendor-categories:all");
 
             _logger.LogInformation("Category {CategoryId} created successfully", category.Id);
 

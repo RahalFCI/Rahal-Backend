@@ -15,13 +15,16 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
     internal class DeleteVendorCategoryCommandHandler : IRequestHandler<DeleteVendorCategoryCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteVendorCategoryCommandHandler> _logger;
 
         public DeleteVendorCategoryCommandHandler(
             IGenericRepository<VendorCategory> repository,
+            ICacheService cacheService,
             ILogger<DeleteVendorCategoryCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -38,6 +41,8 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
 
             _repository.Delete(category);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("vendor-categories:all");
 
             _logger.LogInformation("Category {CategoryId} deleted successfully", category.Id);
 
