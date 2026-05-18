@@ -34,20 +34,8 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.PlanTierId)
                 .IsRequired(false);
 
-            builder.Property(e => e.Streak)
-                .HasDefaultValue(0)
-                .IsRequired();
-
-            builder.Property(e => e.AvailableXp)
-                .HasDefaultValue(0)
-                .IsRequired();
-
             builder.Property(e => e.Level)
                 .HasDefaultValue(1)
-                .IsRequired();
-
-            builder.Property(e => e.CumulativeXp)
-                .HasDefaultValue(0)
                 .IsRequired();
 
             builder.Property(e => e.IsPremium)

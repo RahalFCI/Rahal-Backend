@@ -29,15 +29,6 @@ namespace Gamification.Application.Validators.UserStat
             RuleFor(x => x.LongestStreak)
                 .GreaterThanOrEqualTo(0)
                 .WithMessage("Longest streak must be greater than or equal to 0.");
-
-            RuleFor(x => x.TotalXpEarned)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Total XP earned must be greater than or equal to 0.");
-
-            RuleFor(x => x.LastActivityDate)
-                .LessThanOrEqualTo(DateTime.UtcNow)
-                .WithMessage("Last activity date cannot be in the future.")
-                .When(x => x.LastActivityDate.HasValue);
         }
     }
 }

@@ -7,13 +7,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {
-    public class GetExplorerProfilesIncludingDeletedQueryHandler : IRequestHandler<GetExplorerProfilesIncludingDeletedQuery, ApiResponse<IEnumerable<GetExplorerDto>>>
+    public class GetExplorerProfilesIncludingDeletedQueryHandler : IRequestHandler<GetExplorerProfilesIncludingDeletedQuery, ApiResponse<PagedResult<GetExplorerDto>>>
     {
         private readonly IGenericRepository<ExplorerProfile> _repository;
         private readonly ILogger<GetExplorerProfilesIncludingDeletedQueryHandler> _logger;
@@ -26,16 +28,18 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetExplorerDto>>> Handle(GetExplorerProfilesIncludingDeletedQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetExplorerDto>>> Handle(GetExplorerProfilesIncludingDeletedQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all explorers");
+            _logger.LogInformation("Fetching all explorers including deleted - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var explorerProfiles = await _repository.GetTable().IgnoreQueryFilters().ToListAsync(cancellationToken: cancellationToken);
-            var dtos = ExplorerProfileMapper.ToGetDtos(explorerProfiles);
+            var result = await _repository.GetTable()
+                .IgnoreQueryFilters()
+                .Select(e => ExplorerProfileMapper.ToGetDto(e))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} Profiles", explorerProfiles.Count());
+            _logger.LogInformation("Retrieved {Count} profiles out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            return ApiResponse<IEnumerable<GetExplorerDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetExplorerDto>>.Success(result);
         }
     }
 }

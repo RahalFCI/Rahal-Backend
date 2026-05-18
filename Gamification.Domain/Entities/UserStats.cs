@@ -9,13 +9,14 @@ namespace Gamification.Domain.Entities
     {
         public Guid ExplorerProfileId { get; set; } = Guid.Empty;
         public ExplorerProfile? ExplorerProfile { get; set; }
+        public int AvailableXp { get; set; } = 0;
+        public int CumulativeXp { get; set; } = 0;
+        public int CurrentStreak { get; set; } = 0;
+        public DateTime? LastActivityDate { get; set; }
         public int TotalCheckInCount { get; set; } = 0;
         public int TotalAchievementCount { get; set; } = 0;
         public int TotalChallengeCount { get; set; } = 0;
         public int TotalBadgeCount { get; set; } = 0;
         public int LongestStreak { get; set; } = 0;
-        public DateTime? LastActivityDate { get; set; }
-
-
     }
 }

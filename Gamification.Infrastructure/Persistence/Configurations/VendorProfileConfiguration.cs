@@ -62,7 +62,7 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("IX_VendorProfiles_UserId");
 
             builder.HasIndex(e => e.CategoryId)
-                .HasDatabaseName("IX_VendorProfiles_CategoryId");
+                .HasDatabaseName("IX_VendorProfile_CategoryId");
 
             builder.HasIndex(e => e.IsDeleted)
                 .HasDatabaseName("IX_VendorProfiles_IsDeleted");

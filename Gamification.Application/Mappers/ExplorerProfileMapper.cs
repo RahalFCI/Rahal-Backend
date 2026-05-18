@@ -16,15 +16,13 @@ namespace Gamification.Application.Mappers
                 UserId = explorerProfile.UserId,
                 DisplayName = explorerProfile.DisplayName,
                 ProfilePictureUrl = explorerProfile.ProfilePictureURL,
-                AvailableXp = explorerProfile.AvailableXp,
                 Bio = explorerProfile.Bio,
                 BirthDate = explorerProfile.BirthDate,
                 CountryCode = explorerProfile.CountryCode,
-                CumlativeXp = explorerProfile.CumulativeXp,
                 gender = explorerProfile.Gender,
                 IsPremium = explorerProfile.IsPremium,
                 IsPublic = explorerProfile.IsPublic,
-                Level = explorerProfile.Level,
+                Level = explorerProfile.Level
             };
         }
 
@@ -40,8 +38,7 @@ namespace Gamification.Application.Mappers
                 Bio = dto.Bio,
                 CountryCode = dto.CountryCode,
                 IsPublic = dto.IsPublic,
-                IsPremium = dto.IsPremium,
-
+                IsPremium = dto.IsPremium
             };
         }
 
@@ -58,10 +55,7 @@ namespace Gamification.Application.Mappers
                 CountryCode = dto.CountryCode,
                 IsPublic = dto.IsPublic,
                 IsPremium = dto.IsPremium,
-                CumulativeXp = dto.CumlativeXp,
-                AvailableXp = dto.AvailableXp,
-                Level = dto.Level,
-
+                Level = dto.Level
             };
         }
 

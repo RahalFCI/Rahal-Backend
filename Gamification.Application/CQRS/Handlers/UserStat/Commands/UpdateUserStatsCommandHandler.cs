@@ -1,6 +1,5 @@
 using Gamification.Application.CQRS.Commands.UserStats;
-using Gamification.Application.CQRS.Queries.UserStats;
-using Gamification.Application.Mappers;
+using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,14 +24,14 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 
         public async Task<ApiResponse<string>> Handle(UpdateUserStatsCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Updating user stats for explorer {ExplorerId}", request.UserId);
+            _logger.LogInformation("Updating user stats for explorer {UserId}", request.UserId);
 
             var userStats = await _repository.GetTable()
                 .FirstOrDefaultAsync(us => us.ExplorerProfileId == request.UserId, cancellationToken);
 
             if (userStats is null)
             {
-                _logger.LogWarning("User stats for explorer {ExplorerId} not found", request.UserId);
+                _logger.LogWarning("User stats for explorer {UserId} not found", request.UserId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
@@ -41,12 +40,10 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
             userStats.TotalAchievementCount = request.Dto.TotalAchievementsEarned;
             userStats.TotalBadgeCount = request.Dto.TotalBadgesEarned;
             userStats.LongestStreak = request.Dto.LongestStreak;
-            userStats.LastActivityDate = request.Dto.LastActivityDate ?? DateTime.UtcNow;
 
-            _repository.Update(userStats);
             await _repository.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("User stats for explorer {ExplorerId} updated successfully", request.UserId);
+            _logger.LogInformation("User stats for explorer {UserId} updated successfully", request.UserId);
 
             return ApiResponse<string>.Success("User stats updated successfully");
         }

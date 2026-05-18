@@ -33,10 +33,11 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasDefaultValue(false);
 
             builder.HasIndex(e => e.CategoryName)
-                .HasDatabaseName("IX_VendorProfiles_CategoryId");
+                .IsUnique()
+                .HasDatabaseName("IX_VendorCategory_CategoryName");
 
             builder.HasIndex(e => e.IsDeleted)
-                .HasDatabaseName("IX_VendorProfiles_IsDeleted");
+                .HasDatabaseName("IX_VendorCategory_IsDeleted");
         }
     }
 }

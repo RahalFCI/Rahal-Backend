@@ -18,13 +18,7 @@ namespace Gamification.Domain.Entities
 
         public string CountryCode { get; set; } = string.Empty;
 
-        public int AvailableXp { get; set; } = 0;
-
-        public int CumulativeXp { get; set; } = 0;
-
         public int Level { get; set; } = 1;
-
-        public int Streak { get; set; } = 0;
 
         public bool IsPublic { get; set; } = true;
 

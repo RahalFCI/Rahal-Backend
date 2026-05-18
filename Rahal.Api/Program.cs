@@ -2,6 +2,9 @@ using ECommerce.API.Filters;
 using Gamification.Application.CQRS.Commands.Achievement;
 using Gamification.Application.CQRS.Handlers.Achievements.Commands;
 using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+using Gamification.Application.Jobs;
+using Hangfire;
+using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -160,6 +163,21 @@ app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
 app.UseRateLimiter();
+
+
+//Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() } //Custom authorization filter to restrict access to the dashboard
+}); // Gives you a UI at /hangfire
+
+using (var scope = app.Services.CreateScope())
+{
+    RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
+        "streak-reset",
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Daily(0));
+}
 
 app.UseExceptionHandlingMiddleware();
 

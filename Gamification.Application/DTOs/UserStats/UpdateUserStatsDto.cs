@@ -11,7 +11,5 @@ namespace Gamification.Application.DTOs.UserStats
         public int TotalAchievementsEarned { get; set; }
         public int TotalBadgesEarned { get; set; }
         public int LongestStreak { get; set; }
-        public DateTime? LastActivityDate { get; set; }
-        public int TotalXpEarned { get; set; }
     }
 }

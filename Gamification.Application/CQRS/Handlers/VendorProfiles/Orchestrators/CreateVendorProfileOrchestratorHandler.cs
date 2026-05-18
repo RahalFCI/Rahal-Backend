@@ -2,7 +2,7 @@
 using Gamification.Application.CQRS.Commands.ProfilePictures;
 using Gamification.Application.CQRS.Commands.UserStats;
 using Gamification.Application.CQRS.Commands.VendorProfiles;
-using Gamification.Application.CQRS.Orchestrators;
+using Gamification.Application.CQRS.Orchestrators.VendorProfiles;
 using Gamification.Application.DTOs.UserStats;
 using Gamification.Application.Interfaces;
 using MediatR;
@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Handlers.Orchestrators
+namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
 {
     public class CreateVendorProfileOrchestratorHandler : IRequestHandler<CreateVendorProfileOrchestrator, ApiResponse<Guid>>
     {

@@ -44,4 +44,4 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
             return ApiResponse<PagedResult<GetCheckInChallengeDto>>.Success(result);
         }
     }
-}}
+}

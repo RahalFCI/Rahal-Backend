@@ -1,7 +1,7 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
 using Gamification.Application.CQRS.Commands.ProfilePictures;
 using Gamification.Application.CQRS.Commands.UserStats;
-using Gamification.Application.CQRS.Orchestrators;
+using Gamification.Application.CQRS.Orchestrators.ExplorerProfiles;
 using Gamification.Application.DTOs.Explorer;
 using Gamification.Application.DTOs.UserStats;
 using Gamification.Application.Interfaces;
@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Handlers.Orchestrators
+namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
 {
     public class CreateExplorerProfileWithUserStatsOrchestratorHandler : IRequestHandler<CreateExplorerProfileWithUserStatsOrchestrator, ApiResponse<Guid>>
     {

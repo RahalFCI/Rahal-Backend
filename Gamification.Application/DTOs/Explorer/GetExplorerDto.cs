@@ -13,15 +13,13 @@ namespace Gamification.Application.DTOs.Explorer
         GenderEnum gender,
         string Bio,
         string CountryCode,
-        int AvailableXp,
-        int CumlativeXp,
         int Level,
         bool IsPublic,
         bool IsPremium
         //TODO: Add Plan Tier
         )
     {
-        public GetExplorerDto() : this(default, string.Empty, string.Empty, default, default, string.Empty, string.Empty, default, default, default, default, default)
+        public GetExplorerDto() : this(default, string.Empty, string.Empty, default, default, string.Empty, string.Empty, default, default, default)
         {
         }
     }

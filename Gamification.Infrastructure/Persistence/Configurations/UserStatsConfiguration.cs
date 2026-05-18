@@ -18,6 +18,20 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
 
+            builder.Property(e => e.AvailableXp)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(e => e.CumulativeXp)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(e => e.CurrentStreak)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(e => e.LastActivityDate)
+                .IsRequired(false);
 
             builder.Property(e => e.TotalBadgeCount)
                 .IsRequired()
@@ -63,7 +77,8 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             // Indexes
             builder.HasIndex(e => e.ExplorerProfileId)
-                .HasDatabaseName("IX_ExplorerAchievements_ExplorerProfileId");
+                .IsUnique()
+                .HasDatabaseName("IX_UserStats_ExplorerProfileId");
         }
     }
 }

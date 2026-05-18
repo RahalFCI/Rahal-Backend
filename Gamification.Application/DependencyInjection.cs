@@ -4,6 +4,8 @@ using Gamification.Application.Strategies;
 using Gamification.Application.Strategies.Implementations;
 using Gamification.Application.Utils;
 using Gamification.Application.Validators.Achievement;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Interfaces;
@@ -26,6 +28,8 @@ namespace Gamification.Application
             services.AddScoped<IXpCalculationStrategy, BonusXpStrategy>();
 
             services.AddScoped<IProfileChecker, ProfileChecker>();
+
+            
 
 
 

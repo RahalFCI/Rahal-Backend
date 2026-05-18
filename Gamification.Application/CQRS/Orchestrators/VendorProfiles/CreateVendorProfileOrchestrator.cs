@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Orchestrators
+namespace Gamification.Application.CQRS.Orchestrators.VendorProfiles
 {
     public record CreateVendorProfileOrchestrator(AddVendorDto addVendorDto, IFormFile? profilePicture) : IRequest<ApiResponse<Guid>>
     {

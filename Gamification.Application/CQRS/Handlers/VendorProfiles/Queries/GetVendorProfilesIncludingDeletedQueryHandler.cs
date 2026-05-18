@@ -9,13 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Application.Pagination;
+using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
 {
-    internal class GetVendorProfilesIncludingDeletedQueryHandler : IRequestHandler<GetVendorProfilesIncludingDeletedQuery, ApiResponse<IEnumerable<GetVendorDto>>>
+    internal class GetVendorProfilesIncludingDeletedQueryHandler : IRequestHandler<GetVendorProfilesIncludingDeletedQuery, ApiResponse<PagedResult<GetVendorDto>>>
     {
         private readonly IGenericRepository<VendorProfile> _repository;
         private readonly ILogger<GetVendorProfilesIncludingDeletedQueryHandler> _logger;
@@ -28,16 +30,18 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IEnumerable<GetVendorDto>>> Handle(GetVendorProfilesIncludingDeletedQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetVendorDto>>> Handle(GetVendorProfilesIncludingDeletedQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching all vendors");
+            _logger.LogInformation("Fetching all vendors including deleted - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
-            var vendorProfiles = await _repository.GetTable().IgnoreQueryFilters().ToListAsync(cancellationToken: cancellationToken);
-            var dtos = VendorProfileMapper.ToGetDtos(vendorProfiles);
+            var result = await _repository.GetTable()
+                .IgnoreQueryFilters()
+                .Select(v => VendorProfileMapper.ToGetDto(v))
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} Profiles", vendorProfiles.Count());
+            _logger.LogInformation("Retrieved {Count} vendor profiles out of {TotalCount}", result.Items.Count(), result.TotalCount);
 
-            return ApiResponse<IEnumerable<GetVendorDto>>.Success(dtos);
+            return ApiResponse<PagedResult<GetVendorDto>>.Success(result);
         }
     }
 }
