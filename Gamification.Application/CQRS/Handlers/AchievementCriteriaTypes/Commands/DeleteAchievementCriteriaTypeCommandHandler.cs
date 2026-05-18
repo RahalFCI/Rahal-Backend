@@ -3,6 +3,7 @@ using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
@@ -12,13 +13,16 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
     public class DeleteAchievementCriteriaTypeCommandHandler : IRequestHandler<DeleteAchievementCriteriaTypeCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteAchievementCriteriaTypeCommandHandler> _logger;
 
         public DeleteAchievementCriteriaTypeCommandHandler(
             IGenericRepository<AchievementCriteriaType> repository,
+            ICacheService cacheService,
             ILogger<DeleteAchievementCriteriaTypeCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -38,6 +42,8 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
 
             _repository.Delete(achievementCriteriaType);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("vendor-categories:all");
 
             _logger.LogInformation("Achievement criteria type {AchievementCriteriaTypeId} deleted successfully", request.Id);
 

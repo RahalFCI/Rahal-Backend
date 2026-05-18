@@ -1,7 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.Achievement;
 using Gamification.Application.CQRS.Commands.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Handlers.Achievements.Commands;
-using Gamification.Application.CQRS.Queries.AchievementCriteriaType;
 using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.DTOs.AchievementCriteriaType;
@@ -22,15 +21,18 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
     {
         private readonly IGenericRepository<AchievementCriteriaType> _repository;
         private readonly IMediator _mediator;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<CreateAchievementCriteriaTypeCommandHandler> _logger;
 
         public CreateAchievementCriteriaTypeCommandHandler(
             IGenericRepository<AchievementCriteriaType> repository,
             IMediator mediator,
+            ICacheService cacheService,
             ILogger<CreateAchievementCriteriaTypeCommandHandler> logger)
         {
             _repository = repository;
             _mediator = mediator;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -48,6 +50,8 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
             var achievement = AchievementCriteriaTypeMapper.ToEntity(request.Dto);
             _repository.Add(achievement);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("vendor-categories:all");
 
             _logger.LogInformation("Achievement {AchievementId} created successfully", achievement.Id);
 
