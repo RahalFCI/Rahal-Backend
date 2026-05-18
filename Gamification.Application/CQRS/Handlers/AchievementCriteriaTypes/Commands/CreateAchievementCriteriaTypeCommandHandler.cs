@@ -22,12 +22,12 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
     {
         private readonly IGenericRepository<AchievementCriteriaType> _repository;
         private readonly IMediator _mediator;
-        private readonly ILogger<CreateAchievementCriteriaTypeCommand> _logger;
+        private readonly ILogger<CreateAchievementCriteriaTypeCommandHandler> _logger;
 
         public CreateAchievementCriteriaTypeCommandHandler(
             IGenericRepository<AchievementCriteriaType> repository,
             IMediator mediator,
-            ILogger<CreateAchievementCriteriaTypeCommand> logger)
+            ILogger<CreateAchievementCriteriaTypeCommandHandler> logger)
         {
             _repository = repository;
             _mediator = mediator;

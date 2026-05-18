@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Queries.AchievementCriteriaType
+namespace Gamification.Application.CQRS.Queries.AchievementCriteriaTypes
 {
     public record GetAchievementCriteriaTypeByNameQuery(string Name) : IRequest<ApiResponse<GetAchievementCriteriaTypeDto?>>;
 
