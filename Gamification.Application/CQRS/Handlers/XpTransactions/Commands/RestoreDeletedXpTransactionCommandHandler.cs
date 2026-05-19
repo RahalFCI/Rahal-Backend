@@ -12,13 +12,16 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
     public class RestoreDeletedXpTransactionCommandHandler : IRequestHandler<RestoreDeletedXpTransactionCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<RestoreDeletedXpTransactionCommandHandler> _logger;
 
         public RestoreDeletedXpTransactionCommandHandler(
             IGenericRepository<XpTransaction> repository,
+            ICacheService cacheService,
             ILogger<RestoreDeletedXpTransactionCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -45,6 +48,10 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 
             _repository.SaveInclude(xpTransaction, nameof(xpTransaction.IsDeleted), nameof(xpTransaction.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Update leaderboard cache for the user
+            var newXp = request.ExistingXp + xpTransaction.Amount;
+            await _cacheService.SortedSetAddAsync("leaderboard:xp", request.ExplorerId.ToString(), newXp);
 
             _logger.LogInformation("XP transaction {XpTransactionId} restored successfully", request.Id);
 

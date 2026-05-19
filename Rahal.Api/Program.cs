@@ -1,5 +1,6 @@
 using ECommerce.API.Filters;
 using Gamification.Application.CQRS.Commands.Achievement;
+using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.CQRS.Handlers.Achievements.Commands;
 using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
 using Gamification.Application.Jobs;
@@ -133,9 +134,17 @@ var app = builder.Build();
 try
 {
     var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
-var db = redis.GetDatabase();
-await db.PingAsync();
-app.Logger.LogInformation("Redis connection successful");
+    var db = redis.GetDatabase();
+    await db.PingAsync();
+    app.Logger.LogInformation("Redis connection successful");
+
+    //Refresh leaderboard upon crash
+    redis.ConnectionRestored += async (sender, args) =>
+    {
+        using var scope = app.Services.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        await mediator.Send(new RebuildLeaderboardCommand());
+    };
 }
 catch (Exception ex)
 {
@@ -171,13 +180,15 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = new[] { new HangfireAuthorizationFilter() } //Custom authorization filter to restrict access to the dashboard
 }); // Gives you a UI at /hangfire
 
-using (var scope = app.Services.CreateScope())
-{
-    RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
-        "streak-reset",
-        job => job.ExecuteAsync(CancellationToken.None),
-        Cron.Daily(0));
-}
+RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
+    "streak-reset",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(0));
+
+// Initial leaderboard build
+using var scope = app.Services.CreateScope();
+var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+await mediator.Send(new RebuildLeaderboardCommand());
 
 app.UseExceptionHandlingMiddleware();
 

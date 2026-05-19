@@ -15,15 +15,18 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
     {
         private readonly IGenericRepository<Domain.Entities.XpTransaction> _repository;
         private readonly XpCalculationStrategyResolver _strategyResolver;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<CreateXpTransactionCommandHandler> _logger;
 
         public CreateXpTransactionCommandHandler(
             IGenericRepository<XpTransaction> repository,
             XpCalculationStrategyResolver strategyResolver,
+            ICacheService cacheService,
             ILogger<CreateXpTransactionCommandHandler> logger)
         {
             _repository = repository;
             _strategyResolver = strategyResolver;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -54,6 +57,9 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 
             _repository.Add(transaction);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Update cache
+            await _cacheService.SortedSetAddAsync("leaderboard:xp", request.Dto.ExplorerId.ToString(), request.ExistingXp + xpAmount);
 
             _logger.LogInformation("XP transaction {TransactionId} created with {Amount} XP for explorer {ExplorerId}",
                 transaction.Id, xpAmount, request.Dto.ExplorerId);

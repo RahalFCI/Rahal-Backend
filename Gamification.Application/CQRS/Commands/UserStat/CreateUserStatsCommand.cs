@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Gamification.Application.CQRS.Commands.UserStats
+namespace Gamification.Application.CQRS.Commands.UserStat
 {
     public record CreateUserStatsCommand(CreateUserStatsDto Dto) : IRequest<ApiResponse<string>>;
 

@@ -6,5 +6,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.XpTransactions
 {
-    public record PermenantDeleteXpTransactionCommand(Guid Id) : IRequest<ApiResponse<string>>;
+    public record PermenantDeleteXpTransactionCommand(Guid Id, Guid ExplorerId, int ExistingXp) : IRequest<ApiResponse<string>>;
 }

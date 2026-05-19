@@ -75,5 +75,23 @@ namespace Shared.Application.Services
             if (keys.Any())
                 await _db.KeyDeleteAsync(keys);
         }
+
+        public async Task SortedSetAddAsync(string key, string member, double score)
+            => await _db.SortedSetAddAsync(key, member, score);
+
+        public async Task<List<(string Member, double Score)>> SortedSetGetTopAsync(string key, int count)
+        {
+            var results = await _db.SortedSetRangeByRankWithScoresAsync(key, 0, count - 1, Order.Descending);
+            return results.Select(r => (r.Element.ToString(), r.Score)).ToList();
+        }
+
+        public async Task<long?> SortedSetGetRankAsync(string key, string member)
+            => await _db.SortedSetRankAsync(key, member, Order.Descending);
+        
+        public async Task<double?> SortedSetGetScoreAsync(string key, string member)
+            => await _db.SortedSetScoreAsync(key, member);
+
+        public async Task SortedSetRemoveAsync(string key, string member)
+            => await _db.SortedSetRemoveAsync(key, member);
     }
 }

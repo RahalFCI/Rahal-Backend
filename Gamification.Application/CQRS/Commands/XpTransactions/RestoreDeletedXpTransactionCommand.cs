@@ -6,5 +6,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.XpTransactions
 {
-    public record RestoreDeletedXpTransactionCommand(Guid Id) : IRequest<ApiResponse<string>>;
+    public record RestoreDeletedXpTransactionCommand(Guid Id, Guid ExplorerId, int ExistingXp) : IRequest<ApiResponse<string>>;
 }

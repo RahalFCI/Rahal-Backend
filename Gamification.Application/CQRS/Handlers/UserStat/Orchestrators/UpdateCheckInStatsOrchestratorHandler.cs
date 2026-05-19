@@ -1,8 +1,12 @@
 using Gamification.Application.CQRS.Commands.ExplorerProfiles;
-using Gamification.Application.CQRS.Commands.UserStats;
+using Gamification.Application.CQRS.Commands.UserStat;
+using Gamification.Application.CQRS.Commands.XpTransactions;
 using Gamification.Application.CQRS.Orchestrators.ExplorerProfiles;
 using Gamification.Application.CQRS.Orchestrators.UserStat;
+using Gamification.Application.DTOs.XpTransaction;
+using Gamification.Application.Interfaces;
 using Gamification.Domain.Entities;
+using Gamification.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,47 +19,89 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
     public class UpdateCheckInStatsOrchestratorHandler : IRequestHandler<UpdateCheckInStatsOrchestrator, ApiResponse<string>>
     {
         private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationUnitOfWork _unitOfWork;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateCheckInStatsOrchestratorHandler> _logger;
 
         public UpdateCheckInStatsOrchestratorHandler(
             IGenericRepository<UserStats> repository,
+            IGamificationUnitOfWork unitOfWork,
             IMediator mediator,
             ILogger<UpdateCheckInStatsOrchestratorHandler> logger)
         {
             _repository = repository;
             _mediator = mediator;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
         public async Task<ApiResponse<string>> Handle(UpdateCheckInStatsOrchestrator request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Incrementing check-in count for explorer {ExplorerId}", request.ExplorerId);
-
-            var userStatsExists = await _repository.GetTable()
-                .AnyAsync(us => us.ExplorerProfileId == request.ExplorerId, cancellationToken);
-
-            if (!userStatsExists)
+            try
             {
-                _logger.LogWarning("User stats for explorer {ExplorerId} not found", request.ExplorerId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+
+                _logger.LogInformation("Incrementing check-in count for explorer {ExplorerId}", request.ExplorerId);
+
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+                // Retrieve user stats
+                var userStats = await _repository.GetTable()
+                    .FirstOrDefaultAsync(us => us.ExplorerProfileId == request.ExplorerId, cancellationToken);
+
+                if (userStats is null)
+                {
+                    _logger.LogWarning("User stats for explorer {ExplorerId} not found", request.ExplorerId);
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                }
+
+                //Update User Stats
+                userStats.TotalCheckInCount += 1;
+                userStats.AvailableXp += request.XpAmount;
+                userStats.CumulativeXp += request.XpAmount;
+                await _repository.SaveChangesAsync();
+
+                _logger.LogInformation("User stats updated for explorer {ExplorerId}", request.ExplorerId);
+
+
+                //Create Xp Transaction
+                var xpTransactionResult = await _mediator.Send(new CreateXpTransactionCommand(new CreateXpTransactionDto()
+                {
+                        ExplorerId = request.ExplorerId,
+                        Amount = request.XpAmount, 
+                        ReferenceId = request.CheckInId,
+                        SourceType = XpSourceType.CheckIn.ToString()
+                }, userStats.CumulativeXp), cancellationToken);
+
+                if (!xpTransactionResult.IsSuccess)
+                {
+                    _logger.LogError("Failed to create XP transaction for explorer {ExplorerId}. Error: {ErrorCode}", request.ExplorerId, xpTransactionResult.errorCode);
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return ApiResponse<string>.Failure(xpTransactionResult.errorCode);
+                }
+
+
+
+                //Update Streak
+                var streakResult = await _mediator.Send(new UpdateStreakCommand(request.ExplorerId, userStats), cancellationToken);
+                if (!streakResult.IsSuccess)
+                {
+                    _logger.LogError("Failed to update streak for explorer {ExplorerId}. Error: {ErrorCode}", request.ExplorerId, streakResult.errorCode);
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return ApiResponse<string>.Failure(streakResult.errorCode);
+                }
+
+                _logger.LogInformation("Streak updated for explorer {ExplorerId}", request.ExplorerId);
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+                return ApiResponse<string>.Success("Check-in stats updated successfully");
             }
-
-            var rowsAffected = await _repository.GetTable()
-                .Where(us => us.ExplorerProfileId == request.ExplorerId)
-                .ExecuteUpdateAsync(s => s.SetProperty(us => us.TotalCheckInCount, us => us.TotalCheckInCount + 1), cancellationToken);
-
-            if(rowsAffected == 0)
+            catch (Exception ex)
             {
-                _logger.LogError("Failed to increment check-in count for explorer {ExplorerId}", request.ExplorerId);
-                return ApiResponse<string>.Failure(ErrorCode.DatabaseError);
+                _logger.LogError(ex, "An error occurred while updating check-in stats for explorer {ExplorerId}", request.ExplorerId);
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                return ApiResponse<string>.Failure(ErrorCode.UnknownError);
             }
-
-            _logger.LogInformation("Check-in count incremented for explorer {ExplorerId}", request.ExplorerId);
-
-            await _mediator.Send(new UpdateStreakCommand(request.ExplorerId), cancellationToken);
-
-            return ApiResponse<string>.Success("Check-in stats updated successfully");
         }
     }
 }

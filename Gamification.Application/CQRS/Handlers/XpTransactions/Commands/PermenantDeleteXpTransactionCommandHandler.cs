@@ -15,13 +15,19 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
     public class PermenantDeleteXpTransactionCommandHandler : IRequestHandler<PermenantDeleteXpTransactionCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly IMediator _mediator;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<PermenantDeleteXpTransactionCommandHandler> _logger;
 
         public PermenantDeleteXpTransactionCommandHandler(
             IGenericRepository<XpTransaction> repository,
+            IMediator mediator,
+            ICacheService cacheService,
             ILogger<PermenantDeleteXpTransactionCommandHandler> logger)
         {
             _repository = repository;
+            _mediator = mediator;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -38,6 +44,10 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 
             _repository.Delete(transaction);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Update leaderboard cache for the user
+            var newXp = request.ExistingXp - transaction.Amount;
+            await _cacheService.SortedSetAddAsync("leaderboard:xp", request.ExplorerId.ToString(), newXp);
 
             _logger.LogInformation("XP transaction {TransactionId} deleted", request.Id);
             return ApiResponse<string>.Success("XP transaction deleted successfully");

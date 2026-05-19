@@ -1,4 +1,4 @@
-using Gamification.Application.CQRS.Commands.UserStats;
+using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.Interfaces;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -10,7 +10,7 @@ using Shared.Domain.Enums;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
-    public class UpdateStreakCommandHandler : IRequestHandler<CQRS.Commands.UserStats.UpdateStreakCommand, ApiResponse<string>>
+    public class UpdateStreakCommandHandler : IRequestHandler<UpdateStreakCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<UserStats> _userStatsRepository;
         private readonly ILogger<UpdateStreakCommandHandler> _logger;
@@ -23,15 +23,12 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CQRS.Commands.UserStats.UpdateStreakCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(UpdateStreakCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating streak for explorer {ExplorerId}", request.ExplorerId);
             
-            // Fetch current stats for the explorer
-            var stats = await _userStatsRepository.GetTable()
-                .Where(us => us.ExplorerProfileId == request.ExplorerId)
-                .Select(us => new { us.CurrentStreak, us.LastActivityDate, us.LongestStreak })
-                .FirstOrDefaultAsync(cancellationToken);
+            var stats = request.UserStats ?? await _userStatsRepository.GetTable()
+                .FirstOrDefaultAsync(us => us.ExplorerProfileId == request.ExplorerId, cancellationToken);
 
             if (stats is null)
             {
