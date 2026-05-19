@@ -12,6 +12,6 @@ namespace Users.Application.Interfaces
         Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default);
         Task<ApiResponse<AuthResponseDto?>> LoginAsync(AuthRequestDto loginRequestDto, CancellationToken cancellationToken = default);
         Task LogoutAsync(CancellationToken cancellationToken = default);
-        Task<ApiResponse<string>> DeleteUserWithoutProfileAsync(Guid userId, CancellationToken cancellationToken = default);
+        //Task<ApiResponse<string>> DeleteUserWithoutProfileAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }
