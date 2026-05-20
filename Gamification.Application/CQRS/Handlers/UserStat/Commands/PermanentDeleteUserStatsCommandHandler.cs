@@ -12,13 +12,16 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
     public class PermanentDeleteUserStatsCommandHandler : IRequestHandler<PermanentDeleteUserStatsCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<PermanentDeleteUserStatsCommandHandler> _logger;
 
         public PermanentDeleteUserStatsCommandHandler(
             IGenericRepository<Domain.Entities.UserStats> repository,
+            ICacheService cacheService,
             ILogger<PermanentDeleteUserStatsCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -37,6 +40,9 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 
             _repository.Delete(userStats);
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Update cache
+            await _cacheService.SortedSetRemoveAsync("leaderboard:xp", request.UserId.ToString());
 
             _logger.LogInformation("User stats for explorer {ExplorerId} permanently deleted", request.UserId);
 

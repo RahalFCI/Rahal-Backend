@@ -12,13 +12,16 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
     public class DeleteUserStatsCommandHandler : IRequestHandler<DeleteUserStatsCommand, ApiResponse<string>>
     {
         private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
+        private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteUserStatsCommandHandler> _logger;
 
         public DeleteUserStatsCommandHandler(
             IGenericRepository<Domain.Entities.UserStats> repository,
+            ICacheService cacheService,
             ILogger<DeleteUserStatsCommandHandler> logger)
         {
             _repository = repository;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -44,6 +47,9 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 
             _repository.SaveInclude(userStats, nameof(userStats.IsDeleted), nameof(userStats.DeletedAt));
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Update cache
+            await _cacheService.SortedSetRemoveAsync("leaderboard:xp", request.UserId.ToString());
 
             _logger.LogInformation("User stats for explorer {ExplorerId} deleted successfully", request.UserId);
 
