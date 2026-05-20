@@ -1,4 +1,7 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
+using Gamification.Application.CQRS.Commands.VendorProfiles;
+using Gamification.Application.CQRS.Orchestrators.ExplorerProfiles;
+using Gamification.Application.CQRS.Orchestrators.VendorProfiles;
 using Gamification.Application.Interfaces;
 using MassTransit;
 using MediatR;
@@ -12,12 +15,10 @@ namespace Gamification.Application.EventConsumers
 {
     public class DeleteProfileEventConsumer : IConsumer<DeleteProfileEvent>
     {
-        private readonly IGamificationUnitOfWork _unitOfWork;
         private readonly IMediator _mediator;
 
-        public DeleteProfileEventConsumer(IGamificationUnitOfWork unitOfWork, IMediator mediator)
+        public DeleteProfileEventConsumer(IMediator mediator)
         {
-            _unitOfWork = unitOfWork;
             _mediator = mediator;
         }
 
@@ -26,15 +27,23 @@ namespace Gamification.Application.EventConsumers
             var cancellationToken = context.CancellationToken;
 
             var userId = context.Message.UserId;
+            var IsPermanent = context.Message.IsPermanent;
+            var role = context.Message.Role;
 
-            await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
-            // TODO: call delete ProfileOrchestrator
-
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-
-
+            if(role == "Explorer")
+            {
+                if (IsPermanent) 
+                    await _mediator.Send(new PermanentDeleteExplorerProfileWithUserStatsOrchestrator(userId), cancellationToken);
+                else
+                    await _mediator.Send(new DeleteExplorerProfileWithUserStatsOrchestrator(userId), cancellationToken);
+            }
+            else if(role == "Vendor")
+            {
+                if (IsPermanent)
+                    await _mediator.Send(new PermanentDeleteVendorProfileOrchestrator(userId), cancellationToken);
+                else
+                    await _mediator.Send(new DeleteVendorProfileCommand(userId), cancellationToken);
+            }
         }
     }
 }
