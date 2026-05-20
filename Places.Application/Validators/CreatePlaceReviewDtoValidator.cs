@@ -7,9 +7,6 @@ namespace Places.Application.Validators
     {
         public CreatePlaceReviewDtoValidator()
         {
-            RuleFor(x => x.ExplorerId)
-                .NotEmpty().WithMessage("Explorer ID is required");
-
             RuleFor(x => x.PlaceId)
                 .NotEmpty().WithMessage("Place ID is required");
 

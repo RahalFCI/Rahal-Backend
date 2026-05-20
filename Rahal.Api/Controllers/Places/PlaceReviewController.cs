@@ -82,7 +82,9 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateAsync([FromBody] CreatePlaceReviewDto createReviewDto, CancellationToken cancellationToken)
         {
-            var result = await _reviewService.CreatePlaceReviewAsync(createReviewDto, cancellationToken);
+            var ExplorerId = GetCurrentUserId();
+
+            var result = await _reviewService.CreatePlaceReviewAsync(ExplorerId, createReviewDto, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -95,8 +97,10 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid explorerId, [FromRoute] Guid placeId, [FromRoute] Guid checkInId, [FromBody] UpdatePlaceReviewDto updateReviewDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid placeId, [FromRoute] Guid checkInId, [FromBody] UpdatePlaceReviewDto updateReviewDto, CancellationToken cancellationToken)
         {
+            var explorerId = GetCurrentUserId();
+
             var result = await _reviewService.UpdatePlaceReviewAsync(explorerId, placeId, checkInId, updateReviewDto, cancellationToken);
 
             if (!result.IsSuccess)

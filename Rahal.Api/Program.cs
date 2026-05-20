@@ -72,6 +72,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<DeleteProfileEventConsumer>();
+    x.AddConsumer<RestoreProfileEventConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

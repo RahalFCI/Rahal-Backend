@@ -78,8 +78,10 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateAsync([FromRoute] Guid explorerId, [FromBody] CheckInRequestDto createCheckInDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAsync([FromBody] CheckInRequestDto createCheckInDto, CancellationToken cancellationToken)
         {
+            var explorerId = GetCurrentUserId();
+
             var result = await _checkInService.CheckInAsync(explorerId, createCheckInDto, cancellationToken);
 
             if (!result.IsSuccess)
@@ -93,8 +95,10 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid explorerId, [FromRoute] Guid placeId, [FromBody] UpdateCheckInDto updateCheckInDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid placeId, [FromBody] UpdateCheckInDto updateCheckInDto, CancellationToken cancellationToken)
         {
+            var explorerId = GetCurrentUserId();
+
             var result = await _checkInService.UpdateCheckInStatusAsync(explorerId, placeId, updateCheckInDto, cancellationToken);
 
             if (!result.IsSuccess)

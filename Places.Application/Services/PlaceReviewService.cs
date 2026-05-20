@@ -84,9 +84,9 @@ namespace Places.Application.Services
             return ApiResponse<IEnumerable<GetPlaceReviewDto>>.Success(dtos);
         }
 
-        public async Task<ApiResponse<string>> CreatePlaceReviewAsync(CreatePlaceReviewDto dto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> CreatePlaceReviewAsync(Guid ExplorerId, CreatePlaceReviewDto dto, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Creating review for explorer {ExplorerId} on place {PlaceId}", dto.ExplorerId, dto.PlaceId);
+            _logger.LogInformation("Creating review for explorer {ExplorerId} on place {PlaceId}", ExplorerId, dto.PlaceId);
 
             var place = await _placeRepository.GetByIdAsync(dto.PlaceId, cancellationToken);
             if (place is null)
@@ -96,20 +96,20 @@ namespace Places.Application.Services
             }
 
             var checkIn = await _checkInRepository.GetTable()
-                .FirstOrDefaultAsync(c => c.ExplorerId == dto.ExplorerId && c.PlaceId == dto.PlaceId && c.Id == dto.CheckInId, cancellationToken);
+                .FirstOrDefaultAsync(c => c.ExplorerId == ExplorerId && c.PlaceId == dto.PlaceId && c.Id == dto.CheckInId, cancellationToken);
 
             if (checkIn is null)
             {
-                _logger.LogWarning("Check-in not found for explorer {ExplorerId} at place {PlaceId}", dto.ExplorerId, dto.PlaceId);
+                _logger.LogWarning("Check-in not found for explorer {ExplorerId} at place {PlaceId}", ExplorerId, dto.PlaceId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
             var existingReview = await _reviewRepository.GetTable()
-                .FirstOrDefaultAsync(r => r.ExplorerId == dto.ExplorerId && r.PlaceId == dto.PlaceId && r.CheckInId == dto.CheckInId, cancellationToken);
+                .FirstOrDefaultAsync(r => r.ExplorerId == ExplorerId && r.PlaceId == dto.PlaceId && r.CheckInId == dto.CheckInId, cancellationToken);
 
             if (existingReview is not null)
             {
-                _logger.LogWarning("Review already exists for explorer {ExplorerId} on place {PlaceId}", dto.ExplorerId, dto.PlaceId);
+                _logger.LogWarning("Review already exists for explorer {ExplorerId} on place {PlaceId}", ExplorerId, dto.PlaceId);
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
 
@@ -117,7 +117,7 @@ namespace Places.Application.Services
             _reviewRepository.Add(review);
             await _reviewRepository.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Review created successfully for explorer {ExplorerId} on place {PlaceId}", dto.ExplorerId, dto.PlaceId);
+            _logger.LogInformation("Review created successfully for explorer {ExplorerId} on place {PlaceId}", ExplorerId, dto.PlaceId);
 
             return ApiResponse<string>.Success("Review created successfully");
         }

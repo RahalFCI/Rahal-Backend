@@ -23,7 +23,6 @@ namespace Places.Application.Mappers
         {
             return new PlaceReview
             {
-                ExplorerId = dto.ExplorerId,
                 PlaceId = dto.PlaceId,
                 CheckInId = dto.CheckInId,
                 Rating = dto.Rating,
