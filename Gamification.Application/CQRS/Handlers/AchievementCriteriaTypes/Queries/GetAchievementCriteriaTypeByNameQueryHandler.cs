@@ -1,5 +1,4 @@
-﻿using Gamification.Application.CQRS.Queries.AchievementCriteriaType;
-using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
+﻿using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.DTOs.AchievementCriteriaType;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;

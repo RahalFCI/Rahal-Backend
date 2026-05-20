@@ -8,6 +8,4 @@ using System.Text;
 namespace Gamification.Application.CQRS.Commands.VendorCategories
 {
     public record CreateVendorCategoryCommand(string CategoryName) : IRequest<ApiResponse<string>>;
-    {
-    }
 }

@@ -1,5 +1,5 @@
 using Gamification.Application.CQRS.Commands.ExplorerProfiles;
-using Gamification.Application.CQRS.Commands.UserStats;
+using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.CQRS.Orchestrators.ExplorerProfiles;
 using Gamification.Application.CQRS.Orchestrators.UserStat;
 using Gamification.Domain.Entities;

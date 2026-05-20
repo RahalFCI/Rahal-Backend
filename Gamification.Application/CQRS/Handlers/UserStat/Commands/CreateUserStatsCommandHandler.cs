@@ -1,4 +1,4 @@
-﻿using Gamification.Application.CQRS.Commands.UserStats;
+﻿using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

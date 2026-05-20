@@ -13,6 +13,7 @@ namespace Gamification.Application.Mappers
                 PlaceId = challenge.PlaceId,
                 Name = challenge.Name,
                 Description = challenge.Description,
+                ValidationPrompt = challenge.ValidationPrompt,
                 Type = challenge.Type.ToString(),
                 Difficulty = challenge.Difficulty.ToString(),
                 MinimumLevelRequired = challenge.MinimumLevelRequired,
@@ -30,6 +31,7 @@ namespace Gamification.Application.Mappers
                 PlaceId = dto.PlaceId,
                 Name = dto.Name,
                 Description = dto.Description,
+                ValidationPrompt = dto.ValidationPrompt,
                 Type = Enum.Parse<Gamification.Domain.Enums.ChallengeType>(dto.Type),
                 Difficulty = Enum.Parse<Gamification.Domain.Enums.ChallengeDifficulty>(dto.Difficulty),
                 MinimumLevelRequired = dto.MinimumLevelRequired,
@@ -41,6 +43,7 @@ namespace Gamification.Application.Mappers
         {
             challenge.Name = dto.Name;
             challenge.Description = dto.Description;
+            challenge.ValidationPrompt = dto.ValidationPrompt;
             challenge.Difficulty = Enum.Parse<Gamification.Domain.Enums.ChallengeDifficulty>(dto.Difficulty);
             challenge.MinimumLevelRequired = dto.MinimumLevelRequired;
             challenge.XpReward = dto.XpReward;

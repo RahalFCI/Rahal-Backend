@@ -44,6 +44,10 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasColumnType("text");
 
+            builder.Property(e => e.ValidationPrompt)
+                .IsRequired()
+                .HasColumnType("text");
+
             // Audit Properties (inherited from BaseEntity)
             builder.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")

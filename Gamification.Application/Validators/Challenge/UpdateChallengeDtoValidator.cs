@@ -15,6 +15,10 @@ namespace Gamification.Application.Validators.Challenge
                 .NotEmpty().WithMessage("Challenge description is required")
                 .MaximumLength(500).WithMessage("Challenge description cannot exceed 500 characters");
 
+            RuleFor(x => x.ValidationPrompt)
+                .NotEmpty().WithMessage("Challenge validation prompt is required")
+                .MaximumLength(1000).WithMessage("Challenge validation prompt cannot exceed 1000 characters");
+
             RuleFor(x => x.Difficulty)
                 .NotEmpty().WithMessage("Challenge difficulty is required");
 

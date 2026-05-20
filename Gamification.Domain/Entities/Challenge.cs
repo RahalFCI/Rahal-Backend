@@ -11,6 +11,7 @@ namespace Gamification.Domain.Entities
         public Guid PlaceId { get; set; } = Guid.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string ValidationPrompt { get; set; } = string.Empty;
         public ChallengeDifficulty Difficulty { get; set; }
         public ChallengeType Type { get; set; }
         public int MinimumLevelRequired { get; set; }

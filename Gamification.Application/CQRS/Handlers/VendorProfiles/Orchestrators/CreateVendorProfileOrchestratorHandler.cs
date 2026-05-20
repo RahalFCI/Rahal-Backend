@@ -1,6 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
 using Gamification.Application.CQRS.Commands.ProfilePictures;
-using Gamification.Application.CQRS.Commands.UserStats;
+using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.CQRS.Commands.VendorProfiles;
 using Gamification.Application.CQRS.Orchestrators.VendorProfiles;
 using Gamification.Application.DTOs.UserStats;
