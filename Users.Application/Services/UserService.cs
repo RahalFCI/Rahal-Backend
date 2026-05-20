@@ -1,14 +1,18 @@
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
+using Shared.Application.Events.Profiles;
 using Shared.Application.Interfaces;
 using Shared.Application.Pagination;
 using Shared.Domain.Enums;
 using Shared.Domain.Events.Users;
 using Shared.Infrastructure.Pagination;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,15 +32,18 @@ namespace Users.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly IMediator _mediator;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             UserManager<User> userManager,
             IMediator mediator,
+            IPublishEndpoint publishEndpoint,
             ILogger<UserService> logger)
         {
             _userManager = userManager;
             _mediator = mediator;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -63,11 +70,25 @@ namespace Users.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
             }
 
+            //Publish RabbitMQ event to delete user across different modules
+            if(user.UserType != UserRoleEnum.Admin)
+            {
+                await _publishEndpoint.Publish(new DeleteProfileEvent
+                {
+                    UserId = id,
+                    Role = user.UserType.ToString(),
+                    IsPermanent = false
+                });
+                _logger.LogInformation("ProfileDeletedEvent published through RabbitMQ for user {UserId}", id);
+            }
+
+
+
             //Delete UserProfile and Update search index
             try
             {
                 await _mediator.Publish(new UserDeletedEvent(id), cancellationToken);
-                _logger.LogInformation("UserDeletedEvent published for user {UserId}", id);
+                _logger.LogInformation("UserDeletedEvent published through MediatR for user {UserId}", id);
             }
             catch (Exception ex)
             {
@@ -101,6 +122,18 @@ namespace Users.Application.Services
                 _logger.LogError("Permanent User deletion failed: Could not delete user {UserId}. Errors: {Errors}",
                     id, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+            }
+
+            //Publish RabbitMQ event to delete user across different modules
+            if (user.UserType != UserRoleEnum.Admin)
+            {
+                await _publishEndpoint.Publish(new DeleteProfileEvent
+                {
+                    UserId = id,
+                    Role = user.UserType.ToString(),
+                    IsPermanent = true
+                });
+                _logger.LogInformation("ProfileDeletedEvent published through RabbitMQ for user {UserId}", id);
             }
 
             try
@@ -355,6 +388,16 @@ namespace Users.Application.Services
                     id, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return ApiResponse<string>.Failure(ErrorCode.UnknownError);
             }
+
+            // Publish UserCreatedEvent to trigger welcome email and other handlers
+                var userCreatedEvent = new UserCreatedEvent(
+                    user.Id,
+                    user.DisplayName,
+                    user.Email!
+                );
+
+            await _mediator.Publish(userCreatedEvent, cancellationToken);
+            _logger.LogInformation("UserCreatedEvent published for user {UserId}", user.Id);
 
             _logger.LogInformation("User {UserId} successfully restored", id);
             return ApiResponse<string>.Success("User restored successfully.");

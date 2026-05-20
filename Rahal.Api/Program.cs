@@ -3,9 +3,11 @@ using Gamification.Application.CQRS.Commands.Achievement;
 using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.CQRS.Handlers.Achievements.Commands;
 using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+using Gamification.Application.EventConsumers;
 using Gamification.Application.Jobs;
 using Hangfire;
 using Hangfire.PostgreSql;
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -64,6 +66,29 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateAchievementCommandHandler).Assembly);
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehaviorService<,>));
 
+});
+
+// Register MassTransit
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<DeleteProfileEventConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(builder.Configuration["RabbitMQ:Host"], builder.Configuration["RabbitMQ:VirtualHost"], h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:Username"]!);
+            h.Password(builder.Configuration["RabbitMQ:Password"]!);
+        });
+
+        cfg.UseMessageRetry(r => r.Intervals(
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromSeconds(30)
+        ));
+
+        cfg.ConfigureEndpoints(context);
+    });
 });
 
 

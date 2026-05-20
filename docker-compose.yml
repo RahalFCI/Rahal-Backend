@@ -17,6 +17,10 @@ services:
      - MEILI_API_KEY=masterKey123 
      - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
      - ASPNETCORE_ENVIRONMENT=Development
+     - RabbitMQ__Host=rabbitmq
+     - RabbitMQ__VirtualHost=/
+     - RabbitMQ__Username=guest
+     - RabbitMQ__Password=guest
 
     ports:
      - "7145:8080"
@@ -24,6 +28,8 @@ services:
      - rahal-network
     depends_on:
      - postgres-container
+     - rabbitmq
+     - redis
 
   postgres-container:
    image: postgres:13
@@ -53,6 +59,12 @@ services:
     - MEILI_MASTER_KEY=masterKey123
    volumes:
     - meilisearch_data:/meili_data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
 networks:
  rahal-network:
