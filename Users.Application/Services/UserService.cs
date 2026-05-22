@@ -399,6 +399,17 @@ namespace Users.Application.Services
             await _mediator.Publish(userCreatedEvent, cancellationToken);
             _logger.LogInformation("UserCreatedEvent published for user {UserId}", user.Id);
 
+            //Publish RabbitMQ event to delete user across different modules
+            if (user.UserType != UserRoleEnum.Admin)
+            {
+                await _publishEndpoint.Publish(new RestoreProfileEvent
+                {
+                    UserId = id,
+                    Role = user.UserType.ToString(),
+                });
+                _logger.LogInformation("ProfileRestoredEvent published through RabbitMQ for user {UserId}", id);
+            }
+
             _logger.LogInformation("User {UserId} successfully restored", id);
             return ApiResponse<string>.Success("User restored successfully.");
         }
