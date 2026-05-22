@@ -4,14 +4,16 @@ using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
 {
-    public class GetAchievementByIdQueryHandler : IRequestHandler<GetAchievementByIdQuery, GetAchievementDto?>
+    public class GetAchievementByIdQueryHandler : IRequestHandler<GetAchievementByIdQuery, ApiResponse<GetAchievementDto>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<GetAchievementByIdQueryHandler> _logger;
@@ -24,7 +26,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
             _logger = logger;
         }
 
-        public async Task<GetAchievementDto?> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetAchievementDto>> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching achievement {AchievementId}", request.Id);
 
@@ -37,10 +39,10 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
             if (achievement is null)
             {
                 _logger.LogWarning("Achievement {AchievementId} not found", request.Id);
-                return null;
+                return ApiResponse<GetAchievementDto>.Failure(ErrorCode.NotFound);
             }
 
-            return AchievementMapper.ToGetDto(achievement);
+            return ApiResponse<GetAchievementDto>.Success(AchievementMapper.ToGetDto(achievement));
         }
     }
 }

@@ -15,11 +15,8 @@ namespace Gamification.Application.Validators.Achievement
                 .NotEmpty().WithMessage("Achievement description is required")
                 .MaximumLength(500).WithMessage("Achievement description cannot exceed 500 characters");
 
-            RuleFor(x => x.BadgeId)
-                .NotEmpty().WithMessage("Badge ID is required");
-
             RuleFor(x => x.XpReward)
-                .GreaterThan(0).WithMessage("XP reward must be greater than 0");
+                .GreaterThanOrEqualTo(0).WithMessage("XP reward must be greater than or equal to 0");
 
             RuleFor(x => x.CriteriaTypeId)
                 .NotEmpty().WithMessage("Criteria type ID is required");

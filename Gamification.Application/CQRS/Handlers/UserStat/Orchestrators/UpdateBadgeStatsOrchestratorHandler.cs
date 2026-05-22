@@ -43,9 +43,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
 
             var rowsAffected = await _repository.GetTable()
                 .Where(us => us.ExplorerProfileId == request.ExplorerId)
-                .ExecuteUpdateAsync(s => s.SetProperty(us => us.TotalBadgeCount, us => us.TotalBadgeCount + 1)
-                .SetProperty(us => us.AvailableXp, us => us.AvailableXp + request.Xp)
-                .SetProperty(us => us.CumulativeXp, us => us.CumulativeXp + request.Xp), cancellationToken);
+                .ExecuteUpdateAsync(s => s.SetProperty(us => us.TotalBadgeCount, us => us.TotalBadgeCount + 1));
 
             if (rowsAffected == 0)
             {
