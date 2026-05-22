@@ -7,6 +7,6 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Commands.XpTransactions
 {
-    public record CreateXpTransactionCommand(CreateXpTransactionDto Dto, int ExistingXp) : IRequest<ApiResponse<string>>;
+    public record CreateXpTransactionCommand(CreateXpTransactionDto Dto) : IRequest<ApiResponse<GetXpTransactionDto>>;
 
 }

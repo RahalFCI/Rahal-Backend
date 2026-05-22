@@ -23,7 +23,6 @@ namespace Gamification.Application.Mappers
             return new XpTransaction
             {
                 ExplorerProfileId = dto.ExplorerId,
-                Amount = dto.Amount,
                 Source = Enum.Parse<Gamification.Domain.Enums.XpSourceType>(dto.SourceType),
                 ReferenceId = dto.ReferenceId
             };

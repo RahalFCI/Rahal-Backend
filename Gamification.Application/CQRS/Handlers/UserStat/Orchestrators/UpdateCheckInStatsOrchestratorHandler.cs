@@ -68,10 +68,9 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
                 var xpTransactionResult = await _mediator.Send(new CreateXpTransactionCommand(new CreateXpTransactionDto()
                 {
                         ExplorerId = request.ExplorerId,
-                        Amount = request.XpAmount, 
                         ReferenceId = request.CheckInId,
                         SourceType = XpSourceType.CheckIn.ToString()
-                }, userStats.CumulativeXp), cancellationToken);
+                }), cancellationToken);
 
                 if (!xpTransactionResult.IsSuccess)
                 {
