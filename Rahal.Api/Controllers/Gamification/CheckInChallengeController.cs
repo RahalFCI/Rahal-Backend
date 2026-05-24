@@ -1,5 +1,7 @@
 using Gamification.Application.CQRS.Commands.CheckInChallenge;
+using Gamification.Application.CQRS.Orchestrators.CheckInChallenge;
 using Gamification.Application.CQRS.Queries.CheckInChallenge;
+using Gamification.Application.DTOs.CheckInChallenge;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Shared.Domain.Enums;
@@ -17,6 +19,35 @@ namespace Rahal.Api.Controllers.Gamification
         public CheckInChallengeController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateCheckInChallengeAsync(
+            [FromBody] CreateCheckInChallengeDto dto,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new CreateCheckInChallengeCommand(dto),
+                cancellationToken);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("{id}/validate")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ValidateCheckInChallengeAsync(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new ValidateCheckInChallengeOrchestrator(id),
+                cancellationToken);
+            return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
         }
 
         [HttpDelete("{id}")]
