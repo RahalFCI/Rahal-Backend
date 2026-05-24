@@ -51,11 +51,11 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
             _repository.Add(achievement);
             await _repository.SaveChangesAsync(cancellationToken);
 
-            await _cacheService.RemoveAsync("vendor-categories:all");
+            await _cacheService.RemoveAsync("achievement-criteria-types:all");
 
-            _logger.LogInformation("Achievement {AchievementId} created successfully", achievement.Id);
+            _logger.LogInformation("Achievement criteria type {AchievementCriteriaTypeId} created successfully", achievement.Id);
 
-            return ApiResponse<string>.Success($"Achievement created successfully. ID: {achievement.Id}");
+            return ApiResponse<string>.Success($"Achievement criteria type created successfully. ID: {achievement.Id}");
         }
     }
 }

@@ -73,6 +73,7 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<DeleteProfileEventConsumer>();
     x.AddConsumer<RestoreProfileEventConsumer>();
+    x.AddConsumer<CreateCheckInEventConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

@@ -43,7 +43,7 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
             _repository.Delete(achievementCriteriaType);
             await _repository.SaveChangesAsync(cancellationToken);
 
-            await _cacheService.RemoveAsync("vendor-categories:all");
+            await _cacheService.RemoveAsync("achievement-criteria-types:all");
 
             _logger.LogInformation("Achievement criteria type {AchievementCriteriaTypeId} deleted successfully", request.Id);
 
