@@ -104,6 +104,7 @@ builder.Services.AddControllers(
     options =>
     {
         options.Filters.Add<ValidationActionFilter>();
+        options.Filters.Add<ProfileSetupRequiredFilter>();
 
     })
     .AddJsonOptions(options =>

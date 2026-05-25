@@ -40,7 +40,6 @@ namespace Shared.Application
 
             });
 
-            services.AddScoped<ICacheService, RedisCacheService>(); //Internally redis registers cache as singleton, injected as scoped to avoid issues with HttpContext access
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             // Register FluentValidation validators

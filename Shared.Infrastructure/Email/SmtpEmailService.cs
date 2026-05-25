@@ -35,19 +35,22 @@ namespace Shared.Infrastructure.Email
             {
                 ValidateRequest(request);
 
-                using (var client = CreateSmtpClient())
+                await _resiliencePipeline.ExecuteAsync(async (cancellationToken) =>
                 {
-                    _logger.LogInformation("Connecting to SMTP server {SmtpHost}:{SmtpPort}", _settings.Host, _settings.Port);
-
-                    using (var mailMessage = BuildMailMessage(request))
+                    using (var client = CreateSmtpClient())
                     {
-                        _logger.LogInformation("Sending email to {RecipientEmail} with subject '{Subject}'", request.To, request.Subject);
+                        _logger.LogInformation("Connecting to SMTP server {SmtpHost}:{SmtpPort}", _settings.Host, _settings.Port);
 
-                        await client.SendMailAsync(mailMessage, ct);
+                        using (var mailMessage = BuildMailMessage(request))
+                        {
+                            _logger.LogInformation("Sending email to {RecipientEmail} with subject '{Subject}'", request.To, request.Subject);
 
-                        _logger.LogInformation("Email successfully sent to {RecipientEmail}", request.To);
+                            await client.SendMailAsync(mailMessage, cancellationToken);
+
+                            _logger.LogInformation("Email successfully sent to {RecipientEmail}", request.To);
+                        }
                     }
-                }
+                }, ct);
             }
             catch (SmtpException smtpEx)
             {
