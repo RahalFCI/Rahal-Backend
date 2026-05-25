@@ -34,7 +34,10 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             // Relationships
 
-            //TODO: add relationship with ExplorerProfile
+            builder.HasOne(e => e.ExplorerProfile)
+                .WithMany(c => c.XpTransactions)
+                .HasForeignKey(e => e.ExplorerProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             // Audit Properties (inherited from BaseEntity)

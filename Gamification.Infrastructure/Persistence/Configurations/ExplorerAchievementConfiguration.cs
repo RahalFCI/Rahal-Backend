@@ -31,7 +31,10 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasForeignKey(e => e.AchievementId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //TODO: add relationship with ExplorerProfile
+            builder.HasOne(e => e.ExplorerProfile)
+                .WithMany(c => c.ExplorerAchievements)
+                .HasForeignKey(e => e.ExplorerId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             // Audit Properties (inherited from BaseEntity)

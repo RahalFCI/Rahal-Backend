@@ -27,6 +27,9 @@ namespace Gamification.Domain.Entities
         public Guid? PlanTierId { get; set; } = Guid.Empty;
 
         public UserStats? Stats { get; set; }
+
+        public IEnumerable<ExplorerAchievement> ExplorerAchievements { get; set; } = new List<ExplorerAchievement>();
+        public IEnumerable<XpTransaction> XpTransactions { get; set; } = new List<XpTransaction>();
         public int Age
         {
             get
