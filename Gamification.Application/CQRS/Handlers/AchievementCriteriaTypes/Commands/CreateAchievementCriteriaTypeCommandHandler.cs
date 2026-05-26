@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Commands
 {
-    public class CreateAchievementCriteriaTypeCommandHandler : IRequestHandler<CreateAchievementCriteriaTypeCommand, ApiResponse<string>>
+    public class CreateAchievementCriteriaTypeCommandHandler : IRequestHandler<CreateAchievementCriteriaTypeCommand, ApiResponse<GetAchievementCriteriaTypeDto>>
     {
         private readonly IGenericRepository<AchievementCriteriaType> _repository;
         private readonly IMediator _mediator;
@@ -36,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateAchievementCriteriaTypeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetAchievementCriteriaTypeDto>> Handle(CreateAchievementCriteriaTypeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating achievement criteria type {AchievementCriteriaTypeTitle}", request.Dto.Name);
 
@@ -44,7 +44,7 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
             if (existingCriteriaType.IsSuccess)
             {
                 _logger.LogWarning("Achievement criteria type {AchievementCriteriaTypeTitle} already exists", request.Dto.Name);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetAchievementCriteriaTypeDto>.Failure(ErrorCode.AlreadyExists);
             }
 
             var achievement = AchievementCriteriaTypeMapper.ToEntity(request.Dto);
@@ -55,7 +55,8 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
 
             _logger.LogInformation("Achievement criteria type {AchievementCriteriaTypeId} created successfully", achievement.Id);
 
-            return ApiResponse<string>.Success($"Achievement criteria type created successfully. ID: {achievement.Id}");
+            var dto = AchievementCriteriaTypeMapper.ToGetDto(achievement);
+            return ApiResponse<GetAchievementCriteriaTypeDto>.Success(dto);
         }
     }
 }

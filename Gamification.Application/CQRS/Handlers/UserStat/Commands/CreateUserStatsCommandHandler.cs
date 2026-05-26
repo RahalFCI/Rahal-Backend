@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.CQRS.Commands.UserStat;
+using Gamification.Application.DTOs.UserStats;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
-    public class CreateUserStatsCommandHandler : IRequestHandler<CreateUserStatsCommand, ApiResponse<string>>
+    public class CreateUserStatsCommandHandler : IRequestHandler<CreateUserStatsCommand, ApiResponse<GetUserStatsDto>>
     {
         private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
         private readonly ILogger<CreateUserStatsCommandHandler> _logger;
@@ -25,7 +26,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateUserStatsCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetUserStatsDto>> Handle(CreateUserStatsCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating user stats for explorer {ExplorerId}", request.Dto.ExplorerId);
 
@@ -33,7 +34,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
             if(existingStats)
             {
                 _logger.LogInformation("User stats for explorer {ExplorerId} already exists", request.Dto.ExplorerId);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetUserStatsDto>.Failure(ErrorCode.AlreadyExists);
             }
 
             var userStats = UserStatsMapper.ToEntity(request.Dto);
@@ -43,7 +44,8 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
             _logger.LogInformation("User stats {UserStatsId} created successfully for explorer {ExplorerId}",
                 userStats.Id, request.Dto.ExplorerId);
 
-            return ApiResponse<string>.Success($"User stats created successfully. ID: {userStats.Id}");
+            var dto = UserStatsMapper.ToGetDto(userStats);
+            return ApiResponse<GetUserStatsDto>.Success(dto);
         }
     }
 }

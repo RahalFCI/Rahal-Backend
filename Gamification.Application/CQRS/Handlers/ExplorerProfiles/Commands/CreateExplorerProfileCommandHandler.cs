@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
+using Gamification.Application.DTOs.Explorer;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -13,7 +14,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
-    public class CreateExplorerProfileCommandHandler : IRequestHandler<CreateExplorerProfileCommand, ApiResponse<Guid>>
+    public class CreateExplorerProfileCommandHandler : IRequestHandler<CreateExplorerProfileCommand, ApiResponse<GetExplorerDto>>
     {
         private readonly IGenericRepository<ExplorerProfile> _repository;
         private readonly ILogger<CreateExplorerProfileCommandHandler> _logger;
@@ -24,7 +25,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<Guid>> Handle(CreateExplorerProfileCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetExplorerDto>> Handle(CreateExplorerProfileCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -35,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 if (!existingExplorer)
                 {
                     _logger.LogError("Explorer profile already exists for user {UserId}", request.ExplorerProfileDto.UserId);
-                    return ApiResponse<Guid>.Failure(ErrorCode.AlreadyExists);
+                    return ApiResponse<GetExplorerDto>.Failure(ErrorCode.AlreadyExists);
                 }
 
                 explorerProfile.ProfilePictureURL = request.ProfilePictureUrl;
@@ -45,12 +46,13 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 
                 _logger.LogError("Created explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
 
-                return ApiResponse<Guid>.Success(explorerProfile.UserId);
+                var dto = ExplorerProfileMapper.ToGetDto(explorerProfile);
+                return ApiResponse<GetExplorerDto>.Success(dto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating explorer profile");
-                return ApiResponse<Guid>.Failure(ErrorCode.InvalidOperation);
+                return ApiResponse<GetExplorerDto>.Failure(ErrorCode.InvalidOperation);
             }
         }
     }

@@ -1,6 +1,7 @@
-﻿using Gamification.Application.CQRS.Commands.CheckInChallenge;
+﻿using Gamification.Application.CQRS.Commands.CheckInChallenges;
 using Gamification.Application.CQRS.Queries.Challenge;
 using Gamification.Application.CQRS.Queries.CheckInChallenge;
+using Gamification.Application.DTOs.CheckInChallenge;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -15,7 +16,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 {
-    public class CreateCheckInChallengeCommandHandler : IRequestHandler<CreateCheckInChallengeCommand, ApiResponse<string>>
+    public class CreateCheckInChallengeCommandHandler : IRequestHandler<CreateCheckInChallengeCommand, ApiResponse<GetCheckInChallengeDto>>
     {
         private readonly IGenericRepository<Domain.Entities.CheckInChallenge> _repository;
         private readonly IMediator _mediator;
@@ -31,7 +32,7 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateCheckInChallengeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetCheckInChallengeDto>> Handle(CreateCheckInChallengeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating check-in challenge for challenge {ChallengeId}", request.Dto.ChallengeId);
 
@@ -39,14 +40,14 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
             if (!challenge.IsSuccess)
             {
                 _logger.LogWarning("Challenge {ChallengeId} not found", request.Dto.ChallengeId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetCheckInChallengeDto>.Failure(ErrorCode.NotFound);
             }
 
             var CheckInChallengeExists = await _repository.GetTable().Where(c => c.ChallengeId == request.Dto.ChallengeId && c.CheckInId == request.Dto.CheckInId).AnyAsync(cancellationToken);
             if (CheckInChallengeExists)
             {
                 _logger.LogWarning("CheckInChallenge ChallengeId: {ChallengeId}, CheckInId: {CheckInId} already exists", request.Dto.ChallengeId, request.Dto.CheckInId);
-                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+                return ApiResponse<GetCheckInChallengeDto>.Failure(ErrorCode.Conflict);
             }
 
             var checkInChallenge = CheckInChallengeMapper.ToEntity(request.Dto);
@@ -55,7 +56,8 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 
             _logger.LogInformation("Check-in challenge {CheckInChallengeId} created successfully", checkInChallenge.Id);
 
-            return ApiResponse<string>.Success($"Check-in challenge created successfully. ID: {checkInChallenge.Id}");
+            var dto = CheckInChallengeMapper.ToGetDto(checkInChallenge);
+            return ApiResponse<GetCheckInChallengeDto>.Success(dto);
         }
     }
 }

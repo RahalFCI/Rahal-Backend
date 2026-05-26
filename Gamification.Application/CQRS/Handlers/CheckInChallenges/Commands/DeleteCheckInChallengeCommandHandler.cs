@@ -1,4 +1,4 @@
-﻿using Gamification.Application.CQRS.Commands.CheckInChallenge;
+﻿using Gamification.Application.CQRS.Commands.CheckInChallenges;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Commands.VendorCategories;
+using Gamification.Application.DTOs.VendorCategory;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -14,7 +15,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
 {
-    public class CreateVendorCategoryCommandHandler : IRequestHandler<CreateVendorCategoryCommand, ApiResponse<string>>
+    public class CreateVendorCategoryCommandHandler : IRequestHandler<CreateVendorCategoryCommand, ApiResponse<GetVendorCategoryDto>>
     {
         private readonly IGenericRepository<VendorCategory> _repository;
         private readonly ICacheService _cacheService;
@@ -30,7 +31,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateVendorCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorCategoryDto>> Handle(CreateVendorCategoryCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating Vendor Category with name {VendorCategoryName}", request.CategoryName);
 
@@ -38,7 +39,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
             if (existingCategoryName)
             {
                 _logger.LogWarning("Vendor Category with name {CategoryName} already exists", request.CategoryName);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetVendorCategoryDto>.Failure(ErrorCode.AlreadyExists);
             }
 
             VendorCategory category = new VendorCategory() { CategoryName = request.CategoryName };
@@ -49,7 +50,8 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
 
             _logger.LogInformation("Category {CategoryId} created successfully", category.Id);
 
-            return ApiResponse<string>.Success($"Category created successfully. ID: {category.Id}");
+            var dto = VendorCategoryMapper.ToGetDto(category);
+            return ApiResponse<GetVendorCategoryDto>.Success(dto);
         }
     }
 }

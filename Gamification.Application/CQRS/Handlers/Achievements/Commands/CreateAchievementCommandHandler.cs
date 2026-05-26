@@ -1,6 +1,7 @@
 ﻿using Gamification.Application.CQRS.Commands.Achievement;
 using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.Badge;
+using Gamification.Application.DTOs.Achievement;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
-    public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, ApiResponse<string>>
+    public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, ApiResponse<GetAchievementDto>>
     {
         private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
         private readonly IMediator _mediator;
@@ -30,7 +31,7 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetAchievementDto>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating achievement {AchievementTitle}", request.Dto.Title);
 
@@ -38,21 +39,21 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             if (!badge.IsSuccess)
             {
                 _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetAchievementDto>.Failure(ErrorCode.NotFound);
             }
 
             var criteriaType = await _mediator.Send(new GetAchievementCriteriaTypeByIdQuery(request.Dto.CriteriaTypeId), cancellationToken);
             if (!criteriaType.IsSuccess)
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetAchievementDto>.Failure(ErrorCode.NotFound);
             }
 
             var existingAchievement = await _repository.GetTable().Where(a => a.Title == request.Dto.Title).AnyAsync(cancellationToken);
             if(existingAchievement)
             {
                 _logger.LogWarning("Achievement with title {AchievementTitle} already exists", request.Dto.Title);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetAchievementDto>.Failure(ErrorCode.AlreadyExists);
             }
 
             var achievement = AchievementMapper.ToEntity(request.Dto);
@@ -61,7 +62,8 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 
             _logger.LogInformation("Achievement {AchievementId} created successfully", achievement.Id);
 
-            return ApiResponse<string>.Success($"Achievement created successfully. ID: {achievement.Id}");
+            var dto = AchievementMapper.ToGetDto(achievement);
+            return ApiResponse<GetAchievementDto>.Success(dto);
         }
     }
 }

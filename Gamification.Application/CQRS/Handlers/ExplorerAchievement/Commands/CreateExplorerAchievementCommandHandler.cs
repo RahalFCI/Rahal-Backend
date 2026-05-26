@@ -1,5 +1,6 @@
 using Gamification.Application.CQRS.Commands.ExplorerAchievement;
 using Gamification.Application.CQRS.Queries.Achievement;
+using Gamification.Application.DTOs.ExplorerAchievement;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -11,7 +12,7 @@ using Shared.Domain.Enums;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
 {
-    public class CreateExplorerAchievementCommandHandler : IRequestHandler<CreateExplorerAchievementCommand, ApiResponse<string>>
+    public class CreateExplorerAchievementCommandHandler : IRequestHandler<CreateExplorerAchievementCommand, ApiResponse<GetExplorerAchievementDto>>
     {
         private readonly IGenericRepository<Domain.Entities.ExplorerAchievement> _repository;
         private readonly IMediator _mediator;
@@ -27,7 +28,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateExplorerAchievementCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetExplorerAchievementDto>> Handle(CreateExplorerAchievementCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating explorer achievement for explorer {ExplorerId} and achievement {AchievementId}",
                 request.Dto.ExplorerId, request.Dto.AchievementId);
@@ -37,7 +38,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
             if (achievement is null)
             {
                 _logger.LogWarning("Achievement {AchievementId} not found", request.Dto.AchievementId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetExplorerAchievementDto>.Failure(ErrorCode.NotFound);
             }
 
             var explorerAchievementExists = await _repository.GetTable()
@@ -48,7 +49,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
             {
                 _logger.LogWarning("Explorer {ExplorerId} already has achievement {AchievementId}",
                     request.Dto.ExplorerId, request.Dto.AchievementId);
-                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+                return ApiResponse<GetExplorerAchievementDto>.Failure(ErrorCode.Conflict);
             }
 
             var explorerAchievement = ExplorerAchievementMapper.ToEntity(request.Dto);
@@ -57,7 +58,8 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
 
             _logger.LogInformation("Explorer achievement created with ID {ExplorerAchievementId}", explorerAchievement.Id);
 
-            return ApiResponse<string>.Success($"Explorer achievement created successfully. ID: {explorerAchievement.Id}");
+            var dto = ExplorerAchievementMapper.ToGetDto(explorerAchievement);
+            return ApiResponse<GetExplorerAchievementDto>.Success(dto);
         }
     }
 }

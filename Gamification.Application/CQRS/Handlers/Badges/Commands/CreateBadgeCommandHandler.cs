@@ -1,5 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.Badges;
 using Gamification.Application.CQRS.Queries.Badge;
+using Gamification.Application.DTOs.Badge;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -13,7 +14,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
-    public class CreateBadgeCommandHandler : IRequestHandler<CreateBadgeCommand, ApiResponse<string>>
+    public class CreateBadgeCommandHandler : IRequestHandler<CreateBadgeCommand, ApiResponse<GetBadgeDto>>
     {
         private readonly IGenericRepository<Badge> _repository;
         private readonly IFileStorageService _fileStorageService;
@@ -32,14 +33,14 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateBadgeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetBadgeDto>> Handle(CreateBadgeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating badge {BadgeName}", request.Dto.Name);
 
             var existingBadge = await _mediator.Send(new GetBadgeByNameQuery(request.Dto.Name));
 
             if (existingBadge.IsSuccess)
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetBadgeDto>.Failure(ErrorCode.AlreadyExists);
 
             var badge = BadgeMapper.ToEntity(request.Dto);
 
@@ -55,7 +56,8 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 
             _logger.LogInformation("Badge {BadgeId} created successfully", badge.Id);
 
-            return ApiResponse<string>.Success($"Badge created successfully. ID: {badge.Id}");
+            var dto = BadgeMapper.ToGetDto(badge);
+            return ApiResponse<GetBadgeDto>.Success(dto);
         }
     }
 }

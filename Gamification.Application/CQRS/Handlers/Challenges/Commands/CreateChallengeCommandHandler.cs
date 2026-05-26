@@ -1,5 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.Challenge;
 using Gamification.Application.CQRS.Queries.Challenge;
+using Gamification.Application.DTOs.Challenge;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
-    public class CreateChallengeCommandHandler : IRequestHandler<CreateChallengeCommand, ApiResponse<string>>
+    public class CreateChallengeCommandHandler : IRequestHandler<CreateChallengeCommand, ApiResponse<GetChallengeDto>>
     {
         private readonly IGenericRepository<Domain.Entities.Challenge> _repository;
         private readonly IMediator _mediator;
@@ -28,7 +29,7 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(CreateChallengeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetChallengeDto>> Handle(CreateChallengeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating challenge {ChallengeName} for place {PlaceId}",
                 request.Dto.Name, request.Dto.PlaceId);
@@ -37,7 +38,7 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
             if (existingChallenge.IsSuccess)
             {
                 _logger.LogWarning("Challenge {ChallengeName} already exists", request.Dto.Name);
-                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+                return ApiResponse<GetChallengeDto>.Failure(ErrorCode.Conflict);
             }
 
             var challenge = ChallengeMapper.ToEntity(request.Dto);
@@ -47,7 +48,8 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 
             _logger.LogInformation("Challenge {ChallengeId} created successfully", challenge.Id);
 
-            return ApiResponse<string>.Success($"Challenge created successfully. ID: {challenge.Id}");
+            var dto = ChallengeMapper.ToGetDto(challenge);
+            return ApiResponse<GetChallengeDto>.Success(dto);
         }
     }
 }

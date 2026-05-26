@@ -1,6 +1,7 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
 using Gamification.Application.CQRS.Commands.VendorProfiles;
 using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+using Gamification.Application.DTOs.Vendor;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -15,7 +16,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {
-    public class CreateVendorProfileCommandHandler : IRequestHandler<CreateVendorProfileCommand, ApiResponse<Guid>>
+    public class CreateVendorProfileCommandHandler : IRequestHandler<CreateVendorProfileCommand, ApiResponse<GetVendorDto>>
     {
         private readonly IGenericRepository<VendorProfile> _repository;
         private readonly ILogger<CreateVendorProfileCommandHandler> _logger;
@@ -26,7 +27,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<Guid>> Handle(CreateVendorProfileCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorDto>> Handle(CreateVendorProfileCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -37,7 +38,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
                 if (!existingVendor)
                 {
                     _logger.LogError("Vendor profile already exists for user {UserId}", request.VendorProfileDto.UserId);
-                    return ApiResponse<Guid>.Failure(ErrorCode.AlreadyExists);
+                    return ApiResponse<GetVendorDto>.Failure(ErrorCode.AlreadyExists);
                 }
 
                 vendorProfile.ProfilePictureURL = request.ProfilePictureUrl;
@@ -47,12 +48,13 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 
                 _logger.LogError("Created vendor profile for user {UserId}", request.VendorProfileDto.UserId);
 
-                return ApiResponse<Guid>.Success(vendorProfile.UserId);
+                var dto = VendorProfileMapper.ToGetDto(vendorProfile);
+                return ApiResponse<GetVendorDto>.Success(dto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating vendor profile");
-                return ApiResponse<Guid>.Failure(ErrorCode.InvalidOperation);
+                return ApiResponse<GetVendorDto>.Failure(ErrorCode.InvalidOperation);
             }
         }
     }

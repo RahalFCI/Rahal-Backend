@@ -1,4 +1,4 @@
-using Gamification.Application.CQRS.Commands.CheckInChallenge;
+using Gamification.Application.CQRS.Commands.CheckInChallenges;
 using Gamification.Application.CQRS.Orchestrators.CheckInChallenge;
 using Gamification.Application.CQRS.Queries.CheckInChallenge;
 using Gamification.Application.DTOs.CheckInChallenge;

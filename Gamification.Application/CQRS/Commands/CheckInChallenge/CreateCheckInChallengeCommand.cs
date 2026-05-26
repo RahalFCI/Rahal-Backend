@@ -1,11 +1,9 @@
 ﻿using Gamification.Application.DTOs.CheckInChallenge;
+using Gamification.Domain.Entities;
 using MediatR;
 using Shared.Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Gamification.Application.CQRS.Commands.CheckInChallenge
+namespace Gamification.Application.CQRS.Commands.CheckInChallenges
 {
-    public record CreateCheckInChallengeCommand(CreateCheckInChallengeDto Dto) : IRequest<ApiResponse<string>>;
+    public record CreateCheckInChallengeCommand(CreateCheckInChallengeDto Dto) : IRequest<ApiResponse<GetCheckInChallengeDto>>;
 }
