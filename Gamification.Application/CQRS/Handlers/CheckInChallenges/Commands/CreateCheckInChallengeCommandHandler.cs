@@ -51,6 +51,7 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
             }
 
             var checkInChallenge = CheckInChallengeMapper.ToEntity(request.Dto);
+            checkInChallenge.ExplorerId = request.ExplorerId;
             _repository.Add(checkInChallenge);
             await _repository.SaveChangesAsync(cancellationToken);
 

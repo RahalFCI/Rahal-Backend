@@ -6,6 +6,10 @@ namespace Gamification.Domain.Enums
         Achievement,
         Challenge,
         SocialMediaPost,
-        Bonus
+        Bonus,
+        CheckInInvalidated,
+        AchievementRevoked,
+        ChallengeRevoked,
+        BadgeRevoked
     }
 }

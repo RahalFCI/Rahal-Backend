@@ -5,5 +5,5 @@ using Shared.Application.DTOs;
 
 namespace Gamification.Application.CQRS.Commands.CheckInChallenges
 {
-    public record CreateCheckInChallengeCommand(CreateCheckInChallengeDto Dto) : IRequest<ApiResponse<GetCheckInChallengeDto>>;
+    public record CreateCheckInChallengeCommand(Guid ExplorerId, CreateCheckInChallengeDto Dto) : IRequest<ApiResponse<GetCheckInChallengeDto>>;
 }

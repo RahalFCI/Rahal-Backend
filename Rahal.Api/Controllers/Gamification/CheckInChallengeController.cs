@@ -29,8 +29,10 @@ namespace Rahal.Api.Controllers.Gamification
             [FromBody] CreateCheckInChallengeDto dto,
             CancellationToken cancellationToken)
         {
+            var explorerId = GetCurrentUserId();
+
             var result = await _mediator.Send(
-                new CreateCheckInChallengeCommand(dto),
+                new CreateCheckInChallengeCommand(explorerId, dto),
                 cancellationToken);
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }

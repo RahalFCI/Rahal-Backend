@@ -13,6 +13,7 @@ namespace Gamification.Application.Mappers
                 ChallengeId = checkInChallenge.ChallengeId,
                 ChallengeName = checkInChallenge.Challenge?.Name ?? string.Empty,
                 CheckInId = checkInChallenge.CheckInId,
+                ExplorerId = checkInChallenge.ExplorerId,
                 ProofMediaUrl = checkInChallenge.ProofUrl,
                 ValidationStatus = checkInChallenge.ValidationStatus.ToString()
             };
@@ -35,3 +36,4 @@ namespace Gamification.Application.Mappers
         }
     }
 }
+

@@ -28,6 +28,9 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.CheckInId)
                 .IsRequired();
 
+            builder.Property(e => e.ExplorerId)
+                .IsRequired();
+
             builder.Property(e => e.ValidationStatus)
                 .HasDefaultValue(ChallengeValidationStatus.Pending)
                 .IsRequired();

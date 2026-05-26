@@ -11,6 +11,7 @@ namespace Gamification.Domain.Entities
         public Guid ChallengeId { get; set; } = Guid.Empty;
         public virtual Challenge? Challenge { get; set; }
         public Guid CheckInId { get; set; } = Guid.Empty;
+        public Guid ExplorerId { get; set; } = Guid.Empty;
         public string ProofUrl { get; set; } = string.Empty;
         public ChallengeValidationStatus ValidationStatus { get; set; }
 
