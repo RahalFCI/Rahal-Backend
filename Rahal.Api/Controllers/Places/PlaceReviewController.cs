@@ -93,7 +93,7 @@ namespace Rahal.Api.Controllers.Places
         }
 
         [HttpPut("{explorerId}/{placeId}/{checkInId}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -101,7 +101,7 @@ namespace Rahal.Api.Controllers.Users
 
  
         [HttpGet("{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -214,13 +214,13 @@ namespace Rahal.Api.Controllers.Users
 
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] BaseUserDto explorerDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> UpdateAsync([FromBody] BaseUserDto explorerDto, CancellationToken cancellationToken = default)
         {
             var result = await _userService.UpdateUser(explorerDto, cancellationToken);
 
@@ -232,14 +232,16 @@ namespace Rahal.Api.Controllers.Users
 
  
         [HttpPut("password/{id}")]
-        [Authorize(Roles = "Explorer,Admin")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdatePasswordAsync([FromRoute] Guid id, [FromBody] UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdatePasswordAsync([FromBody] UpdatePasswordDto updatePasswordDto, CancellationToken cancellationToken)
         {
+            var id = GetCurrentUserId();
+
             var result = await _userService.UpdatePassword(id, updatePasswordDto, cancellationToken);
 
             if (!result.IsSuccess)

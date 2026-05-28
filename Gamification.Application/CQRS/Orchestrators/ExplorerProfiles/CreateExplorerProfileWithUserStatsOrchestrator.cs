@@ -8,5 +8,5 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Orchestrators.ExplorerProfiles
 {
-    public record CreateExplorerProfileWithUserStatsOrchestrator(AddExplorerDto explorerDto, IFormFile? ProfilePicture) : IRequest<ApiResponse<Guid>>;
+    public record CreateExplorerProfileWithUserStatsOrchestrator(AddExplorerDto explorerDto, IFormFile? ProfilePicture) : IRequest<ApiResponse<GetExplorerDto>>;
 }

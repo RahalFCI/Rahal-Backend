@@ -38,7 +38,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPut("{explorerId}/update-picture")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -54,7 +54,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPut("{explorerId}")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

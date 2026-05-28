@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Orchestrators.VendorProfiles
 {
-    public record CreateVendorProfileOrchestrator(AddVendorDto addVendorDto, IFormFile? profilePicture) : IRequest<ApiResponse<Guid>>
+    public record CreateVendorProfileOrchestrator(AddVendorDto addVendorDto, IFormFile? profilePicture) : IRequest<ApiResponse<GetVendorDto>>
     {
     }
 }

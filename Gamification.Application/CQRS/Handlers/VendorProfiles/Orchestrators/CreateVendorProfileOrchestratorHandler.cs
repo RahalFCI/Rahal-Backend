@@ -4,6 +4,7 @@ using Gamification.Application.CQRS.Commands.UserStat;
 using Gamification.Application.CQRS.Commands.VendorProfiles;
 using Gamification.Application.CQRS.Orchestrators.VendorProfiles;
 using Gamification.Application.DTOs.UserStats;
+using Gamification.Application.DTOs.Vendor;
 using Gamification.Application.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
 {
-    public class CreateVendorProfileOrchestratorHandler : IRequestHandler<CreateVendorProfileOrchestrator, ApiResponse<Guid>>
+    public class CreateVendorProfileOrchestratorHandler : IRequestHandler<CreateVendorProfileOrchestrator, ApiResponse<GetVendorDto>>
     {
         private readonly IMediator _mediator;
         private readonly ILogger<CreateVendorProfileOrchestratorHandler> _logger;
@@ -25,7 +26,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
             _logger = logger;
         }
 
-        public async Task<ApiResponse<Guid>> Handle(CreateVendorProfileOrchestrator request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorDto>> Handle(CreateVendorProfileOrchestrator request, CancellationToken cancellationToken)
         {
             try
             {
@@ -44,17 +45,17 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
                     _logger.LogError("Failed to create vendor profile for user {UserId} with error code {ErrorCode}", request.addVendorDto.UserId, profileResult.errorCode);
                     await _mediator.Send(new DeleteProfilePictureCommand(profilePictureResult.Data!), cancellationToken);
                     _logger.LogError("Deleted uploaded profile picture for user {UserId} due to profile creation failure", request.addVendorDto.UserId);
-                    return ApiResponse<Guid>.Failure(profileResult.errorCode);
+                    return ApiResponse<GetVendorDto>.Failure(profileResult.errorCode);
                 }
 
                 _logger.LogError("Profile creation orchestration completed for vendor profile for user {UserId}", request.addVendorDto.UserId);
 
-                return ApiResponse<Guid>.Success(profileResult.Data);
+                return ApiResponse<GetVendorDto>.Success(profileResult.Data);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating vendor profile");
-                return ApiResponse<Guid>.Failure(ErrorCode.InvalidOperation);
+                return ApiResponse<GetVendorDto>.Failure(ErrorCode.InvalidOperation);
             }
         }
     }

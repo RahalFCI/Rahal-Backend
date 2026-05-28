@@ -16,7 +16,7 @@ using System.Text;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
 {
-    public class CreateExplorerProfileWithUserStatsOrchestratorHandler : IRequestHandler<CreateExplorerProfileWithUserStatsOrchestrator, ApiResponse<Guid>>
+    public class CreateExplorerProfileWithUserStatsOrchestratorHandler : IRequestHandler<CreateExplorerProfileWithUserStatsOrchestrator, ApiResponse<GetExplorerDto>>
     {
         private readonly IMediator _mediator;
         private readonly IGamificationUnitOfWork _unitOfWork;
@@ -29,7 +29,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
             _logger = logger;
         }
 
-        public async Task<ApiResponse<Guid>> Handle(CreateExplorerProfileWithUserStatsOrchestrator request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetExplorerDto>> Handle(CreateExplorerProfileWithUserStatsOrchestrator request, CancellationToken cancellationToken)
         {
             try
             {
@@ -53,27 +53,27 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
                     _logger.LogError("Deleted uploaded profile picture for user {UserId} due to profile creation failure", request.explorerDto.UserId);
 
                     await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    return ApiResponse<Guid>.Failure(profileResult.errorCode);
+                    return ApiResponse<GetExplorerDto>.Failure(profileResult.errorCode);
                 } 
 
 
-                var userStatsResult = await _mediator.Send(new CreateUserStatsCommand(new CreateUserStatsDto() { ExplorerId = profileResult.Data }), cancellationToken);
+                var userStatsResult = await _mediator.Send(new CreateUserStatsCommand(new CreateUserStatsDto() { ExplorerId = profileResult.Data.UserId }), cancellationToken);
 
                 if (!userStatsResult.IsSuccess)
                 {
-                    _logger.LogError("Failed to create user stats for explorer {ExplorerId} with error code {ErrorCode}", profileResult.Data, userStatsResult.errorCode);
+                    _logger.LogError("Failed to create user stats for explorer {ExplorerId} with error code {ErrorCode}", profileResult.Data.UserId, userStatsResult.errorCode);
                     await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    return ApiResponse<Guid>.Failure(userStatsResult.errorCode);
+                    return ApiResponse<GetExplorerDto>.Failure(userStatsResult.errorCode);
                 }
 
                 _logger.LogError("Profile creation orchestration completed for explorer profile for user {UserId}", request.explorerDto.UserId);
 
-                return ApiResponse<Guid>.Success(profileResult.Data);
+                return ApiResponse<GetExplorerDto>.Success(profileResult.Data);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating explorer profile");
-                return ApiResponse<Guid>.Failure(ErrorCode.InvalidOperation);
+                return ApiResponse<GetExplorerDto>.Failure(ErrorCode.InvalidOperation);
             }
         }
     }

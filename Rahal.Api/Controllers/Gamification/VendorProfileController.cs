@@ -22,7 +22,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPost("create")]
-        [Authorize]
+        [Authorize(Roles = "Vendor")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateVendorProfileAsync(
@@ -51,7 +51,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPut("{vendorId}")]
-        [Authorize]
+        [Authorize(Roles = "Vendor")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,7 +67,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPut("{vendorId}/update-picture")]
-        [Authorize]
+        [Authorize(Roles = "Vendor")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

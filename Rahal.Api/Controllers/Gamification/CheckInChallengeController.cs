@@ -22,7 +22,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCheckInChallengeAsync(
@@ -38,7 +38,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPost("{id}/validate")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

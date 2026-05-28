@@ -20,11 +20,11 @@ namespace Rahal.Api.Controllers.Gamification
             _mediator = mediator;
         }
 
-        [HttpPost("create-with-reward")]
-        [Authorize]
+        [HttpPost("create")]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateExplorerAchievementWithRewardAsync(
+        public async Task<IActionResult> CreateExplorerAchievementAsync(
             [FromBody] CreateExplorerAchievementDto dto,
             CancellationToken cancellationToken)
         {
@@ -35,7 +35,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Explorer,Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteExplorerAchievementAsync(
@@ -63,7 +63,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPost("{id}/restore")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RestoreDeletedExplorerAchievementAsync(
