@@ -22,6 +22,9 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.Name)
                 .IsRequired();
 
+            builder.Property(e => e.Code)
+                .IsRequired();
+
             // Large string mapped to TEXT type in database
             builder.Property(e => e.Description)
                 .IsRequired()
