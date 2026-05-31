@@ -208,15 +208,15 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = new[] { new HangfireAuthorizationFilter() } //Custom authorization filter to restrict access to the dashboard
 }); // Gives you a UI at /hangfire
 
-RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
-    "streak-reset",
-    job => job.ExecuteAsync(CancellationToken.None),
-    Cron.Daily(0));
+//RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
+//    "streak-reset",
+//    job => job.ExecuteAsync(CancellationToken.None),
+//    Cron.Daily(0));
 
-// Initial leaderboard build
-using var scope = app.Services.CreateScope();
-var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-await mediator.Send(new RebuildLeaderboardCommand());
+//// Initial leaderboard build
+//using var scope = app.Services.CreateScope();
+//var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+//await mediator.Send(new RebuildLeaderboardCommand());
 
 app.UseExceptionHandlingMiddleware();
 

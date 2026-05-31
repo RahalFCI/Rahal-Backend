@@ -127,7 +127,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet("explorers")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -139,7 +139,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet("vendors")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -151,7 +151,7 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet("admins")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

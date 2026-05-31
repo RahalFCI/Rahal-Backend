@@ -7,7 +7,6 @@ namespace Gamification.Application.DTOs.Explorer
 {
     public record AddExplorerDto(
             string DisplayName,
-            string ProfilePictureUrl,
             Guid UserId,
             DateOnly BirthDate,
             GenderEnum Gender,
@@ -18,7 +17,7 @@ namespace Gamification.Application.DTOs.Explorer
             //TODO: Add Plan Tier
             )
     {
-        public AddExplorerDto() : this(string.Empty, string.Empty, default, default, default, string.Empty, string.Empty, default, default)
+        public AddExplorerDto() : this(string.Empty, default, default, default, string.Empty, string.Empty, default, default)
         {
         }
     }

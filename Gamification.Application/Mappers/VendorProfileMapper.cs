@@ -32,7 +32,6 @@ namespace Gamification.Application.Mappers
             {
                 UserId = dto.UserId,
                 DisplayName = dto.DisplayName,
-                ProfilePictureURL = dto.ProfilePictureUrl,
                 Address = dto.Address,
                 AddressUrl = dto.AddressUrl,
                 WorkingHours = dto.WorkingHours,
