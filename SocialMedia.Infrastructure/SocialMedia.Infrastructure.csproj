@@ -17,12 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\SocialMedia.Application\SocialMedia.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Persistence\Configurations\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>

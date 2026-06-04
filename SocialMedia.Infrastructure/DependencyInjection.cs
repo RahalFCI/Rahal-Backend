@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using SocialMedia.Infrastructure.Persistence;
+using SocialMedia.Infrastructure.Repositories;
+using Shared.Application.Interfaces;
 
 namespace SocialMedia.Infrastructure
 {
@@ -25,6 +24,8 @@ namespace SocialMedia.Infrastructure
                     b => b.MigrationsHistoryTable("__EFMigrationsHistory", "socialmedia")
                 )
             );
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(SocialMediaRepository<>));
 
             return services;
         }

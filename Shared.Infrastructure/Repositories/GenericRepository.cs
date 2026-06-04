@@ -2,81 +2,80 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Shared.Application.Interfaces;
 using Shared.Domain.Entities;
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Shared.Infrastructure.Repositories
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+    public abstract class GenericRepository<TEntity, TContext> : IGenericRepository<TEntity>
+        where TEntity : BaseEntity
+        where TContext : DbContext
     {
-        private readonly DbContext _dbContext;
+        protected readonly TContext Context;
 
-        public GenericRepository(DbContext dbContext)
+        protected GenericRepository(TContext context)
         {
-            _dbContext = dbContext;
+            Context = context;
         }
 
-        public async Task<T?> GetByIdAsync<TKey>(TKey id, CancellationToken cancellationToken = default)
+        public async Task<TEntity?> GetByIdAsync<TKey>(TKey id, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Set<T>().FindAsync(id, cancellationToken);
+            return await Context.Set<TEntity>().FindAsync(new object?[] { id }, cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<T?>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<TEntity?>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Set<T>().ToListAsync(cancellationToken);
+            return await Context.Set<TEntity>().ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<T?>> GetAllByExpression(Expression<Func<T, bool>> conditionExpression, CancellationToken cancellationToken)
+        public async Task<IEnumerable<TEntity?>> GetAllByExpression(Expression<Func<TEntity, bool>> conditionExpression, CancellationToken cancellationToken)
         {
-            return await _dbContext.Set<T>().Where(conditionExpression).ToListAsync(cancellationToken);
+            return await Context.Set<TEntity>().Where(conditionExpression).ToListAsync(cancellationToken);
         }
 
-        public async Task<T?> GetByExpression(Expression<Func<T, bool>> conditionExpression, CancellationToken cancellationToken)
+        public async Task<TEntity?> GetByExpression(Expression<Func<TEntity, bool>> conditionExpression, CancellationToken cancellationToken)
         {
-            return await _dbContext.Set<T>().FirstOrDefaultAsync(conditionExpression, cancellationToken);
+            return await Context.Set<TEntity>().FirstOrDefaultAsync(conditionExpression, cancellationToken);
         }
 
-        public IQueryable<T> GetTable()
+        public IQueryable<TEntity> GetTable()
         {
-            return _dbContext.Set<T>();
+            return Context.Set<TEntity>();
         }
 
-        public void Add(T entity)
+        public void Add(TEntity entity)
         {
-            _dbContext.Set<T>().Add(entity);
+            Context.Set<TEntity>().Add(entity);
         }
 
-        public void Update(T entity)
+        public void Update(TEntity entity)
         {
-            _dbContext.Set<T>().Update(entity);
+            Context.Set<TEntity>().Update(entity);
         }
 
-        public void Delete(T entity)
+        public void Delete(TEntity entity)
         {
-            _dbContext.Set<T>().Remove(entity);
+            Context.Set<TEntity>().Remove(entity);
         }
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await Context.SaveChangesAsync(cancellationToken);
         }
 
-        public void SaveInclude(T entity, params string[] includedProperties)
+        public void SaveInclude(TEntity entity, params string[] includedProperties)
         {
-            var localEntity = _dbContext.Set<T>().Local.FirstOrDefault(e => e.Id == entity.Id);
+            var localEntity = Context.Set<TEntity>().Local.FirstOrDefault(e => e.Id == entity.Id);
 
             EntityEntry entry;
             if (localEntity == null)
             {
-                _dbContext.Set<T>().Attach(entity);
-                entry = _dbContext.Entry(entity);
+                Context.Set<TEntity>().Attach(entity);
+                entry = Context.Entry(entity);
             }
             else
             {
-                entry = _dbContext.Entry(localEntity);
-                _dbContext.Entry(localEntity).CurrentValues.SetValues(entity);
+                entry = Context.Entry(localEntity);
+                Context.Entry(localEntity).CurrentValues.SetValues(entity);
             }
             foreach (var property in entry.Properties)
             {

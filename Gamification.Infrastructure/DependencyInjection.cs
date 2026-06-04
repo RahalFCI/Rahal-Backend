@@ -1,6 +1,7 @@
 ﻿using Gamification.Application.Interfaces;
 using Gamification.Application.Jobs;
 using Gamification.Infrastructure.Persistence;
+using Gamification.Infrastructure.Repositories;
 using Gamification.Infrastructure.Search.Explorer;
 using Gamification.Infrastructure.Search.Vendor;
 using Hangfire;
@@ -9,9 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Gamification.Infrastructure
 {
@@ -33,6 +31,9 @@ namespace Gamification.Infrastructure
                 )
             );
 
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GamificationRepository<>));
+
+
             // Register Search Index Configuration
             services.AddScoped<ISearchIndexInitializer, ExplorerIndexConfig>();
             services.AddScoped<ISearchIndexInitializer, VendorIndexConfig>();
@@ -49,7 +50,6 @@ namespace Gamification.Infrastructure
 
             //Register for gamification unit of work
             services.AddScoped<IGamificationUnitOfWork, GamificationUnitOfWork>();
-
 
             return services;
         }

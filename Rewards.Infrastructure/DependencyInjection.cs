@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Rewards.Infrastructure.Persistence;
+using Rewards.Infrastructure.Repositories;
+using Shared.Application.Interfaces;
 
 namespace Rewards.Infrastructure
 {
@@ -25,6 +24,8 @@ namespace Rewards.Infrastructure
                     b => b.MigrationsHistoryTable("__EFMigrationsHistory", "rewards")
                 )
             );
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(RewardsRepository<>));
 
             return services;
         }

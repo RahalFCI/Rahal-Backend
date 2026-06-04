@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Payment.Infrastructure.Persistence;
+using Payment.Infrastructure.Repositories;
+using Shared.Application.Interfaces;
 
 namespace Payment.Infrastructure
 {
@@ -25,6 +24,8 @@ namespace Payment.Infrastructure
                     b => b.MigrationsHistoryTable("__EFMigrationsHistory", "payment")
                 )
             );
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(PaymentRepository<>));
 
             return services;
         }
