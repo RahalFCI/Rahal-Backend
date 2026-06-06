@@ -1,6 +1,7 @@
 ﻿using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.DTOs.AchievementCriteriaType;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -16,10 +17,10 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Querie
 {
     public class GetAchievementCriteriaTypeByIdQueryHandler : IRequestHandler<GetAchievementCriteriaTypeByIdQuery, ApiResponse<GetAchievementCriteriaTypeDto?>>
     {
-        private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly IGamificationRepository<AchievementCriteriaType> _repository;
         private readonly ILogger<GetAchievementCriteriaTypeByIdQueryHandler> _logger;
 
-        public GetAchievementCriteriaTypeByIdQueryHandler(IGenericRepository<AchievementCriteriaType> repository, ILogger<GetAchievementCriteriaTypeByIdQueryHandler> logger)
+        public GetAchievementCriteriaTypeByIdQueryHandler(IGamificationRepository<AchievementCriteriaType> repository, ILogger<GetAchievementCriteriaTypeByIdQueryHandler> logger)
         {
             _repository = repository;
             _logger = logger;

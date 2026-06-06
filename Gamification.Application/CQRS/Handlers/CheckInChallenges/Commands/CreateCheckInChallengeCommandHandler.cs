@@ -13,17 +13,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 {
     public class CreateCheckInChallengeCommandHandler : IRequestHandler<CreateCheckInChallengeCommand, ApiResponse<GetCheckInChallengeDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.CheckInChallenge> _repository;
+        private readonly IGamificationRepository<Domain.Entities.CheckInChallenge> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateCheckInChallengeCommandHandler> _logger;
 
         public CreateCheckInChallengeCommandHandler(
-            IGenericRepository<CheckInChallenge> repository,
+            IGamificationRepository<CheckInChallenge> repository,
             IMediator mediator,
             ILogger<CreateCheckInChallengeCommandHandler> logger)
         {

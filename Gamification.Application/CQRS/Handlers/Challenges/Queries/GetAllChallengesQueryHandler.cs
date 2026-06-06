@@ -11,16 +11,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
 {
     public class GetAllChallengesQueryHandler : IRequestHandler<GetAllChallengesQuery, ApiResponse<PagedResult<GetChallengeDto>>>
     {
-        private readonly IGenericRepository<Challenge> _repository;
+        private readonly IGamificationRepository<Challenge> _repository;
         private readonly ILogger<GetAllChallengesQueryHandler> _logger;
 
         public GetAllChallengesQueryHandler(
-            IGenericRepository<Challenge> repository,
+            IGamificationRepository<Challenge> repository,
             ILogger<GetAllChallengesQueryHandler> logger)
         {
             _repository = repository;

@@ -16,18 +16,19 @@ using System;
 using System.Collections.Generic;
 using System.Security.AccessControl;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Orchestrators
 {
     public class ValidateCheckInChallengeOrchestratorHandler : IRequestHandler<ValidateCheckInChallengeOrchestrator, ApiResponse<bool>>
     {
-        private readonly IGenericRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<CheckInChallenge> _repository;
         private readonly IGamificationUnitOfWork _unitOfWork;
         private readonly IMediator _mediator;
         private readonly XpCalculationStrategyResolver _strategy;
         private readonly ILogger<ValidateCheckInChallengeOrchestratorHandler> _logger;
 
-        public ValidateCheckInChallengeOrchestratorHandler(IGenericRepository<CheckInChallenge> repository, IGamificationUnitOfWork unitOfWork, IMediator mediator, XpCalculationStrategyResolver strategy, ILogger<ValidateCheckInChallengeOrchestratorHandler> logger)
+        public ValidateCheckInChallengeOrchestratorHandler(IGamificationRepository<CheckInChallenge> repository, IGamificationUnitOfWork unitOfWork, IMediator mediator, XpCalculationStrategyResolver strategy, ILogger<ValidateCheckInChallengeOrchestratorHandler> logger)
         {
             _repository = repository;
             _mediator = mediator;

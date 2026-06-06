@@ -11,17 +11,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
     public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateAchievementCommandHandler> _logger;
 
         public UpdateAchievementCommandHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             IMediator mediator,
             ILogger<UpdateAchievementCommandHandler> logger)
         {

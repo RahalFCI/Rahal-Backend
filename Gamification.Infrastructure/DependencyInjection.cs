@@ -31,7 +31,7 @@ namespace Gamification.Infrastructure
                 )
             );
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GamificationRepository<>));
+            services.AddScoped(typeof(IGamificationRepository<>), typeof(GamificationRepository<>));
 
 
             // Register Search Index Configuration

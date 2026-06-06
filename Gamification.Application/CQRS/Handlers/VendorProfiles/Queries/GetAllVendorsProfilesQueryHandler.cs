@@ -13,16 +13,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
 {
     public class GetAllVendorsProfilesQueryHandler : IRequestHandler<GetAllVendorsProfilesQuery, ApiResponse<PagedResult<GetVendorDto>>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly ILogger<GetAllVendorsProfilesQueryHandler> _logger;
 
         public GetAllVendorsProfilesQueryHandler(
-            IGenericRepository<VendorProfile> repository,
+            IGamificationRepository<VendorProfile> repository,
             ILogger<GetAllVendorsProfilesQueryHandler> logger)
         {
             _repository = repository;

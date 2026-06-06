@@ -8,17 +8,18 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
 {
     public class UpdateAchievementStatsOrchestratorHandler : IRequestHandler<UpdateAchievementStatsOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateAchievementStatsOrchestratorHandler> _logger;
 
         public UpdateAchievementStatsOrchestratorHandler(
-            IGenericRepository<UserStats> repository,
+            IGamificationRepository<UserStats> repository,
             IMediator mediator,
             ILogger<UpdateAchievementStatsOrchestratorHandler> logger)
         {

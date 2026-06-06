@@ -10,17 +10,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
 {
 
     public class UpdateVendorProfilePictureOrchestratorHandler : IRequestHandler<UpdateVendorProfilePictureOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateVendorProfilePictureOrchestratorHandler> _logger;
 
-        public UpdateVendorProfilePictureOrchestratorHandler(IMediator mediator, ILogger<UpdateVendorProfilePictureOrchestratorHandler> logger, IGenericRepository<VendorProfile> genericRepository)
+        public UpdateVendorProfilePictureOrchestratorHandler(IMediator mediator, ILogger<UpdateVendorProfilePictureOrchestratorHandler> logger, IGamificationRepository<VendorProfile> genericRepository)
         {
             _mediator = mediator;
             _repository = genericRepository;

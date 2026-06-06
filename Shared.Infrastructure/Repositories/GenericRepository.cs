@@ -57,9 +57,9 @@ namespace Shared.Infrastructure.Repositories
             Context.Set<TEntity>().Remove(entity);
         }
 
-        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            await Context.SaveChangesAsync(cancellationToken);
+            return await Context.SaveChangesAsync(cancellationToken);
         }
 
         public void SaveInclude(TEntity entity, params string[] includedProperties)

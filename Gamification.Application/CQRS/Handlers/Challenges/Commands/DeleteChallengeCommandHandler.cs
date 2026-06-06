@@ -9,16 +9,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
     public class DeleteChallengeCommandHandler : IRequestHandler<DeleteChallengeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Challenge> _repository;
+        private readonly IGamificationRepository<Challenge> _repository;
         private readonly ILogger<DeleteChallengeCommandHandler> _logger;
 
         public DeleteChallengeCommandHandler(
-            IGenericRepository<Challenge> repository,
+            IGamificationRepository<Challenge> repository,
             ILogger<DeleteChallengeCommandHandler> logger)
         {
             _repository = repository;

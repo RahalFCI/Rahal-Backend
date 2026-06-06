@@ -14,16 +14,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {
     public class GetAllExplorerProfilesQueryHandler : IRequestHandler<GetAllExplorerProfilesQuery, ApiResponse<PagedResult<GetExplorerDto>>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<GetAllExplorerProfilesQueryHandler> _logger;
 
         public GetAllExplorerProfilesQueryHandler(
-            IGenericRepository<ExplorerProfile> repository,
+            IGamificationRepository<ExplorerProfile> repository,
             ILogger<GetAllExplorerProfilesQueryHandler> logger)
         {
             _repository = repository;

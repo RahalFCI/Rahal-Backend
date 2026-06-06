@@ -9,20 +9,21 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Orchestrators
 {
     public class DeleteBadgeWithAchievementReversalOrchestratorHandler : IRequestHandler<DeleteBadgeWithAchievementReversalOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Badge> _badgeRepository;
-        private readonly IGenericRepository<Achievement> _achievementRepository;
+        private readonly IGamificationRepository<Badge> _badgeRepository;
+        private readonly IGamificationRepository<Achievement> _achievementRepository;
         private readonly IMediator _mediator;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<DeleteBadgeWithAchievementReversalOrchestratorHandler> _logger;
 
         public DeleteBadgeWithAchievementReversalOrchestratorHandler(
-            IGenericRepository<Badge> badgeRepository,
-            IGenericRepository<Achievement> achievementRepository,
+            IGamificationRepository<Badge> badgeRepository,
+            IGamificationRepository<Achievement> achievementRepository,
             IMediator mediator,
             IBackgroundJobClient backgroundJobClient,
             ILogger<DeleteBadgeWithAchievementReversalOrchestratorHandler> logger)

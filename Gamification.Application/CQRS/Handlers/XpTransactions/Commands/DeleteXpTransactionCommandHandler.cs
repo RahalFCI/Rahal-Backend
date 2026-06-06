@@ -12,17 +12,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 {
     public class DeleteXpTransactionCommandHandler : IRequestHandler<DeleteXpTransactionCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly IGamificationRepository<XpTransaction> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteXpTransactionCommandHandler> _logger;
 
         public DeleteXpTransactionCommandHandler(
-            IGenericRepository<XpTransaction> repository,
+            IGamificationRepository<XpTransaction> repository,
             ICacheService cacheService,
             ILogger<DeleteXpTransactionCommandHandler> logger)
         {

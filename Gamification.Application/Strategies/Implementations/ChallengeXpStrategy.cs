@@ -3,18 +3,19 @@ using Gamification.Domain.Enums;
 using Shared.Application.Interfaces;
 using Gamification.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.Strategies.Implementations
 {
     public class ChallengeXpStrategy : IXpCalculationStrategy
     {
-        private readonly IGenericRepository<Domain.Entities.Challenge> _challengeRepository;
+        private readonly IGamificationRepository<Domain.Entities.Challenge> _challengeRepository;
         private readonly ILogger<ChallengeXpStrategy> _logger;
 
         public XpSourceType SourceType => XpSourceType.Challenge;
 
         public ChallengeXpStrategy(
-            IGenericRepository<Domain.Entities.Challenge> challengeRepository,
+            IGamificationRepository<Domain.Entities.Challenge> challengeRepository,
             ILogger<ChallengeXpStrategy> logger)
         {
             _challengeRepository = challengeRepository;

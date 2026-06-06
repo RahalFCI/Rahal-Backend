@@ -12,16 +12,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Queries
 {
     internal class GetVendorProfileByIdQueryHandler : IRequestHandler <GetVendorProfileByIdQuery, ApiResponse<GetVendorDto>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly ILogger<GetVendorProfileByIdQueryHandler> _logger;
 
         public GetVendorProfileByIdQueryHandler(
-            IGenericRepository<VendorProfile> repository,
+            IGamificationRepository<VendorProfile> repository,
             ILogger<GetVendorProfileByIdQueryHandler> logger)
         {
             _repository = repository;

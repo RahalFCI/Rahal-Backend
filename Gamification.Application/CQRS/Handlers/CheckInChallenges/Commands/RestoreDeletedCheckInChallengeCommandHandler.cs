@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 {
     public class RestoreDeletedCheckInChallengeCommandHandler : IRequestHandler<RestoreDeletedCheckInChallengeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<CheckInChallenge> _repository;
         private readonly ILogger<RestoreDeletedCheckInChallengeCommandHandler> _logger;
 
         public RestoreDeletedCheckInChallengeCommandHandler(
-            IGenericRepository<CheckInChallenge> repository,
+            IGamificationRepository<CheckInChallenge> repository,
             ILogger<RestoreDeletedCheckInChallengeCommandHandler> logger)
         {
             _repository = repository;

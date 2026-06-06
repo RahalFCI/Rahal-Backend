@@ -11,16 +11,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
 {
     public class GetCheckInChallengesByChallengeIdQueryHandler : IRequestHandler<GetCheckInChallengesByChallengeIdQuery, ApiResponse<PagedResult<GetCheckInChallengeDto>>>
     {
-        private readonly IGenericRepository<Domain.Entities.CheckInChallenge> _repository;
+        private readonly IGamificationRepository<Domain.Entities.CheckInChallenge> _repository;
         private readonly ILogger<GetCheckInChallengesByChallengeIdQueryHandler> _logger;
 
         public GetCheckInChallengesByChallengeIdQueryHandler(
-            IGenericRepository<Domain.Entities.CheckInChallenge> repository,
+            IGamificationRepository<Domain.Entities.CheckInChallenge> repository,
             ILogger<GetCheckInChallengesByChallengeIdQueryHandler> logger)
         {
             _repository = repository;

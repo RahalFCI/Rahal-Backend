@@ -12,16 +12,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Queries
 {
     public class GetXpTransactionsByExplorerIdQueryHandler : IRequestHandler<GetXpTransactionsByExplorerIdQuery, ApiResponse<PagedResult<GetXpTransactionDto>>>
     {
-        private readonly IGenericRepository<Domain.Entities.XpTransaction> _repository;
+        private readonly IGamificationRepository<Domain.Entities.XpTransaction> _repository;
         private readonly ILogger<GetXpTransactionsByExplorerIdQueryHandler> _logger;
 
         public GetXpTransactionsByExplorerIdQueryHandler(
-            IGenericRepository<XpTransaction> repository,
+            IGamificationRepository<XpTransaction> repository,
             ILogger<GetXpTransactionsByExplorerIdQueryHandler> logger)
         {
             _repository = repository;

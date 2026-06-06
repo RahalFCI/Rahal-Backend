@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     public class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserStatsCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
+        private readonly IGamificationRepository<Domain.Entities.UserStats> _repository;
         private readonly ILogger<UpdateUserStatsCommandHandler> _logger;
 
         public UpdateUserStatsCommandHandler(
-            IGenericRepository<Domain.Entities.UserStats> repository,
+            IGamificationRepository<Domain.Entities.UserStats> repository,
             ILogger<UpdateUserStatsCommandHandler> logger)
         {
             _repository = repository;

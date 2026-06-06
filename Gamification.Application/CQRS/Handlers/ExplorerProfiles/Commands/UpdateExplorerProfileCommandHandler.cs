@@ -11,15 +11,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
     public class UpdateExplorerProfileCommandHandler : IRequestHandler<UpdateExplorerProfileCommand, ApiResponse<GetExplorerDto>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<UpdateExplorerProfileCommandHandler> _logger;
 
-        public UpdateExplorerProfileCommandHandler(IGenericRepository<ExplorerProfile> repository, ILogger<UpdateExplorerProfileCommandHandler> logger)
+        public UpdateExplorerProfileCommandHandler(IGamificationRepository<ExplorerProfile> repository, ILogger<UpdateExplorerProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

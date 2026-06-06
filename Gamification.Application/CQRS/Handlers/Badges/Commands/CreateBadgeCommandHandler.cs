@@ -11,18 +11,19 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
     public class CreateBadgeCommandHandler : IRequestHandler<CreateBadgeCommand, ApiResponse<GetBadgeDto>>
     {
-        private readonly IGenericRepository<Badge> _repository;
+        private readonly IGamificationRepository<Badge> _repository;
         private readonly IFileStorageService _fileStorageService;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateBadgeCommandHandler> _logger;
 
         public CreateBadgeCommandHandler(
-            IGenericRepository<Badge> repository,
+            IGamificationRepository<Badge> repository,
             IFileStorageService fileStorageService,
             IMediator mediator,
             ILogger<CreateBadgeCommandHandler> logger)

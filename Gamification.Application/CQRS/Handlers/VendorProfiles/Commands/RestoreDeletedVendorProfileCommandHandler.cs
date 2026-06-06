@@ -11,15 +11,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {
     internal class RestoreDeletedVendorProfileCommandHandler : IRequestHandler<RestoreDeletedVendorProfileCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly ILogger<RestoreDeletedVendorProfileCommandHandler> _logger;
 
-        public RestoreDeletedVendorProfileCommandHandler(IGenericRepository<VendorProfile> repository, ILogger<RestoreDeletedVendorProfileCommandHandler> logger)
+        public RestoreDeletedVendorProfileCommandHandler(IGamificationRepository<VendorProfile> repository, ILogger<RestoreDeletedVendorProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

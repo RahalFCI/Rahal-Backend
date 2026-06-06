@@ -1,6 +1,7 @@
 ﻿using Gamification.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Rahal.Api.Attributes;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
 using System.Security.Claims;
@@ -18,6 +19,17 @@ namespace Rahal.Api.Filters
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
+            var endpoint = context.HttpContext.GetEndpoint();
+
+            var skipProfileCheck =
+                endpoint?.Metadata.GetMetadata<SkipProfileCheckAttribute>() != null;
+
+            if (skipProfileCheck)
+            {
+                await next();
+                return;
+            }
+
             var user = context.HttpContext.User;
 
             if (!user.Identity?.IsAuthenticated ?? true)

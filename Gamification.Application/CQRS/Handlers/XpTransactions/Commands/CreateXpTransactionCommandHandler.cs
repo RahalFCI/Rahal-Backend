@@ -11,18 +11,21 @@ using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
+
+
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 {
     public class CreateXpTransactionCommandHandler : IRequestHandler<CreateXpTransactionCommand, ApiResponse<GetXpTransactionDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.XpTransaction> _repository;
+        private readonly IGamificationRepository<Domain.Entities.XpTransaction> _repository;
         private readonly IMediator _mediator;
         private readonly XpCalculationStrategyResolver _strategyResolver;
         private readonly ICacheService _cacheService;
         private readonly ILogger<CreateXpTransactionCommandHandler> _logger;
 
         public CreateXpTransactionCommandHandler(
-            IGenericRepository<XpTransaction> repository,
+            IGamificationRepository<XpTransaction> repository,
             IMediator mediator,
             XpCalculationStrategyResolver strategyResolver,
             ICacheService cacheService,

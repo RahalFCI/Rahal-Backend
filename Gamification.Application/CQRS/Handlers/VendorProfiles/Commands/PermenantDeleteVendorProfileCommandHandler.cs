@@ -11,15 +11,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {
     public class PermenantDeleteVendorProfileCommandHandler : IRequestHandler<PermenantDeleteVendorProfileCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly ILogger<PermenantDeleteVendorProfileCommandHandler> _logger;
 
-        public PermenantDeleteVendorProfileCommandHandler(IGenericRepository<VendorProfile> repository, ILogger<PermenantDeleteVendorProfileCommandHandler> logger)
+        public PermenantDeleteVendorProfileCommandHandler(IGamificationRepository<VendorProfile> repository, ILogger<PermenantDeleteVendorProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

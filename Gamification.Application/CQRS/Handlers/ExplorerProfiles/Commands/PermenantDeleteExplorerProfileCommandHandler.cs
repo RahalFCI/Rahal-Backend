@@ -10,15 +10,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
     public class PermenantDeleteExplorerProfileCommandHandler : IRequestHandler<PermenantDeleteExplorerProfileCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<PermenantDeleteExplorerProfileCommandHandler> _logger;
 
-        public PermenantDeleteExplorerProfileCommandHandler(IGenericRepository<ExplorerProfile> repository, ILogger<PermenantDeleteExplorerProfileCommandHandler> logger)
+        public PermenantDeleteExplorerProfileCommandHandler(IGamificationRepository<ExplorerProfile> repository, ILogger<PermenantDeleteExplorerProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

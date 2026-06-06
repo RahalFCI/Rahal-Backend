@@ -12,16 +12,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {
     public class GetExplorerProfilesIncludingDeletedQueryHandler : IRequestHandler<GetExplorerProfilesIncludingDeletedQuery, ApiResponse<PagedResult<GetExplorerDto>>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<GetExplorerProfilesIncludingDeletedQueryHandler> _logger;
 
         public GetExplorerProfilesIncludingDeletedQueryHandler(
-            IGenericRepository<ExplorerProfile> repository,
+            IGamificationRepository<ExplorerProfile> repository,
             ILogger<GetExplorerProfilesIncludingDeletedQueryHandler> logger)
         {
             _repository = repository;

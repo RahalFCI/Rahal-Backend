@@ -11,16 +11,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
 {
     public class GetCheckInChallengeByIdQueryHandler : IRequestHandler<GetCheckInChallengeByIdQuery, ApiResponse<GetCheckInChallengeDto>>
     {
-        private readonly IGenericRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<CheckInChallenge> _repository;
         private readonly ILogger<GetCheckInChallengeByIdQueryHandler> _logger;
 
         public GetCheckInChallengeByIdQueryHandler(
-            IGenericRepository<CheckInChallenge> repository,
+            IGamificationRepository<CheckInChallenge> repository,
             ILogger<GetCheckInChallengeByIdQueryHandler> logger)
         {
             _repository = repository;

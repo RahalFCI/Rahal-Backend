@@ -11,16 +11,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
 {
     public class GetAllAchievementsQueryHandler : IRequestHandler<GetAllAchievementsQuery, ApiResponse<PagedResult<GetAchievementDto>>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<GetAllAchievementsQueryHandler> _logger;
 
         public GetAllAchievementsQueryHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             ILogger<GetAllAchievementsQueryHandler> logger)
         {
             _repository = repository;

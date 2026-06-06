@@ -2,6 +2,7 @@
 using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.Badge;
 using Gamification.Application.DTOs.Achievement;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Mappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,12 +18,12 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
     public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, ApiResponse<GetAchievementDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateAchievementCommandHandler> _logger;
 
         public CreateAchievementCommandHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             IMediator mediator,
             ILogger<CreateAchievementCommandHandler> logger)
         {

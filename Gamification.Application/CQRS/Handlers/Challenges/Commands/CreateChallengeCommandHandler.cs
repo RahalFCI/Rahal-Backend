@@ -10,17 +10,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
     public class CreateChallengeCommandHandler : IRequestHandler<CreateChallengeCommand, ApiResponse<GetChallengeDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.Challenge> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Challenge> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateChallengeCommandHandler> _logger;
 
         public CreateChallengeCommandHandler(
-            IGenericRepository<Domain.Entities.Challenge> repository,
+            IGamificationRepository<Domain.Entities.Challenge> repository,
             IMediator mediator,
             ILogger<CreateChallengeCommandHandler> logger)
         {

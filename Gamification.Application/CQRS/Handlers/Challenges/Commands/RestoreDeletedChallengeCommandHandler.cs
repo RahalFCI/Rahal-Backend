@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
     public class RestoreDeletedChallengeCommandHandler : IRequestHandler<RestoreDeletedChallengeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Challenge> _repository;
+        private readonly IGamificationRepository<Challenge> _repository;
         private readonly ILogger<RestoreDeletedChallengeCommandHandler> _logger;
 
         public RestoreDeletedChallengeCommandHandler(
-            IGenericRepository<Challenge> repository,
+            IGamificationRepository<Challenge> repository,
             ILogger<RestoreDeletedChallengeCommandHandler> logger)
         {
             _repository = repository;

@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     public class DecrementCheckInStatsCommandHandler : IRequestHandler<DecrementCheckInStatsCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly ILogger<DecrementCheckInStatsCommandHandler> _logger;
 
         public DecrementCheckInStatsCommandHandler(
-            IGenericRepository<UserStats> repository,
+            IGamificationRepository<UserStats> repository,
             ILogger<DecrementCheckInStatsCommandHandler> logger)
         {
             _repository = repository;

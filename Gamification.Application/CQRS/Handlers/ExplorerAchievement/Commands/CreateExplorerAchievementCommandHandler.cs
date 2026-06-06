@@ -9,17 +9,18 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
 {
     public class CreateExplorerAchievementCommandHandler : IRequestHandler<CreateExplorerAchievementCommand, ApiResponse<GetExplorerAchievementDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.ExplorerAchievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.ExplorerAchievement> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateExplorerAchievementCommandHandler> _logger;
 
         public CreateExplorerAchievementCommandHandler(
-            IGenericRepository<Domain.Entities.ExplorerAchievement> repository,
+            IGamificationRepository<Domain.Entities.ExplorerAchievement> repository,
             IMediator mediator,
             ILogger<CreateExplorerAchievementCommandHandler> logger)
         {

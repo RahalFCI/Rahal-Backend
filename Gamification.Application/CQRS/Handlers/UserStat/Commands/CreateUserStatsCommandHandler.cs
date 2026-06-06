@@ -10,16 +10,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     public class CreateUserStatsCommandHandler : IRequestHandler<CreateUserStatsCommand, ApiResponse<GetUserStatsDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
+        private readonly IGamificationRepository<Domain.Entities.UserStats> _repository;
         private readonly ILogger<CreateUserStatsCommandHandler> _logger;
 
         public CreateUserStatsCommandHandler(
-            IGenericRepository<Domain.Entities.UserStats> repository,
+            IGamificationRepository<Domain.Entities.UserStats> repository,
             ILogger<CreateUserStatsCommandHandler> logger)
         {
             _repository = repository;

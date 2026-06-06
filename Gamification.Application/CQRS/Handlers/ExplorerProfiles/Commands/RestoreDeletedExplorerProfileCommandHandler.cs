@@ -9,15 +9,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
     public class RestoreDeletedExplorerProfileCommandHandler : IRequestHandler<RestoreDeletedExplorerProfileCommand, ApiResponse<string>>    
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<RestoreDeletedExplorerProfileCommandHandler> _logger;
 
-        public RestoreDeletedExplorerProfileCommandHandler(IGenericRepository<ExplorerProfile> repository, ILogger<RestoreDeletedExplorerProfileCommandHandler> logger)
+        public RestoreDeletedExplorerProfileCommandHandler(IGamificationRepository<ExplorerProfile> repository, ILogger<RestoreDeletedExplorerProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

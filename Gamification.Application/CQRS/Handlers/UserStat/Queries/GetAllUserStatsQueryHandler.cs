@@ -11,16 +11,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
 {
     public class GetAllUserStatsQueryHandler : IRequestHandler<GetAllUserStatsQuery, ApiResponse<PagedResult<GetUserStatsDto>>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly ILogger<GetAllUserStatsQueryHandler> _logger;
 
         public GetAllUserStatsQueryHandler(
-            IGenericRepository<UserStats> repository,
+            IGamificationRepository<UserStats> repository,
             ILogger<GetAllUserStatsQueryHandler> logger)
         {
             _repository = repository;

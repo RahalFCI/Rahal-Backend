@@ -12,16 +12,17 @@ using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorCategories.Queries
 {
     internal class GetAllVendorCategoriesQueryHandler : IRequestHandler<GetAllVendorCategoriesQuery, ApiResponse<IEnumerable<GetVendorCategoryDto>>>
     {
-        private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly IGamificationRepository<VendorCategory> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<GetAllVendorCategoriesQueryHandler> _logger;
 
-        public GetAllVendorCategoriesQueryHandler(IGenericRepository<VendorCategory> repository, ICacheService cacheService, ILogger<GetAllVendorCategoriesQueryHandler> logger)
+        public GetAllVendorCategoriesQueryHandler(IGamificationRepository<VendorCategory> repository, ICacheService cacheService, ILogger<GetAllVendorCategoriesQueryHandler> logger)
         {
             _repository = repository;
             _cacheService = cacheService;

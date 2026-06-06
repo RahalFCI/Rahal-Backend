@@ -6,17 +6,18 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     public class DeleteUserStatsCommandHandler : IRequestHandler<DeleteUserStatsCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Domain.Entities.UserStats> _repository;
+        private readonly IGamificationRepository<Domain.Entities.UserStats> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteUserStatsCommandHandler> _logger;
 
         public DeleteUserStatsCommandHandler(
-            IGenericRepository<Domain.Entities.UserStats> repository,
+            IGamificationRepository<Domain.Entities.UserStats> repository,
             ICacheService cacheService,
             ILogger<DeleteUserStatsCommandHandler> logger)
         {

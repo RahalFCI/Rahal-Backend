@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Interfaces;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.Jobs
 {
@@ -21,9 +22,9 @@ namespace Gamification.Application.Jobs
         public async Task ExecuteAsync(Guid challengeId, int xpReward, CancellationToken cancellationToken = default)
         {
             using var scope = _scopeFactory.CreateScope();
-            var checkInChallengeRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<CheckInChallenge>>();
-            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserStats>>();
-            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<XpTransaction>>();
+            var checkInChallengeRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<CheckInChallenge>>();
+            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<UserStats>>();
+            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<XpTransaction>>();
             var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
             _logger.LogInformation("Starting XP reversal for deleted challenge {ChallengeId}", challengeId);

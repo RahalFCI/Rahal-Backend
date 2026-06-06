@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Interfaces;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.Jobs
 {
@@ -21,10 +22,10 @@ namespace Gamification.Application.Jobs
         public async Task ExecuteAsync(Guid badgeId, CancellationToken cancellationToken = default)
         {
             using var scope = _scopeFactory.CreateScope();
-            var achievementRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<Achievement>>();
-            var explorerAchievementRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<ExplorerAchievement>>();
-            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserStats>>();
-            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<XpTransaction>>();
+            var achievementRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<Achievement>>();
+            var explorerAchievementRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<ExplorerAchievement>>();
+            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<UserStats>>();
+            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<XpTransaction>>();
             var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
             _logger.LogInformation("Starting badge deletion job for badge {BadgeId}", badgeId);

@@ -10,16 +10,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Queries
 {
     public class GetAchievementByIdQueryHandler : IRequestHandler<GetAchievementByIdQuery, ApiResponse<GetAchievementDto>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<GetAchievementByIdQueryHandler> _logger;
 
         public GetAchievementByIdQueryHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             ILogger<GetAchievementByIdQueryHandler> logger)
         {
             _repository = repository;

@@ -12,6 +12,7 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
 {
@@ -63,7 +64,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
                 }
 
                 _logger.LogError("Profile deletion orchestration completed for explorer profile for user {UserId}", request.Id);
-
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return ApiResponse<string>.Success(profileResult.Data);
             }
             catch (Exception ex)

@@ -13,16 +13,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
 {
     public class UpdateExplorerProfilePictureOrchestratorHandler : IRequestHandler<UpdateExplorerProfilePictureOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateExplorerProfilePictureOrchestrator> _logger;
 
-        public UpdateExplorerProfilePictureOrchestratorHandler(IMediator mediator, ILogger<UpdateExplorerProfilePictureOrchestrator> logger, IGenericRepository<ExplorerProfile> genericRepository)
+        public UpdateExplorerProfilePictureOrchestratorHandler(IMediator mediator, ILogger<UpdateExplorerProfilePictureOrchestrator> logger, IGamificationRepository<ExplorerProfile> genericRepository)
         {
             _mediator = mediator;
             _repository = genericRepository;
@@ -52,7 +53,6 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
                 await _repository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogError("Uploaded explorer profile picture with error code {ErrorCode}", profilePictureResult.errorCode);
-
                 return ApiResponse<string>.Success(profilePictureResult.Data!);
             }
             catch (Exception ex)

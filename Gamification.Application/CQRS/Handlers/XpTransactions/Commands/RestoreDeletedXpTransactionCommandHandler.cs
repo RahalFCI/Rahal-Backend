@@ -6,17 +6,18 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 {
     public class RestoreDeletedXpTransactionCommandHandler : IRequestHandler<RestoreDeletedXpTransactionCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly IGamificationRepository<XpTransaction> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<RestoreDeletedXpTransactionCommandHandler> _logger;
 
         public RestoreDeletedXpTransactionCommandHandler(
-            IGenericRepository<XpTransaction> repository,
+            IGamificationRepository<XpTransaction> repository,
             ICacheService cacheService,
             ILogger<RestoreDeletedXpTransactionCommandHandler> logger)
         {

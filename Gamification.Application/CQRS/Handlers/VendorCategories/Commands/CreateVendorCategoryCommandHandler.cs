@@ -12,17 +12,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
 {
     public class CreateVendorCategoryCommandHandler : IRequestHandler<CreateVendorCategoryCommand, ApiResponse<GetVendorCategoryDto>>
     {
-        private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly IGamificationRepository<VendorCategory> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<CreateVendorCategoryCommandHandler> _logger;
 
         public CreateVendorCategoryCommandHandler(
-            IGenericRepository<VendorCategory> repository,
+            IGamificationRepository<VendorCategory> repository,
             ICacheService cacheService,
             ILogger<CreateVendorCategoryCommandHandler> logger)
         {

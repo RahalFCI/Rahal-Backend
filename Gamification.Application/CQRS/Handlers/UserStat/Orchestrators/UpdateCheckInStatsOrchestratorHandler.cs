@@ -13,18 +13,19 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
 {
     public class UpdateCheckInStatsOrchestratorHandler : IRequestHandler<UpdateCheckInStatsOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly IGamificationUnitOfWork _unitOfWork;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateCheckInStatsOrchestratorHandler> _logger;
 
         public UpdateCheckInStatsOrchestratorHandler(
-            IGenericRepository<UserStats> repository,
+            IGamificationRepository<UserStats> repository,
             IGamificationUnitOfWork unitOfWork,
             IMediator mediator,
             ILogger<UpdateCheckInStatsOrchestratorHandler> logger)

@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
     public class RestoreDeletedBadgeCommandHandler : IRequestHandler<RestoreDeletedBadgeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Badge> _repository;
+        private readonly IGamificationRepository<Badge> _repository;
         private readonly ILogger<RestoreDeletedBadgeCommandHandler> _logger;
 
         public RestoreDeletedBadgeCommandHandler(
-            IGenericRepository<Badge> repository,
+            IGamificationRepository<Badge> repository,
             ILogger<RestoreDeletedBadgeCommandHandler> logger)
         {
             _repository = repository;

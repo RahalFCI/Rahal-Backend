@@ -13,6 +13,7 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
 {
@@ -37,7 +38,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
                 await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
                 var profilePictureResult = await _mediator.Send(new UploadPorfilePictureCommand(request.ProfilePicture), cancellationToken);
-                if (profilePictureResult.IsSuccess)
+                if (!profilePictureResult.IsSuccess)
                     _logger.LogError("Failed to upload explorer profile picture with error code {ErrorCode}", profilePictureResult.errorCode);
 
                 _logger.LogError("Uploaded explorer profile picture with error code {ErrorCode}", profilePictureResult.errorCode);
@@ -67,12 +68,13 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
                 }
 
                 _logger.LogError("Profile creation orchestration completed for explorer profile for user {UserId}", request.explorerDto.UserId);
-
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return ApiResponse<GetExplorerDto>.Success(profileResult.Data);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating explorer profile");
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                 return ApiResponse<GetExplorerDto>.Failure(ErrorCode.InvalidOperation);
             }
         }

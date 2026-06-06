@@ -11,16 +11,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Queries
 {
     public class GetAllAchievementCriteriaTypesQueryHandler : IRequestHandler<GetAllAchievementCriteriaTypesQuery, ApiResponse<IEnumerable<GetAchievementCriteriaTypeDto>>>
     {
-        private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly IGamificationRepository<AchievementCriteriaType> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<GetAllAchievementCriteriaTypesQueryHandler> _logger;
 
-        public GetAllAchievementCriteriaTypesQueryHandler(IGenericRepository<AchievementCriteriaType> repository, ICacheService cacheService, ILogger<GetAllAchievementCriteriaTypesQueryHandler> logger)
+        public GetAllAchievementCriteriaTypesQueryHandler(IGamificationRepository<AchievementCriteriaType> repository, ICacheService cacheService, ILogger<GetAllAchievementCriteriaTypesQueryHandler> logger)
         {
             _repository = repository;
             _cacheService = cacheService;

@@ -1,4 +1,5 @@
 using Gamification.Application.CQRS.Commands.AchievementCriteriaTypes;
+using Gamification.Application.Interfaces;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +13,12 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
 {
     public class DeleteAchievementCriteriaTypeCommandHandler : IRequestHandler<DeleteAchievementCriteriaTypeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly IGamificationRepository<AchievementCriteriaType> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteAchievementCriteriaTypeCommandHandler> _logger;
 
         public DeleteAchievementCriteriaTypeCommandHandler(
-            IGenericRepository<AchievementCriteriaType> repository,
+            IGamificationRepository<AchievementCriteriaType> repository,
             ICacheService cacheService,
             ILogger<DeleteAchievementCriteriaTypeCommandHandler> logger)
         {

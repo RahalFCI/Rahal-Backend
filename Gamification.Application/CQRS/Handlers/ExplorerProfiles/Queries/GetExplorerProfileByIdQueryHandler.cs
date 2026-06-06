@@ -10,16 +10,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Queries
 {
     public class GetExplorerProfileByIdQueryHandler : IRequestHandler<GetExplorerProfileByIdQuery, ApiResponse<GetExplorerDto>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<GetExplorerProfileByIdQueryHandler> _logger;
 
         public GetExplorerProfileByIdQueryHandler(
-            IGenericRepository<ExplorerProfile> repository,
+            IGamificationRepository<ExplorerProfile> repository,
             ILogger<GetExplorerProfileByIdQueryHandler> logger)
         {
             _repository = repository;

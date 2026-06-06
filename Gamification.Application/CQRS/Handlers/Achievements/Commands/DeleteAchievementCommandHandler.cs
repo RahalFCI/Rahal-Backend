@@ -9,16 +9,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
     public class DeleteAchievementCommandHandler : IRequestHandler<DeleteAchievementCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<DeleteAchievementCommandHandler> _logger;
 
         public DeleteAchievementCommandHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             ILogger<DeleteAchievementCommandHandler> logger)
         {
             _repository = repository;

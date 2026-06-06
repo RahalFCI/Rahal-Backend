@@ -9,16 +9,17 @@ using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Application.Pagination;
 using Shared.Infrastructure.Pagination;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Queries
 {
     public class GetExplorerAchievementsByAchievementIdQueryHandler : IRequestHandler<GetExplorerAchievementsByAchievementIdQuery, ApiResponse<PagedResult<GetExplorerAchievementDto>>>
     {
-        private readonly IGenericRepository<Domain.Entities.ExplorerAchievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.ExplorerAchievement> _repository;
         private readonly ILogger<GetExplorerAchievementsByAchievementIdQueryHandler> _logger;
 
         public GetExplorerAchievementsByAchievementIdQueryHandler(
-            IGenericRepository<Domain.Entities.ExplorerAchievement> repository,
+            IGamificationRepository<Domain.Entities.ExplorerAchievement> repository,
             ILogger<GetExplorerAchievementsByAchievementIdQueryHandler> logger)
         {
             _repository = repository;

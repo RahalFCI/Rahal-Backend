@@ -11,16 +11,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
 {
     public class GetUserStatsByExplorerIdQueryHandler : IRequestHandler<GetUserStatsByExplorerIdQuery, ApiResponse<GetUserStatsDto>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly ILogger<GetUserStatsByExplorerIdQueryHandler> _logger;
 
         public GetUserStatsByExplorerIdQueryHandler(
-            IGenericRepository<UserStats> repository,
+            IGamificationRepository<UserStats> repository,
             ILogger<GetUserStatsByExplorerIdQueryHandler> logger)
         {
             _repository = repository;

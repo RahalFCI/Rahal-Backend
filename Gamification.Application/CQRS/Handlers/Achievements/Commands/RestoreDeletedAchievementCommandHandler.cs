@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
 {
     public class RestoreDeletedAchievementCommandHandler : IRequestHandler<RestoreDeletedAchievementCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Domain.Entities.Achievement> _repository;
+        private readonly IGamificationRepository<Domain.Entities.Achievement> _repository;
         private readonly ILogger<RestoreDeletedAchievementCommandHandler> _logger;
 
         public RestoreDeletedAchievementCommandHandler(
-            IGenericRepository<Domain.Entities.Achievement> repository,
+            IGamificationRepository<Domain.Entities.Achievement> repository,
             ILogger<RestoreDeletedAchievementCommandHandler> logger)
         {
             _repository = repository;

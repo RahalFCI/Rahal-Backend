@@ -10,18 +10,19 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
     public class UpdateBadgeCommandHandler : IRequestHandler<UpdateBadgeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Badge> _repository;
+        private readonly IGamificationRepository<Badge> _repository;
         private readonly IFileStorageService _fileStorageService;
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateBadgeCommandHandler> _logger;
 
         public UpdateBadgeCommandHandler(
-            IGenericRepository<Badge> repository,
+            IGamificationRepository<Badge> repository,
             IFileStorageService fileStorageService,
             IMediator mediator,
             ILogger<UpdateBadgeCommandHandler> logger)

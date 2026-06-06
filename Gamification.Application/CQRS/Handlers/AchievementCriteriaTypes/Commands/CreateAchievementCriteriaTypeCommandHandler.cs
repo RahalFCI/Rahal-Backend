@@ -14,18 +14,19 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Commands
 {
     public class CreateAchievementCriteriaTypeCommandHandler : IRequestHandler<CreateAchievementCriteriaTypeCommand, ApiResponse<GetAchievementCriteriaTypeDto>>
     {
-        private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly IGamificationRepository<AchievementCriteriaType> _repository;
         private readonly IMediator _mediator;
         private readonly ICacheService _cacheService;
         private readonly ILogger<CreateAchievementCriteriaTypeCommandHandler> _logger;
 
         public CreateAchievementCriteriaTypeCommandHandler(
-            IGenericRepository<AchievementCriteriaType> repository,
+            IGamificationRepository<AchievementCriteriaType> repository,
             IMediator mediator,
             ICacheService cacheService,
             ILogger<CreateAchievementCriteriaTypeCommandHandler> logger)

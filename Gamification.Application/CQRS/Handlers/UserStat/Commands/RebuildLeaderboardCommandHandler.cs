@@ -7,15 +7,16 @@ using Shared.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     internal class RebuildLeaderboardCommandHandler : IRequestHandler<RebuildLeaderboardCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<UserStats> _repository;
+        private readonly IGamificationRepository<UserStats> _repository;
         private readonly ICacheService _cacheService;
 
-        public RebuildLeaderboardCommandHandler(IGenericRepository<UserStats> repository, ICacheService cacheService)
+        public RebuildLeaderboardCommandHandler(IGamificationRepository<UserStats> repository, ICacheService cacheService)
         {
             _repository = repository;
             _cacheService = cacheService;

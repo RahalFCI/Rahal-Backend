@@ -10,16 +10,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Queries
 {
     public class GetChallengeByIdQueryHandler : IRequestHandler<GetChallengeByIdQuery, ApiResponse<GetChallengeDto>>
     {
-        private readonly IGenericRepository<Challenge> _repository;
+        private readonly IGamificationRepository<Challenge> _repository;
         private readonly ILogger<GetChallengeByIdQueryHandler> _logger;
 
         public GetChallengeByIdQueryHandler(
-            IGenericRepository<Challenge> repository,
+            IGamificationRepository<Challenge> repository,
             ILogger<GetChallengeByIdQueryHandler> logger)
         {
             _repository = repository;

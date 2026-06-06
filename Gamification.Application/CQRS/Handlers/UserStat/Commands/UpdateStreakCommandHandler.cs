@@ -7,16 +7,17 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
 {
     public class UpdateStreakCommandHandler : IRequestHandler<UpdateStreakCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<UserStats> _userStatsRepository;
+        private readonly IGamificationRepository<UserStats> _userStatsRepository;
         private readonly ILogger<UpdateStreakCommandHandler> _logger;
 
         public UpdateStreakCommandHandler(
-            IGenericRepository<UserStats> userStatsRepository,
+            IGamificationRepository<UserStats> userStatsRepository,
             ILogger<UpdateStreakCommandHandler> logger)
         {
             _userStatsRepository = userStatsRepository;

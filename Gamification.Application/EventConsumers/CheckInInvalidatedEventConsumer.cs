@@ -15,14 +15,14 @@ namespace Gamification.Application.EventConsumers
 {
     public class CheckInInvalidatedEventConsumer : IConsumer<CheckInInvalidatedEvent>
     {
-        private readonly IGenericRepository<UserStats> _userStatsRepository;
-        private readonly IGenericRepository<XpTransaction> _xpTransactionRepository;
+        private readonly IGamificationRepository<UserStats> _userStatsRepository;
+        private readonly IGamificationRepository<XpTransaction> _xpTransactionRepository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<CheckInInvalidatedEventConsumer> _logger;
 
         public CheckInInvalidatedEventConsumer(
-            IGenericRepository<UserStats> userStatsRepository,
-            IGenericRepository<XpTransaction> xpTransactionRepository,
+            IGamificationRepository<UserStats> userStatsRepository,
+            IGamificationRepository<XpTransaction> xpTransactionRepository,
             ICacheService cacheService,
             ILogger<CheckInInvalidatedEventConsumer> logger)
         {

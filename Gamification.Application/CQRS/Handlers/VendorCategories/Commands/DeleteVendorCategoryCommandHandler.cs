@@ -9,17 +9,18 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorCategories.Commands
 {
     internal class DeleteVendorCategoryCommandHandler : IRequestHandler<DeleteVendorCategoryCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly IGamificationRepository<VendorCategory> _repository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<DeleteVendorCategoryCommandHandler> _logger;
 
         public DeleteVendorCategoryCommandHandler(
-            IGenericRepository<VendorCategory> repository,
+            IGamificationRepository<VendorCategory> repository,
             ICacheService cacheService,
             ILogger<DeleteVendorCategoryCommandHandler> logger)
         {

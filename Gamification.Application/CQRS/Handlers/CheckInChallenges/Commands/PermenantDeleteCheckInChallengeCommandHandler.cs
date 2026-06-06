@@ -8,16 +8,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Commands
 {
     public class PermenantDeleteCheckInChallengeCommandHandler : IRequestHandler<PermenantDeleteCheckInChallengeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<CheckInChallenge> _repository;
         private readonly ILogger<PermenantDeleteCheckInChallengeCommandHandler> _logger;
 
         public PermenantDeleteCheckInChallengeCommandHandler(
-            IGenericRepository<CheckInChallenge> repository,
+            IGamificationRepository<CheckInChallenge> repository,
             ILogger<PermenantDeleteCheckInChallengeCommandHandler> logger)
         {
             _repository = repository;

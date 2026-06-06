@@ -11,16 +11,17 @@ using Shared.Infrastructure.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Queries
 {
     public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, ApiResponse<PagedResult<GetBadgeDto>>>
     {
-        private readonly IGenericRepository<Badge> _repository;
+        private readonly IGamificationRepository<Badge> _repository;
         private readonly ILogger<GetAllBadgesQueryHandler> _logger;
 
         public GetAllBadgesQueryHandler(
-            IGenericRepository<Badge> repository,
+            IGamificationRepository<Badge> repository,
             ILogger<GetAllBadgesQueryHandler> logger)
         {
             _repository = repository;

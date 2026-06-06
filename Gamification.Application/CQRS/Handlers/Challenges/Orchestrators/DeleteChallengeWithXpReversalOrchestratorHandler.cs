@@ -9,18 +9,19 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Orchestrators
 {
     public class DeleteChallengeWithXpReversalOrchestratorHandler : IRequestHandler<DeleteChallengeWithXpReversalOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Challenge> _challengeRepository;
+        private readonly IGamificationRepository<Challenge> _challengeRepository;
         private readonly IMediator _mediator;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<DeleteChallengeWithXpReversalOrchestratorHandler> _logger;
 
         public DeleteChallengeWithXpReversalOrchestratorHandler(
-            IGenericRepository<Challenge> challengeRepository,
+            IGamificationRepository<Challenge> challengeRepository,
             IMediator mediator,
             IBackgroundJobClient backgroundJobClient,
             ILogger<DeleteChallengeWithXpReversalOrchestratorHandler> logger)

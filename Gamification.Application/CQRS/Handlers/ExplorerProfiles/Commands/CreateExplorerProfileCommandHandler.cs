@@ -11,15 +11,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
     public class CreateExplorerProfileCommandHandler : IRequestHandler<CreateExplorerProfileCommand, ApiResponse<GetExplorerDto>>
     {
-        private readonly IGenericRepository<ExplorerProfile> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _repository;
         private readonly ILogger<CreateExplorerProfileCommandHandler> _logger;
 
-        public CreateExplorerProfileCommandHandler(IGenericRepository<ExplorerProfile> repository, ILogger<CreateExplorerProfileCommandHandler> logger)
+        public CreateExplorerProfileCommandHandler(IGamificationRepository<ExplorerProfile> repository, ILogger<CreateExplorerProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;
@@ -33,7 +34,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 var explorerProfile = ExplorerProfileMapper.ToEntity(request.ExplorerProfileDto);
 
                 var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.ExplorerProfileDto.UserId).AnyAsync(cancellationToken);
-                if (!existingExplorer)
+                if (existingExplorer)
                 {
                     _logger.LogError("Explorer profile already exists for user {UserId}", request.ExplorerProfileDto.UserId);
                     return ApiResponse<GetExplorerDto>.Failure(ErrorCode.AlreadyExists);
@@ -42,7 +43,11 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 explorerProfile.ProfilePictureURL = request.ProfilePictureUrl;
 
                 _repository.Add(explorerProfile);
-                await _repository.SaveChangesAsync();
+                var affectedRows = await _repository.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "SaveChanges affected {AffectedRows} rows",
+                    affectedRows);
 
                 _logger.LogError("Created explorer profile for user {UserId}", request.ExplorerProfileDto.UserId);
 

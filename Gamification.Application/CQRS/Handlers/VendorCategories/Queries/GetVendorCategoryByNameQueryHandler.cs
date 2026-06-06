@@ -11,15 +11,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorCategories.Queries
 {
     internal class GetVendorCategoryByNameQueryHandler : IRequestHandler<GetVendorCategoryByNameQuery, ApiResponse<GetVendorCategoryDto>>
     {
-        private readonly IGenericRepository<VendorCategory> _repository;
+        private readonly IGamificationRepository<VendorCategory> _repository;
         private readonly ILogger<GetVendorCategoryByNameQueryHandler> _logger;
 
-        public GetVendorCategoryByNameQueryHandler(IGenericRepository<VendorCategory> repository, ILogger<GetVendorCategoryByNameQueryHandler> logger)
+        public GetVendorCategoryByNameQueryHandler(IGamificationRepository<VendorCategory> repository, ILogger<GetVendorCategoryByNameQueryHandler> logger)
         {
             _repository = repository;
             _logger = logger;

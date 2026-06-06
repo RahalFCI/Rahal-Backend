@@ -9,18 +9,19 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 {
     public class PermenantDeleteXpTransactionCommandHandler : IRequestHandler<PermenantDeleteXpTransactionCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<XpTransaction> _repository;
+        private readonly IGamificationRepository<XpTransaction> _repository;
         private readonly IMediator _mediator;
         private readonly ICacheService _cacheService;
         private readonly ILogger<PermenantDeleteXpTransactionCommandHandler> _logger;
 
         public PermenantDeleteXpTransactionCommandHandler(
-            IGenericRepository<XpTransaction> repository,
+            IGamificationRepository<XpTransaction> repository,
             IMediator mediator,
             ICacheService cacheService,
             ILogger<PermenantDeleteXpTransactionCommandHandler> logger)

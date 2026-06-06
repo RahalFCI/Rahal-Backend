@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.Jobs
 {
@@ -33,10 +34,10 @@ namespace Gamification.Application.Jobs
             using var scope = _scopeFactory.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
-            var achievementRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<Achievement>>();
-            var explorerAchievementRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<Gamification.Domain.Entities.ExplorerAchievement>>();
-            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<XpTransaction>>();
-            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserStats>>();
+            var achievementRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<Achievement>>();
+            var explorerAchievementRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<Gamification.Domain.Entities.ExplorerAchievement>>();
+            var xpTransactionRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<XpTransaction>>();
+            var userStatsRepository = scope.ServiceProvider.GetRequiredService<IGamificationRepository<UserStats>>();
 
             var userStats = await mediator.Send(new GetUserStatsByExplorerIdQuery(explorerId), cancellationToken);
 

@@ -13,15 +13,16 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {
     public class CreateVendorProfileCommandHandler : IRequestHandler<CreateVendorProfileCommand, ApiResponse<GetVendorDto>>
     {
-        private readonly IGenericRepository<VendorProfile> _repository;
+        private readonly IGamificationRepository<VendorProfile> _repository;
         private readonly ILogger<CreateVendorProfileCommandHandler> _logger;
 
-        public CreateVendorProfileCommandHandler(IGenericRepository<VendorProfile> repository, ILogger<CreateVendorProfileCommandHandler> logger)
+        public CreateVendorProfileCommandHandler(IGamificationRepository<VendorProfile> repository, ILogger<CreateVendorProfileCommandHandler> logger)
         {
             _repository = repository;
             _logger = logger;

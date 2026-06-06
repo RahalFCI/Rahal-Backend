@@ -9,16 +9,17 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
     public class DeleteBadgeCommandHandler : IRequestHandler<DeleteBadgeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Badge> _repository;
+        private readonly IGamificationRepository<Badge> _repository;
         private readonly ILogger<DeleteBadgeCommandHandler> _logger;
 
         public DeleteBadgeCommandHandler(
-            IGenericRepository<Badge> repository,
+            IGamificationRepository<Badge> repository,
             ILogger<DeleteBadgeCommandHandler> logger)
         {
             _repository = repository;

@@ -1,5 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.AchievementCriteriaTypes;
 using Gamification.Application.CQRS.Queries.AchievementCriteriaTypes;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MassTransit;
@@ -16,13 +17,13 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
 {
     public class UpdateAchievementCriteriaTypeCommandHandler : IRequestHandler<UpdateAchievementCriteriaTypeCommand, ApiResponse<string>>
     {
-        private readonly IGenericRepository<AchievementCriteriaType> _repository;
+        private readonly IGamificationRepository<AchievementCriteriaType> _repository;
         private readonly IMediator _mediator;
         private readonly ICacheService _cacheService;
         private readonly ILogger<UpdateAchievementCriteriaTypeCommandHandler> _logger;
 
         public UpdateAchievementCriteriaTypeCommandHandler(
-            IGenericRepository<AchievementCriteriaType> repository,
+            IGamificationRepository<AchievementCriteriaType> repository,
             IMediator mediator,
             ICacheService cacheService,
             ILogger<UpdateAchievementCriteriaTypeCommandHandler> logger)

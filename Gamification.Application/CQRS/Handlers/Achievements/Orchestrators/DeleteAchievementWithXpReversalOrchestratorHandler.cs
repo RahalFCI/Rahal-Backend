@@ -8,24 +8,25 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
+using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Achievements.Orchestrators
 {
     public class DeleteAchievementWithXpReversalOrchestratorHandler : IRequestHandler<DeleteAchievementWithXpReversalOrchestrator, ApiResponse<string>>
     {
-        private readonly IGenericRepository<Achievement> _achievementRepository;
-        private readonly IGenericRepository<Gamification.Domain.Entities.ExplorerAchievement> _explorerAchievementRepository;
-        private readonly IGenericRepository<XpTransaction> _xpTransactionRepository;
-        private readonly IGenericRepository<UserStats> _userStatsRepository;
+        private readonly IGamificationRepository<Achievement> _achievementRepository;
+        private readonly IGamificationRepository<Gamification.Domain.Entities.ExplorerAchievement> _explorerAchievementRepository;
+        private readonly IGamificationRepository<XpTransaction> _xpTransactionRepository;
+        private readonly IGamificationRepository<UserStats> _userStatsRepository;
         private readonly ICacheService _cacheService;
         private readonly IMediator _mediator;
         private readonly ILogger<DeleteAchievementWithXpReversalOrchestratorHandler> _logger;
 
         public DeleteAchievementWithXpReversalOrchestratorHandler(
-            IGenericRepository<Achievement> achievementRepository,
-            IGenericRepository<Gamification.Domain.Entities.ExplorerAchievement> explorerAchievementRepository,
-            IGenericRepository<XpTransaction> xpTransactionRepository,
-            IGenericRepository<UserStats> userStatsRepository,
+            IGamificationRepository<Achievement> achievementRepository,
+            IGamificationRepository<Gamification.Domain.Entities.ExplorerAchievement> explorerAchievementRepository,
+            IGamificationRepository<XpTransaction> xpTransactionRepository,
+            IGamificationRepository<UserStats> userStatsRepository,
             ICacheService cacheService,
             IMediator mediator,
             ILogger<DeleteAchievementWithXpReversalOrchestratorHandler> logger)
