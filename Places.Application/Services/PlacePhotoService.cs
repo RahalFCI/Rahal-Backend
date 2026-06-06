@@ -13,14 +13,14 @@ namespace Places.Application.Services
 {
     internal class PlacePhotoService : IPlacePhotoService
     {
-        private readonly IGenericRepository<PlacePhoto> _photoRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<PlacePhoto> _photoRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
         private readonly IFileStorageService _fileStorageService;
         private readonly ILogger<PlacePhotoService> _logger;
 
         public PlacePhotoService(
-            IGenericRepository<PlacePhoto> photoRepository,
-            IGenericRepository<Place> placeRepository,
+            IPlacesRepository<PlacePhoto> photoRepository,
+            IPlacesRepository<Place> placeRepository,
             IFileStorageService fileStorageService,
             ILogger<PlacePhotoService> logger)
         {

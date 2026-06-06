@@ -17,14 +17,14 @@ namespace Places.Application.Services
 {
     internal class PlaceService : IPlaceService
     {
-        private readonly IGenericRepository<Place> _placeRepository;
-        private readonly IGenericRepository<PlaceCategory> _categoryRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<PlaceCategory> _categoryRepository;
         private readonly IMediator _mediator;
         private readonly ILogger<PlaceService> _logger;
 
         public PlaceService(
-            IGenericRepository<Place> placeRepository,
-            IGenericRepository<PlaceCategory> categoryRepository,
+            IPlacesRepository<Place> placeRepository,
+            IPlacesRepository<PlaceCategory> categoryRepository,
             IMediator mediator,
             ILogger<PlaceService> logger)
         {

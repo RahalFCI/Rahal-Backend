@@ -32,7 +32,7 @@ namespace Places.Infrastructure
 
             services.AddScoped<IDbInitializer, PlacesDBInitializer>();
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(PlacesRepository<>));
+            services.AddScoped(typeof(IPlacesRepository<>), typeof(PlacesRepository<>));
 
             services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
 

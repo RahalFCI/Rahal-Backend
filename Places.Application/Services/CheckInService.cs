@@ -18,15 +18,15 @@ namespace Places.Application.Services
 {
     internal class CheckInService : ICheckInService
     {
-        private readonly IGenericRepository<CheckIn> _checkInRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<CheckIn> _checkInRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
         private readonly ICheckInValidatorService _validator;
         private readonly IPublishEndpoint _publisher;
         private readonly ILogger<CheckInService> _logger;
 
         public CheckInService(
-            IGenericRepository<CheckIn> checkInRepository,
-            IGenericRepository<Place> placeRepository,
+            IPlacesRepository<CheckIn> checkInRepository,
+            IPlacesRepository<Place> placeRepository,
             ICheckInValidatorService validator,
             IPublishEndpoint publisher,
             ILogger<CheckInService> logger)

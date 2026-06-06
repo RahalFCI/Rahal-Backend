@@ -17,11 +17,11 @@ namespace Places.Infrastructure.Services
         private const double MaxAccuracyMeters = 50;
         private const int MaxTimestampAgeSeconds = 120;
 
-        private readonly IGenericRepository<CheckIn> _checkInRepository;
+        private readonly IPlacesRepository<CheckIn> _checkInRepository;
         private readonly ILogger<GeoCheckInValidatorService> _logger;
 
         public GeoCheckInValidatorService(
-            IGenericRepository<CheckIn> checkInRepository,
+            IPlacesRepository<CheckIn> checkInRepository,
             ILogger<GeoCheckInValidatorService> logger)
         {
             _checkInRepository = checkInRepository;

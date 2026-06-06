@@ -12,13 +12,13 @@ namespace Places.Application.Services
 {
     internal class PlaceCategoryService : IPlaceCategoryService
     {
-        private readonly IGenericRepository<PlaceCategory> _categoryRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<PlaceCategory> _categoryRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
         private readonly ILogger<PlaceCategoryService> _logger;
 
         public PlaceCategoryService(
-            IGenericRepository<PlaceCategory> categoryRepository,
-            IGenericRepository<Place> placeRepository,
+            IPlacesRepository<PlaceCategory> categoryRepository,
+            IPlacesRepository<Place> placeRepository,
             ILogger<PlaceCategoryService> logger)
         {
             _categoryRepository = categoryRepository;

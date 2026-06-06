@@ -13,15 +13,15 @@ namespace Places.Application.Services
 {
     internal class PlaceReviewService : IPlaceReviewService
     {
-        private readonly IGenericRepository<PlaceReview> _reviewRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
-        private readonly IGenericRepository<CheckIn> _checkInRepository;
+        private readonly IPlacesRepository<PlaceReview> _reviewRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<CheckIn> _checkInRepository;
         private readonly ILogger<PlaceReviewService> _logger;
 
         public PlaceReviewService(
-            IGenericRepository<PlaceReview> reviewRepository,
-            IGenericRepository<Place> placeRepository,
-            IGenericRepository<CheckIn> checkInRepository,
+            IPlacesRepository<PlaceReview> reviewRepository,
+            IPlacesRepository<Place> placeRepository,
+            IPlacesRepository<CheckIn> checkInRepository,
             ILogger<PlaceReviewService> logger)
         {
             _reviewRepository = reviewRepository;

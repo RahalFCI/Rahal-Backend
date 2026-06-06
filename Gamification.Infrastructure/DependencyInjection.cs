@@ -51,6 +51,9 @@ namespace Gamification.Infrastructure
             //Register for gamification unit of work
             services.AddScoped<IGamificationUnitOfWork, GamificationUnitOfWork>();
 
+            services.AddScoped<IDbInitializer, GamificationDbInitializer>();
+
+
             return services;
         }
     }
