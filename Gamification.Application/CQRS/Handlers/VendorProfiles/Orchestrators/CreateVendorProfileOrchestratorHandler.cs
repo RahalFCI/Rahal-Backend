@@ -13,7 +13,6 @@ using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Orchestrators
 {
