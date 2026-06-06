@@ -9,7 +9,7 @@ namespace Gamification.Domain.Entities
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public Guid BadgeId { get; set; } = Guid.Empty;
+        public Guid? BadgeId { get; set; } = null;
         public virtual Badge? Badge { get; set; }
         public int Xp { get; set; } = 0;
         public Guid AchievementCriteriaTypeId { get; set; } = Guid.Empty;

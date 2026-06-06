@@ -36,11 +36,14 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
         {
             _logger.LogInformation("Creating achievement {AchievementTitle}", request.Dto.Title);
 
-            var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId), cancellationToken);
-            if (!badge.IsSuccess)
+            if(request.Dto.BadgeId is not null)
             {
-                _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
-                return ApiResponse<GetAchievementDto>.Failure(ErrorCode.NotFound);
+                var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId.Value), cancellationToken);
+                if (!badge.IsSuccess)
+                {
+                    _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
+                    return ApiResponse<GetAchievementDto>.Failure(ErrorCode.NotFound);
+                }
             }
 
             var criteriaType = await _mediator.Send(new GetAchievementCriteriaTypeByIdQuery(request.Dto.CriteriaTypeId), cancellationToken);

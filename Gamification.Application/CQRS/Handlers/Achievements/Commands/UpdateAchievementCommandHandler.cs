@@ -42,11 +42,14 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId), cancellationToken);
-            if (!badge.IsSuccess)
-            {
-                _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            if(request.Dto.BadgeId is not null)
+            { 
+                var badge = await _mediator.Send(new GetBadgeByIdQuery(request.Dto.BadgeId.Value), cancellationToken);
+                if (!badge.IsSuccess)
+                {
+                    _logger.LogWarning("Badge {BadgeId} not found", request.Dto.BadgeId);
+                    return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                }
             }
 
             var criteriaType = await _mediator.Send(new GetAchievementCriteriaTypeByIdQuery(request.Dto.CriteriaTypeId), cancellationToken);

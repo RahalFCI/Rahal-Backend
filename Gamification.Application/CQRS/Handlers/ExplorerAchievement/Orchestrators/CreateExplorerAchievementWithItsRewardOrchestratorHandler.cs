@@ -86,9 +86,9 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Orchestrato
             }
 
             //Create badge reward
-            if(achievementResult.Data.BadgeId != Guid.Empty)
+            if(achievementResult.Data.BadgeId is not null)
             {
-                var BadgeRewardResult = await _mediator.Send(new UpdateBadgeStatsOrchestrator(achievementResult.Data.BadgeId));
+                var BadgeRewardResult = await _mediator.Send(new UpdateBadgeStatsOrchestrator(achievementResult.Data.BadgeId.Value), cancellationToken);
                 if(!BadgeRewardResult.IsSuccess)
                 {
                     _logger.LogError("Failed to create badge reward for explorer {ExplorerId} and achievement {AchievementId}", request.Dto.ExplorerId, request.Dto.AchievementId);

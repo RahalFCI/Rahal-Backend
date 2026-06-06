@@ -12,7 +12,7 @@ namespace Gamification.Application.Mappers
                 Id = achievement.Id,
                 Title = achievement.Title,
                 Description = achievement.Description,
-                BadgeId = achievement.BadgeId,
+                BadgeId = achievement.BadgeId ,
                 BadgeName = achievement.Badge?.Name ?? string.Empty,
                 XpReward = achievement.Xp,
                 CriteriaTypeId = achievement.AchievementCriteriaTypeId,
