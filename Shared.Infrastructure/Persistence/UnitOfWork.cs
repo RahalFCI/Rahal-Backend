@@ -15,6 +15,7 @@ namespace Shared.Infrastructure.Persistence
         private readonly ILogger<UnitOfWork<TContext>> _logger;
         private IDbContextTransaction? _transaction;
         private bool _disposed;
+        private int depth = 0;
 
         public bool HasActiveTransaction => _transaction != null;
 
@@ -32,6 +33,7 @@ namespace Shared.Infrastructure.Persistence
             if (_transaction != null)
             {
                 _logger.LogWarning("A transaction is already active. Skipping BeginTransaction.");
+                depth++;
                 return;
             }
 
@@ -43,6 +45,12 @@ namespace Shared.Infrastructure.Persistence
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
+
+            if (depth > 0)
+            {
+                depth--;
+                return;
+            }
 
             if (_transaction == null)
                 throw new InvalidOperationException("No active transaction to commit.");

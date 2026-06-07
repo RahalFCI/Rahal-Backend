@@ -79,7 +79,7 @@ namespace Places.Application.Services
             return ApiResponse<PagedResult<GetPlaceDto>>.Success(result);
         }
 
-        public async Task<ApiResponse<string>> CreatePlaceAsync(CreatePlaceDto dto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<Guid>> CreatePlaceAsync(CreatePlaceDto dto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Creating new place");
 
@@ -87,7 +87,7 @@ namespace Places.Application.Services
             if (category is null)
             {
                 _logger.LogWarning("Category {CategoryId} not found", dto.PlaceCategoryId);
-                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                return ApiResponse<Guid>.Failure(ErrorCode.NotFound);
             }
 
             var place = PlaceMapper.ToEntity(dto);
@@ -106,7 +106,7 @@ namespace Places.Application.Services
                 _logger.LogError(ex, "Failed to publish PlaceCreatedEvent for place {PlaceId}. Place creation was successful but search index may not be updated.", place.Id);
             }
 
-            return ApiResponse<string>.Success($"Place created successfully. ID: {place.Id}");
+            return ApiResponse<Guid>.Success(place.Id);
         }
 
         public async Task<ApiResponse<string>> UpdatePlaceAsync(Guid id, UpdatePlaceDto dto, CancellationToken cancellationToken = default)

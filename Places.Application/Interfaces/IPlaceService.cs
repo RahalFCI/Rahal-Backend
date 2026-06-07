@@ -9,7 +9,7 @@ namespace Places.Application.Interfaces
         Task<ApiResponse<GetPlaceDto>> GetPlaceByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResult<GetPlaceDto>>> GetAllPlacesAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResult<GetPlaceDto>>> GetPlacesByCategoryIdAsync(Guid categoryId, OffsetPaginationRequest request, CancellationToken cancellationToken = default);
-        Task<ApiResponse<string>> CreatePlaceAsync(CreatePlaceDto dto, CancellationToken cancellationToken = default);
+        Task<ApiResponse<Guid>> CreatePlaceAsync(CreatePlaceDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> UpdatePlaceAsync(Guid id, UpdatePlaceDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeletePlaceAsync(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeletePlacePermanentlyAsync(Guid id, CancellationToken cancellationToken = default);
