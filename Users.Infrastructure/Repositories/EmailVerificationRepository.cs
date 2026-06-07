@@ -7,7 +7,7 @@ using Users.Infrastructure.Persistence;
 namespace Users.Infrastructure.Repositories
 {
 
-    public class EmailVerificationRepository : GenericRepository<EmailVerificationToken>, IEmailVerificationRepository
+    public class EmailVerificationRepository : GenericRepository<EmailVerificationToken, UsersDbContext>, IEmailVerificationRepository
     {
         public EmailVerificationRepository(UsersDbContext dbContext) : base(dbContext)
         {

@@ -28,6 +28,7 @@ namespace Shared.Domain.Enums
         LockedOut = 40301,
         Forbidden = 40300,
         EmailNotVerified = 40302,
+        ProfileSetupRequired = 40303,
 
         // State / business rules
         InvalidOperation = 40910,

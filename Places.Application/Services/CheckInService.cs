@@ -1,3 +1,5 @@
+using MassTransit;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Places.Application.DTOs.CheckIn;
@@ -6,6 +8,7 @@ using Places.Application.Interfaces;
 using Places.Application.Mappers;
 using Places.Domain.Entities;
 using Shared.Application.DTOs;
+using Shared.Application.Events.CheckIns;
 using Shared.Application.Interfaces;
 using Shared.Application.Pagination;
 using Shared.Domain.Enums;
@@ -15,20 +18,23 @@ namespace Places.Application.Services
 {
     internal class CheckInService : ICheckInService
     {
-        private readonly IGenericRepository<CheckIn> _checkInRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<CheckIn> _checkInRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
         private readonly ICheckInValidatorService _validator;
+        private readonly IPublishEndpoint _publisher;
         private readonly ILogger<CheckInService> _logger;
 
         public CheckInService(
-            IGenericRepository<CheckIn> checkInRepository,
-            IGenericRepository<Place> placeRepository,
+            IPlacesRepository<CheckIn> checkInRepository,
+            IPlacesRepository<Place> placeRepository,
             ICheckInValidatorService validator,
+            IPublishEndpoint publisher,
             ILogger<CheckInService> logger)
         {
             _checkInRepository = checkInRepository;
             _placeRepository = placeRepository;
             _validator = validator;
+            _publisher = publisher;
             _logger = logger;
         }
 
@@ -135,6 +141,20 @@ namespace Places.Application.Services
             }
 
             _logger.LogInformation("Check-in successful for explorer {ExplorerId}", explorerId);
+
+            try
+            {
+                await _publisher.Publish(new CreateCheckInEvent(explorerId, checkIn.Id), ct);
+
+                _logger.LogInformation("Check-in event published for explorer {ExplorerId} with check-in {CheckInId}",
+                    explorerId, checkIn.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish check-in event for explorer {ExplorerId} with check-in {CheckInId}",
+                    explorerId, checkIn.Id);
+            }
+
             return ApiResponse<string>.Success("Checked in successfully");
         }
 

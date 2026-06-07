@@ -16,18 +16,6 @@ namespace Users.Infrastructure.Persistence
         {
         }
 
-
-
-        public DbSet<ExplorerProfile> ExplorerProfiles { get; set; }
-
-        public DbSet<VendorProfile> VendorProfiles { get; set; }
-
-
-        public DbSet<AdminProfile> AdminProfiles { get; set; }
-
-
-        public DbSet<VendorCategory> VendorCategories { get; set; }
-
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
 

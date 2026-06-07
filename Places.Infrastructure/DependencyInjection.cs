@@ -4,11 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Places.Application.Interfaces;
 using Places.Infrastructure.Persistence;
+using Places.Infrastructure.Repositories;
 using Places.Infrastructure.Search;
 using Places.Infrastructure.Search.EventHandlers;
 using Places.Infrastructure.Services;
 using Shared.Application.Interfaces;
-using Shared.Infrastructure.Repositories;
 
 namespace Places.Infrastructure
 {
@@ -30,11 +30,9 @@ namespace Places.Infrastructure
                 )
             );
 
-            services.AddScoped<DbContext, PlacesDbContext>();
-
             services.AddScoped<IDbInitializer, PlacesDBInitializer>();
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped(typeof(IPlacesRepository<>), typeof(PlacesRepository<>));
 
             services.AddScoped<ISearchIndexInitializer, PlaceIndexConfig>();
 

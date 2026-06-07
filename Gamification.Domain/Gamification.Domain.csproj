@@ -12,8 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
-    <Folder Include="Enums\" />
+    <ProjectReference Include="..\Shared.Domain\Shared.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Events\" />
   </ItemGroup>
 

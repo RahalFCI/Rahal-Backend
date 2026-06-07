@@ -1,12 +1,24 @@
 using ECommerce.API.Filters;
-using Microsoft.AspNetCore.HttpOverrides;
+using Gamification.Application.CQRS.Commands.Achievement;
+using Gamification.Application.CQRS.Commands.UserStat;
+using Gamification.Application.CQRS.Handlers.Achievements.Commands;
+using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+using Gamification.Application.EventConsumers;
+using Gamification.Application.Jobs;
+using Hangfire;
+using Hangfire.PostgreSql;
+using MassTransit;
+using MediatR;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
+using Rahal.Api.Filters;
 using Rahal.Api.Middlewares;
 using Serilog;
+using Shared.Application.Services;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
 using StackExchange.Redis;
@@ -51,6 +63,34 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(SendWelcomeEmailHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(UserCreatedEventHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(PlaceCreatedEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CreateAchievementCommandHandler).Assembly);
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehaviorService<,>));
+
+});
+
+// Register MassTransit
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<DeleteProfileEventConsumer>();
+    x.AddConsumer<RestoreProfileEventConsumer>();
+    x.AddConsumer<CreateCheckInEventConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(builder.Configuration["RabbitMQ:Host"], builder.Configuration["RabbitMQ:VirtualHost"], h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:Username"]!);
+            h.Password(builder.Configuration["RabbitMQ:Password"]!);
+        });
+
+        cfg.UseMessageRetry(r => r.Intervals(
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromSeconds(30)
+        ));
+
+        cfg.ConfigureEndpoints(context);
+    });
 });
 
 
@@ -64,6 +104,8 @@ builder.Services.AddControllers(
     options =>
     {
         options.Filters.Add<ValidationActionFilter>();
+        options.Filters.Add<ProfileSetupRequiredFilter>();
+
     })
     .AddJsonOptions(options =>
     {
@@ -120,9 +162,17 @@ var app = builder.Build();
 try
 {
     var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
-var db = redis.GetDatabase();
-await db.PingAsync();
-app.Logger.LogInformation("Redis connection successful");
+    var db = redis.GetDatabase();
+    await db.PingAsync();
+    app.Logger.LogInformation("Redis connection successful");
+
+    //Refresh leaderboard upon crash
+    redis.ConnectionRestored += async (sender, args) =>
+    {
+        using var scope = app.Services.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        await mediator.Send(new RebuildLeaderboardCommand());
+    };
 }
 catch (Exception ex)
 {
@@ -150,6 +200,23 @@ app.UseRouting(); //Identifying action method based on route
 app.UseAuthentication(); //Enable Authentication Middleware
 app.UseAuthorization(); //Enable Authorization Middleware
 app.UseRateLimiter();
+
+
+//Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() } //Custom authorization filter to restrict access to the dashboard
+}); // Gives you a UI at /hangfire
+
+//RecurringJob.AddOrUpdate<StreakResetBackgroundJob>(
+//    "streak-reset",
+//    job => job.ExecuteAsync(CancellationToken.None),
+//    Cron.Daily(0));
+
+//// Initial leaderboard build
+//using var scope = app.Services.CreateScope();
+//var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+//await mediator.Send(new RebuildLeaderboardCommand());
 
 app.UseExceptionHandlingMiddleware();
 

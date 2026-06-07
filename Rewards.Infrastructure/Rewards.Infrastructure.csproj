@@ -18,11 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Rewards.Application\Rewards.Application.csproj" />
+    <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Persistence\Configurations\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>

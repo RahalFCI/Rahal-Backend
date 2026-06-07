@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
+using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,8 @@ using System.Text;
 using Users.Application.DTOs.Auth;
 using Users.Application.DTOs.OAuth;
 using Users.Application.Interfaces;
-using Users.Domain.Entities._Common;
 using Users.Domain.Entities;
+using Users.Domain.Entities._Common;
 using Users.Domain.Enums;
 
 namespace Users.Application.Services
@@ -81,7 +82,15 @@ namespace Users.Application.Services
                 _logger.LogInformation("No existing user found for email {Email}. Creating new user for type {UserType}", googleUserInfo.Email, userType);
 
                 // Step 3b: Create new user with profile based on user type
-                var newUser = CreateUserWithProfile(googleUserInfo, userType);
+                var newUser = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Email = googleUserInfo.Email,
+                    UserName = googleUserInfo.Email,
+                    DisplayName = $"{googleUserInfo.FirstName} {googleUserInfo.LastName}".Trim(),
+                    UserType = UserRoleEnum.Explorer,
+                    EmailConfirmed = true, // Auto-confirm for OAuth users
+                };
 
                 if (newUser is null)
                 {
@@ -109,124 +118,6 @@ namespace Users.Application.Services
                 return ApiResponse<AuthResponseDto>.Failure(ErrorCode.UnknownError);
             }
         }
-
-        /// <summary>
-        /// Creates a new user with appropriate profile based on user type
-        /// </summary>
-        private User? CreateUserWithProfile(GoogleUserInfo googleUserInfo, UserRoleEnum userType)
-        {
-            try
-            {
-                return userType switch
-                {
-                    UserRoleEnum.Explorer => CreateExplorerUser(googleUserInfo),
-                    UserRoleEnum.Vendor => CreateVendorUser(googleUserInfo),
-                    UserRoleEnum.Admin => CreateAdminUser(googleUserInfo),
-                    _ => throw new InvalidOperationException($"Invalid user type: {userType}")
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating user for type {UserType}", userType);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Creates an Explorer user with profile from Google claims
-        /// </summary>
-        private User CreateExplorerUser(GoogleUserInfo googleUserInfo)
-        {
-            _logger.LogDebug("Creating Explorer user from Google claims for email: {Email}", googleUserInfo.Email);
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = googleUserInfo.Email,
-                UserName = googleUserInfo.Email,
-                DisplayName = $"{googleUserInfo.FirstName} {googleUserInfo.LastName}".Trim(),
-                UserType = UserRoleEnum.Explorer,
-                ProfilePictureURL = googleUserInfo.PictureUrl ?? string.Empty,
-                EmailConfirmed = true, // Auto-confirm for OAuth users
-            };
-
-            user.ExplorerProfile = new ExplorerProfile
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                User = user,
-                Bio = string.Empty,
-                CountryCode = "US", // Default country
-                Gender = GenderEnum.Male, // Default gender
-                BirthDate = new DateOnly(2000, 1, 1), // Default birthdate
-                IsPublic = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            return user;
-        }
-
-        /// <summary>
-        /// Creates a Vendor user with profile from Google claims
-        /// </summary>
-        private User CreateVendorUser(GoogleUserInfo googleUserInfo)
-        {
-            _logger.LogDebug("Creating Vendor user from Google claims for email: {Email}", googleUserInfo.Email);
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = googleUserInfo.Email,
-                UserName = googleUserInfo.Email,
-                DisplayName = $"{googleUserInfo.FirstName} {googleUserInfo.LastName}".Trim(),
-                UserType = UserRoleEnum.Vendor,
-                ProfilePictureURL = googleUserInfo.PictureUrl ?? string.Empty,
-                EmailConfirmed = true, // Auto-confirm for OAuth users
-            };
-
-            user.VendorProfile = new VendorProfile
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                User = user,
-                CountryCode = "US", // Default country
-                Address = string.Empty,
-                AddressUrl = string.Empty,
-                WorkingHours = new Dictionary<DayOfWeek, string>(), // Empty working hours
-                CategoryId = Guid.Empty, // Default category
-                CreatedAt = DateTime.UtcNow
-            };
-
-            return user;
-        }
-
-        /// <summary>
-        /// Creates an Admin user with profile from Google claims
-        /// </summary>
-        private User CreateAdminUser(GoogleUserInfo googleUserInfo)
-        {
-            _logger.LogDebug("Creating Admin user from Google claims for email: {Email}", googleUserInfo.Email);
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = googleUserInfo.Email,
-                UserName = googleUserInfo.Email,
-                DisplayName = $"{googleUserInfo.FirstName} {googleUserInfo.LastName}".Trim(),
-                UserType = UserRoleEnum.Admin,
-                ProfilePictureURL = googleUserInfo.PictureUrl ?? string.Empty,
-                EmailConfirmed = true, // Auto-confirm for OAuth users
-            };
-
-            user.AdminProfile = new AdminProfile
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                User = user,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            return user;
-        }
+        
     }
 }

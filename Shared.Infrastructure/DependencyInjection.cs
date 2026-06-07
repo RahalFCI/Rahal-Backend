@@ -5,19 +5,21 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
+using Polly.Registry;
 using Shared.Application.Interfaces;
 using Shared.Application.Settings;
 using Shared.Application.Settings.ReslilienceSettings;
 using Shared.Infrastructure.Email;
 using Shared.Infrastructure.FileStorage;
+using Shared.Infrastructure.Persistence;
 using Shared.Infrastructure.Repositories;
 using Shared.Infrastructure.Resilience;
 using Shared.Infrastructure.Search;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Users.Application.Interfaces;
-using Users.Infrastructure.Persistence;
 
 namespace Shared.Infrastructure
 {
@@ -38,11 +40,13 @@ namespace Shared.Infrastructure
             services.Configure<SearchResilienceSettings>(configuration.GetSection(SearchResilienceSettings.SectionName));
             services.Configure<EmailResilienceSettings>(configuration.GetSection(EmailResilienceSettings.SectionName));
             services.Configure<FileStorageResilienceSettings>(configuration.GetSection(FileStorageResilienceSettings.SectionName));
+            services.Configure<RedisResilienceSettings>(configuration.GetSection(RedisResilienceSettings.SectionName));
 
             // Register ResiliencePipeline as singleton
             services.AddSingleton<SearchResiliencePipelineFactory>();
             services.AddSingleton<EmailResiliencePipelineFactory>();
             services.AddSingleton<FileStorageResiliencePipelineFactory>();
+            services.AddSingleton<RedisResiliencePipelineFactory>();
 
             services.AddResiliencePipeline("search", (builder, context) =>
             {
@@ -69,6 +73,21 @@ namespace Shared.Infrastructure
 
                 // copy strategies from factory pipeline into the builder
                 builder.AddPipeline(pipeline);
+            });
+
+            services.AddResiliencePipeline("redis", (builder, context) =>
+            {
+                var factory = context.ServiceProvider.GetRequiredService<RedisResiliencePipelineFactory>();
+                var pipeline = factory.CreatePipeline();
+                builder.AddPipeline(pipeline);
+            });
+
+            services.AddScoped<ICacheService>(sp =>
+            {
+                var redis = sp.GetRequiredService<IConnectionMultiplexer>();
+                var pipelineProvider = sp.GetRequiredService<ResiliencePipelineProvider<string>>();
+                var logger = sp.GetRequiredService<ILogger<Shared.Infrastructure.RedisCacheService>>();
+                return new Shared.Infrastructure.RedisCacheService(redis, pipelineProvider, logger);
             });
 
 
@@ -106,11 +125,6 @@ namespace Shared.Infrastructure
 
             // Register MeilisearchService as open generic
             services.AddScoped(typeof(ISearchService<>), typeof(MeilisearchService<>));
-
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-            //Register Unit of Work
-            services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
 
 
             return services;

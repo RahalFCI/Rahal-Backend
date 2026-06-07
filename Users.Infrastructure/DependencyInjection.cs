@@ -49,7 +49,6 @@ namespace Users.Infrastructure
                 )
             );
 
-            // Enable Identity with default role type
             services.AddIdentityCore<User>(options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -70,6 +69,8 @@ namespace Users.Infrastructure
 
             services.AddScoped<SignInManager<User>>();
 
+
+            services.AddScoped(typeof(IUsersRepository<>), typeof(UsersRepository<>));
 
             services.AddScoped<IDbInitializer, UsersDBInitializer>();
 

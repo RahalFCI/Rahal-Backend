@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Places.Domain.Events;
+using Places.Application.Events;
 using Places.Infrastructure.Search;
 using Shared.Application.Interfaces;
 

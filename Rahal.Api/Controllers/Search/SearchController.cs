@@ -1,3 +1,5 @@
+using Gamification.Infrastructure.Search.Explorer;
+using Gamification.Infrastructure.Search.Vendor;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,15 +20,21 @@ namespace Rahal.Api.Controllers.Search
     {
         private readonly ISearchService<UserSearchDocument> _userSearchService;
         private readonly ISearchService<PlaceSearchDocument> _placesSearchService;
+        private readonly ISearchService<ExplorerSearchDocument> _explorerSearchDocument;
+        private readonly ISearchService<VendorSearchDocument> _vendorSearchDocument;
         private readonly ILogger<SearchController> _logger;
 
         public SearchController(
             ISearchService<UserSearchDocument> userSearchService,
             ISearchService<PlaceSearchDocument> placesSearchService,
+            ISearchService<ExplorerSearchDocument> explorerSearchDocument,
+            ISearchService<VendorSearchDocument> vendorSearchDocument,
             ILogger<SearchController> logger)
         {
             _userSearchService = userSearchService;
             _placesSearchService = placesSearchService;
+            _explorerSearchDocument = explorerSearchDocument;
+            _vendorSearchDocument = vendorSearchDocument;
             _logger = logger;
         }
 
@@ -125,7 +133,7 @@ namespace Rahal.Api.Controllers.Search
                 };
 
                 // Perform search
-                var result = await _userSearchService.SearchAsync(
+                var result = await _placesSearchService.SearchAsync(
                     searchRequest.Query,
                     options,
                     cancellationToken);
@@ -164,6 +172,148 @@ namespace Rahal.Api.Controllers.Search
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during user search: {Message}", ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = false,
+                    message = "An error occurred while processing your search"
+                });
+            }
+        }
+
+        [HttpGet("explorers")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SearchExplorers(
+            [FromQuery] SearchRequestDto searchRequest,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Explorer search initiated: query='{Query}', page={Page}, pageSize={PageSize}",
+                searchRequest.Query, searchRequest.Page, searchRequest.PageSize);
+
+            try
+            {
+                // Create search options from request
+                var options = new SearchOptions
+                {
+                    Query = searchRequest.Query,
+                    Page = searchRequest.Page,
+                    PageSize = searchRequest.PageSize,
+                    Filter = searchRequest.Filter,
+                    SortBy = searchRequest.SortBy
+                };
+
+                // Perform search
+                var result = await _explorerSearchDocument.SearchAsync(
+                    searchRequest.Query,
+                    options,
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Explorer search completed: query='{Query}', found={HitCount} results out of {TotalHits}",
+                    searchRequest.Query, result.Hits.Count(), result.TotalHits);
+
+                // Return success response with pagination metadata
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        results = result.Hits,
+                        pagination = new
+                        {
+                            currentPage = result.Page,
+                            pageSize = result.PageSize,
+                            totalPages = result.TotalPages,
+                            totalResults = result.TotalHits,
+                            hasMore = result.HasMore
+                        }
+                    }
+                });
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogError(ex, "Explorer search was cancelled");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    success = false,
+                    message = "Search service is temporarily unavailable"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during explorer search: {Message}", ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = false,
+                    message = "An error occurred while processing your search"
+                });
+            }
+        }
+
+        [HttpGet("vendors")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SearchVendors(
+            [FromQuery] SearchRequestDto searchRequest,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Vendor search initiated: query='{Query}', page={Page}, pageSize={PageSize}",
+                searchRequest.Query, searchRequest.Page, searchRequest.PageSize);
+
+            try
+            {
+                // Create search options from request
+                var options = new SearchOptions
+                {
+                    Query = searchRequest.Query,
+                    Page = searchRequest.Page,
+                    PageSize = searchRequest.PageSize,
+                    Filter = searchRequest.Filter,
+                    SortBy = searchRequest.SortBy
+                };
+
+                // Perform search
+                var result = await _vendorSearchDocument.SearchAsync(
+                    searchRequest.Query,
+                    options,
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Vendor search completed: query='{Query}', found={HitCount} results out of {TotalHits}",
+                    searchRequest.Query, result.Hits.Count(), result.TotalHits);
+
+                // Return success response with pagination metadata
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        results = result.Hits,
+                        pagination = new
+                        {
+                            currentPage = result.Page,
+                            pageSize = result.PageSize,
+                            totalPages = result.TotalPages,
+                            totalResults = result.TotalHits,
+                            hasMore = result.HasMore
+                        }
+                    }
+                });
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogError(ex, "Vendor search was cancelled");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    success = false,
+                    message = "Search service is temporarily unavailable"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during vendor search: {Message}", ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     success = false,

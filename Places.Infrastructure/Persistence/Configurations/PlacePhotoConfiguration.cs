@@ -22,6 +22,19 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasMaxLength(500)
                 .HasComment("URL of the place photo");
 
+            // Audit Properties (inherited from BaseEntity)
+            builder.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+
+            builder.Property(e => e.UpdatedAt)
+                .ValueGeneratedOnUpdate();
+
+            builder.Property(e => e.DeletedAt);
+
+            builder.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
             // Foreign Key to Place
             builder.HasOne(e => e.Place)
                 .WithMany()

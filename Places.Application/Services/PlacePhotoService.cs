@@ -13,14 +13,14 @@ namespace Places.Application.Services
 {
     internal class PlacePhotoService : IPlacePhotoService
     {
-        private readonly IGenericRepository<PlacePhoto> _photoRepository;
-        private readonly IGenericRepository<Place> _placeRepository;
+        private readonly IPlacesRepository<PlacePhoto> _photoRepository;
+        private readonly IPlacesRepository<Place> _placeRepository;
         private readonly IFileStorageService _fileStorageService;
         private readonly ILogger<PlacePhotoService> _logger;
 
         public PlacePhotoService(
-            IGenericRepository<PlacePhoto> photoRepository,
-            IGenericRepository<Place> placeRepository,
+            IPlacesRepository<PlacePhoto> photoRepository,
+            IPlacesRepository<Place> placeRepository,
             IFileStorageService fileStorageService,
             ILogger<PlacePhotoService> logger)
         {
@@ -84,7 +84,7 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var photoUrl = await _fileStorageService.UploadAsync(photo);
+            var photoUrl = await _fileStorageService.UploadAsync(photo, cancellationToken);
             _logger.LogInformation("Photo successfully uploaded to {Url}", photoUrl);
 
             var photoInstance = new PlacePhoto
@@ -113,7 +113,7 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var deletion = _fileStorageService.DeleteAsync(url);
+            var deletion = _fileStorageService.DeleteAsync(url, cancellationToken);
 
             if (deletion is null)
                 return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);

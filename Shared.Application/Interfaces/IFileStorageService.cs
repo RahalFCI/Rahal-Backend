@@ -7,7 +7,7 @@ namespace Shared.Application.Interfaces
 {
     public interface IFileStorageService
     {
-        Task<string> UploadAsync(IFormFile file);
-        Task DeleteAsync(string fileUrl);
+        Task<string> UploadAsync(IFormFile file, CancellationToken cancellationToken);
+        Task DeleteAsync(string fileUrl, CancellationToken cancellationToken);
     }
 }

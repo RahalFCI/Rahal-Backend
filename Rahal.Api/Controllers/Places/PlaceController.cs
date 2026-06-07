@@ -60,7 +60,7 @@ namespace Rahal.Api.Controllers.Places
         }
 
         [HttpPost]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -75,7 +75,7 @@ namespace Rahal.Api.Controllers.Places
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -90,7 +90,7 @@ namespace Rahal.Api.Controllers.Places
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Vendor,Admin")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)

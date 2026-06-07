@@ -48,7 +48,7 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.HasMany(e => e.Places)
                 .WithOne(p => p.PlaceCategory)
                 .HasForeignKey(p => p.PlaceCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
             builder.HasIndex(e => e.Name)

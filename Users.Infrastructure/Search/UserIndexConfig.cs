@@ -23,6 +23,11 @@ namespace Users.Infrastructure.Search
                 await index.UpdateSearchableAttributesAsync(
                     new[] { "fullName", "username", "email" }, cancellationToken);
 
+                await index.UpdateFilterableAttributesAsync(new[]
+                    {
+                        "role",
+                    });
+
             }
             catch (Exception ex)
             {

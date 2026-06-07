@@ -23,9 +23,6 @@ namespace Rahal.Api.Controllers.Auth
             _tokenService = tokenService;
         }
 
-        /// <summary>
-        /// Request password reset and receive reset link via email
-        /// </summary>
         [HttpPost("forgot-password")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
