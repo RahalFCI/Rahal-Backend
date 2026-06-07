@@ -70,7 +70,7 @@ namespace Users.Infrastructure
             services.AddScoped<SignInManager<User>>();
 
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(UsersRepository<>));
+            services.AddScoped(typeof(IUsersRepository<>), typeof(UsersRepository<>));
 
             services.AddScoped<IDbInitializer, UsersDBInitializer>();
 
