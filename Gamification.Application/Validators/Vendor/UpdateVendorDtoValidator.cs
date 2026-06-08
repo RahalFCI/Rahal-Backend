@@ -14,9 +14,6 @@ namespace Gamification.Application.Validators.Vendor
             RuleFor(x => x.UserId)
                 .NotEmpty().WithMessage("User ID is required");
 
-            RuleFor(x => x.ProfilePictureUrl)
-                .MaximumLength(00).WithMessage("Profile picture URL must not exceed 100 characters");
-
             RuleFor(x => x.DisplayName)
                 .MaximumLength(100).WithMessage("Display name must not exceed 100 characters");
 

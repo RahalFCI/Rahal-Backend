@@ -206,16 +206,10 @@ namespace Places.Application.Services
             }
 
             var pagedPlaces = await _placeRepository.GetTable()
+                .Where(p => GeoLocationHelper.IsPointWithinRadius(latitude, longitude, p.Latitude, p.Longitude, radiusInMeters))
+                .OrderBy(p => GeoLocationHelper.CalculateDistanceInMeters(latitude, longitude, p.Latitude, p.Longitude))
                 .Select(p => PlaceMapper.ToGetDto(p))
                 .ToPagedResultAsync(request, cancellationToken);
-
-            var nearbyPlaces = GeoLocationHelper.FilterByRadius(
-                pagedPlaces.Items!,
-                latitude,
-                longitude,
-                radiusInMeters,
-                p => p.Latitude,
-                p => p.Longitude).ToList();
 
             _logger.LogInformation("Found {PlaceCount} places within {Radius} meters out of {TotalCount}", pagedPlaces.Items.Count(), radiusInMeters, pagedPlaces.TotalCount);
 

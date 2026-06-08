@@ -62,7 +62,7 @@ namespace Rahal.Api.Controllers.Places
             return Ok(result);
         }
 
-        [HttpGet("batch")]
+        [HttpPost("batch")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPhotosByPlacesAsync([FromBody] IEnumerable<Guid> placeIds, CancellationToken cancellationToken)

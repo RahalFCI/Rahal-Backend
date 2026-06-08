@@ -1,5 +1,6 @@
 ﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
 using Gamification.Application.DTOs.Explorer;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
@@ -10,8 +11,9 @@ using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
-using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
 {
@@ -32,14 +34,21 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
             {
                 _logger.LogError("Updating explorer profile for user {UserId}", request.UpdateExplorerDto.UserId);
 
-                var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.UpdateExplorerDto.UserId).FirstOrDefaultAsync(cancellationToken);
-                if (existingExplorer is not null)
+                var explorerProfile = await _repository.GetTable().Where(x => x.UserId == request.UpdateExplorerDto.UserId).FirstOrDefaultAsync(cancellationToken);
+                if (explorerProfile is null)
                 {
                     _logger.LogError("Explorer profile already exists for user {UserId}", request.UpdateExplorerDto.UserId);
-                    return ApiResponse<GetExplorerDto>.Failure(ErrorCode.AlreadyExists);
+                    return ApiResponse<GetExplorerDto>.Failure(ErrorCode.NotFound);
                 }
 
-                var explorerProfile = ExplorerProfileMapper.ToEntity(request.UpdateExplorerDto);
+                explorerProfile.DisplayName = request.UpdateExplorerDto.DisplayName;
+                explorerProfile.BirthDate = request.UpdateExplorerDto.BirthDate;
+                explorerProfile.Gender = request.UpdateExplorerDto.Gender;
+                explorerProfile.Bio = request.UpdateExplorerDto.Bio;
+                explorerProfile.CountryCode = request.UpdateExplorerDto.CountryCode;
+                explorerProfile.IsPublic = request.UpdateExplorerDto.IsPublic;
+                explorerProfile.IsPremium = request.UpdateExplorerDto.IsPremium;
+                explorerProfile.Level = request.UpdateExplorerDto.Level;
 
                 _repository.Update(explorerProfile);
                 await _repository.SaveChangesAsync();

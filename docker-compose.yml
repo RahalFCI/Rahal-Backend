@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Rahal.Api/Dockerfile
+    volumes:
+     - ./uploads:/app/wwwroot/uploads
     environment:
      - DATABASE_HOST=postgres-container
      - DATABASE_PORT=5432
