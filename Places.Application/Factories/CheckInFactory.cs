@@ -16,6 +16,8 @@ namespace Places.Application.Factories
             {
                 ExplorerId = explorerId,
                 PlaceId = placeId,
+                Latitude = latitude,
+                Longitude = longitude,
                 ValidationStatus = CheckInValidationStatus.Verified
             };
             checkIn.RiskScore = riskScore;
@@ -33,6 +35,8 @@ namespace Places.Application.Factories
             {
                 ExplorerId = explorerId,
                 PlaceId = placeId,
+                Latitude = latitude,
+                Longitude = longitude,
                 ValidationStatus = CheckInValidationStatus.Failed
             };
             checkIn.RiskScore = riskScore;

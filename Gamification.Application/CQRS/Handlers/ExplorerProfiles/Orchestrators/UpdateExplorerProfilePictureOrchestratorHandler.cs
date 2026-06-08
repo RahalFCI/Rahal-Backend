@@ -36,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Orchestrators
             {
                 _logger.LogError("Started profile picture update orchestration for user {UserId}", request.UserId);
 
-                var user = await _repository.GetTable().Where(u => u.Id == request.UserId).FirstOrDefaultAsync(cancellationToken);
+                var user = await _repository.GetTable().Where(u => u.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
 
                 if (user is null)
                 {

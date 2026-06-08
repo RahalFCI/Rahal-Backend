@@ -1,19 +1,14 @@
-﻿using Gamification.Application.CQRS.Commands.ExplorerProfiles;
-using Gamification.Application.CQRS.Commands.VendorProfiles;
-using Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands;
+﻿using Gamification.Application.CQRS.Commands.VendorProfiles;
 using Gamification.Application.DTOs.Vendor;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
-using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Gamification.Application.Interfaces;
+using System.Net;
 
 namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
 {
@@ -33,14 +28,21 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
             try
             {
                 _logger.LogError("Updating vendor profile for user {UserId}", request.UpdateVendorDto.UserId);
-                var existingVendor = await _repository.GetTable().Where(x => x.UserId == request.UpdateVendorDto.UserId).FirstOrDefaultAsync(cancellationToken);
-                if (existingVendor is not null)
+                var vendorProfile = await _repository.GetTable().Where(x => x.UserId == request.UpdateVendorDto.UserId).FirstOrDefaultAsync(cancellationToken);
+                if (vendorProfile is null)
                 {
                     _logger.LogError("Vendor profile already exists for user {UserId}", request.UpdateVendorDto.UserId);
-                    return ApiResponse<GetVendorDto>.Failure(ErrorCode.AlreadyExists);
+                    return ApiResponse<GetVendorDto>.Failure(ErrorCode.NotFound);
                 }
 
-                var vendorProfile = VendorProfileMapper.ToEntity(request.UpdateVendorDto);
+                vendorProfile.DisplayName = request.UpdateVendorDto.DisplayName;
+                vendorProfile.Address = request.UpdateVendorDto.Address;
+                vendorProfile.AddressUrl = request.UpdateVendorDto.AddressUrl;
+                vendorProfile.WorkingHours = request.UpdateVendorDto.WorkingHours;
+                vendorProfile.CountryCode = request.UpdateVendorDto.CountryCode;
+                vendorProfile.CategoryId = request.UpdateVendorDto.CategoryId;
+
+
                 _repository.Update(vendorProfile);
                 await _repository.SaveChangesAsync();
 

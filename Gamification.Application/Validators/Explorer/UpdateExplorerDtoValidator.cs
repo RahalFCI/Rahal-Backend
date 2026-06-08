@@ -17,9 +17,6 @@ namespace Gamification.Application.Validators.Explorer
             RuleFor(x => x.DisplayName)
                 .MaximumLength(100).WithMessage("Display name must not exceed 100 characters");
 
-            RuleFor(x => x.ProfilePictureUrl)
-                .MaximumLength(100).WithMessage("Profile picture URL must not exceed 100 characters");
-
             RuleFor(x => x.Bio)
                 .MaximumLength(500).WithMessage("Bio must not exceed 500 characters");
 
@@ -43,12 +40,10 @@ namespace Gamification.Application.Validators.Explorer
                 .NotEmpty().WithMessage("Level is required");
 
             RuleFor(x => x.CumlativeXp)
-                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0")
-                .NotEmpty().WithMessage("Level is required");
+                .GreaterThanOrEqualTo(0).WithMessage("Cumulative Xp must be greater than or equal to 0");
 
             RuleFor(x => x.AvailableXp)
-                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0")
-                .NotEmpty().WithMessage("Level is required");
+                .GreaterThanOrEqualTo(0).WithMessage("Available Xp must be greater than or equal to 0");
 
             RuleFor(x => x.BirthDate)
                 .Must(date => date < DateOnly.FromDateTime(DateTime.Today))

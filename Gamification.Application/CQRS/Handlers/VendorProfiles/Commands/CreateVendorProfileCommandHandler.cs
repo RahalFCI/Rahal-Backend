@@ -36,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
                 var vendorProfile = VendorProfileMapper.ToEntity(request.VendorProfileDto);
 
                 var existingVendor = await _repository.GetTable().Where(x => x.UserId == request.VendorProfileDto.UserId).AnyAsync(cancellationToken);
-                if (!existingVendor)
+                if (existingVendor)
                 {
                     _logger.LogError("Vendor profile already exists for user {UserId}", request.VendorProfileDto.UserId);
                     return ApiResponse<GetVendorDto>.Failure(ErrorCode.AlreadyExists);
