@@ -22,6 +22,8 @@ services:
      - RabbitMQ__Username=guest
      - RabbitMQ__Password=guest
 
+    volumes:
+     - ./uploads:/app/wwwroot/uploads
     ports:
      - "7145:8080"
     networks:

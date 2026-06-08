@@ -70,5 +70,14 @@ namespace Rahal.Api.Controllers.Places
             var result = await _photoService.GetPhotosByPlaceIdsAsync(placeIds, cancellationToken);
             return Ok(result);
         }
+
+        [HttpPost("batch")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPhotosByPlacesPostAsync([FromBody] IEnumerable<Guid> placeIds, CancellationToken cancellationToken)
+        {
+            var result = await _photoService.GetPhotosByPlaceIdsAsync(placeIds, cancellationToken);
+            return Ok(result);
+        }
     }
 }

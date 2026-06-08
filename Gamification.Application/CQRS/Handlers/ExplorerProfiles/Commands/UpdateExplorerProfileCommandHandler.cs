@@ -33,20 +33,28 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 _logger.LogError("Updating explorer profile for user {UserId}", request.UpdateExplorerDto.UserId);
 
                 var existingExplorer = await _repository.GetTable().Where(x => x.UserId == request.UpdateExplorerDto.UserId).FirstOrDefaultAsync(cancellationToken);
-                if (existingExplorer is not null)
+                if (existingExplorer is null)
                 {
-                    _logger.LogError("Explorer profile already exists for user {UserId}", request.UpdateExplorerDto.UserId);
-                    return ApiResponse<GetExplorerDto>.Failure(ErrorCode.AlreadyExists);
+                    _logger.LogError("Explorer profile not found for user {UserId}", request.UpdateExplorerDto.UserId);
+                    return ApiResponse<GetExplorerDto>.Failure(ErrorCode.NotFound);
                 }
 
-                var explorerProfile = ExplorerProfileMapper.ToEntity(request.UpdateExplorerDto);
+                existingExplorer.DisplayName = request.UpdateExplorerDto.DisplayName;
+                existingExplorer.ProfilePictureURL = request.UpdateExplorerDto.ProfilePictureUrl;
+                existingExplorer.BirthDate = request.UpdateExplorerDto.BirthDate;
+                existingExplorer.Gender = request.UpdateExplorerDto.Gender;
+                existingExplorer.Bio = request.UpdateExplorerDto.Bio;
+                existingExplorer.CountryCode = request.UpdateExplorerDto.CountryCode;
+                existingExplorer.IsPublic = request.UpdateExplorerDto.IsPublic;
+                existingExplorer.IsPremium = request.UpdateExplorerDto.IsPremium;
+                existingExplorer.Level = request.UpdateExplorerDto.Level;
 
-                _repository.Update(explorerProfile);
+                _repository.Update(existingExplorer);
                 await _repository.SaveChangesAsync();
 
                 _logger.LogError("Updated explorer profile for user {UserId}", request.UpdateExplorerDto.UserId);
 
-                return ApiResponse<GetExplorerDto>.Success(ExplorerProfileMapper.ToGetDto(explorerProfile));
+                return ApiResponse<GetExplorerDto>.Success(ExplorerProfileMapper.ToGetDto(existingExplorer));
             }
             catch (Exception ex)
             {

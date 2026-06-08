@@ -194,7 +194,7 @@ namespace Places.Application.Services
             return ApiResponse<string>.Success("Place permanently deleted");
         }
 
-        public async Task<ApiResponse<PagedResult<GetPlaceDto>>> SearchPlacesByLocationAsync(double latitude, double longitude, int radiusInMeters, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetPlaceDto>>> SearchPlacesByLocationAsync(double latitude, double longitude, int radiusInMeters, OffsetPaginationRequest request, Guid? categoryId = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Searching places near latitude {Latitude}, longitude {Longitude} with radius {Radius} meters - page {Page}, pageSize {PageSize}", 
                 latitude, longitude, radiusInMeters, request.Page, request.PageSize);
@@ -205,21 +205,66 @@ namespace Places.Application.Services
                 return ApiResponse<PagedResult<GetPlaceDto>>.Failure(ErrorCode.ValidationError);
             }
 
-            var pagedPlaces = await _placeRepository.GetTable()
-                .Select(p => PlaceMapper.ToGetDto(p))
-                .ToPagedResultAsync(request, cancellationToken);
+            if (radiusInMeters <= 0)
+            {
+                _logger.LogWarning("Invalid search radius: {Radius}", radiusInMeters);
+                return ApiResponse<PagedResult<GetPlaceDto>>.Failure(ErrorCode.ValidationError);
+            }
+
+            var latitudeDelta = radiusInMeters / 111_320d;
+            var longitudeDelta = radiusInMeters / (111_320d * Math.Cos(latitude * Math.PI / 180d));
+            if (double.IsNaN(longitudeDelta) || double.IsInfinity(longitudeDelta))
+                longitudeDelta = 180d;
+
+            var minLatitude = Math.Max(-90d, latitude - latitudeDelta);
+            var maxLatitude = Math.Min(90d, latitude + latitudeDelta);
+            var minLongitude = Math.Max(-180d, longitude - longitudeDelta);
+            var maxLongitude = Math.Min(180d, longitude + longitudeDelta);
+
+            var query = _placeRepository.GetTable()
+                .AsNoTracking()
+                .Include(p => p.PlaceCategory)
+                .Where(p =>
+                    p.Latitude >= minLatitude &&
+                    p.Latitude <= maxLatitude &&
+                    p.Longitude >= minLongitude &&
+                    p.Longitude <= maxLongitude);
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.PlaceCategoryId == categoryId.Value);
+            }
+
+            var candidates = await query.ToListAsync(cancellationToken);
 
             var nearbyPlaces = GeoLocationHelper.FilterByRadius(
-                pagedPlaces.Items!,
+                candidates,
                 latitude,
                 longitude,
                 radiusInMeters,
                 p => p.Latitude,
-                p => p.Longitude).ToList();
+                p => p.Longitude)
+                .OrderBy(p => GeoLocationHelper.CalculateDistanceInMeters(latitude, longitude, p.Latitude, p.Longitude))
+                .Select(PlaceMapper.ToGetDto)
+                .ToList();
 
-            _logger.LogInformation("Found {PlaceCount} places within {Radius} meters out of {TotalCount}", pagedPlaces.Items.Count(), radiusInMeters, pagedPlaces.TotalCount);
+            var totalCount = nearbyPlaces.Count;
+            var items = nearbyPlaces
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToList();
 
-            return ApiResponse<PagedResult<GetPlaceDto>>.Success(pagedPlaces);
+            var result = new PagedResult<GetPlaceDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = request.Page,
+                PageSize = request.PageSize
+            };
+
+            _logger.LogInformation("Found {PlaceCount} places within {Radius} meters out of {CandidateCount}", totalCount, radiusInMeters, candidates.Count);
+
+            return ApiResponse<PagedResult<GetPlaceDto>>.Success(result);
         }
     }
 }

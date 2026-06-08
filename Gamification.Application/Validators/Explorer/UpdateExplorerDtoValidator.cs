@@ -39,16 +39,13 @@ namespace Gamification.Application.Validators.Explorer
                 .IsInEnum().WithMessage("Gender must be a valid enum value");
 
             RuleFor(x => x.Level)
-                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0")
-                .NotEmpty().WithMessage("Level is required");
+                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0");
 
             RuleFor(x => x.CumlativeXp)
-                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0")
-                .NotEmpty().WithMessage("Level is required");
+                .GreaterThanOrEqualTo(0).WithMessage("Cumulative XP must be greater than or equal to 0");
 
             RuleFor(x => x.AvailableXp)
-                .GreaterThanOrEqualTo(0).WithMessage("Level must be greater than or equal to 0")
-                .NotEmpty().WithMessage("Level is required");
+                .GreaterThanOrEqualTo(0).WithMessage("Available XP must be greater than or equal to 0");
 
             RuleFor(x => x.BirthDate)
                 .Must(date => date < DateOnly.FromDateTime(DateTime.Today))

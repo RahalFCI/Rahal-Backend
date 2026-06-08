@@ -26,6 +26,9 @@ RUN dotnet publish "./Rahal.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
+USER root
+RUN mkdir -p /app/wwwroot/uploads && chown -R $APP_UID /app/wwwroot/uploads
+USER $APP_UID
 COPY --from=publish /app/publish .
 # These are defaults - will be overridden by docker-compose.yml
 ENV ASPNETCORE_ENVIRONMENT=Development

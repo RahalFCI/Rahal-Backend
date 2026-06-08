@@ -36,9 +36,12 @@ namespace Rahal.Api.Controllers.Users
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync([FromBody] BaseRegisterDto registerRequestDto, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> RegisterAsync(
+            [FromForm] RegisterExplorerDto registerRequestDto,
+            [FromForm] IFormFile? profilePicture = null,
+            CancellationToken cancellationToken = default)
         {
-            var result = await _authService.RegisterAsync(registerRequestDto, registerRequestDto.Password, cancellationToken);
+            var result = await _authService.RegisterAsync(registerRequestDto, profilePicture, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

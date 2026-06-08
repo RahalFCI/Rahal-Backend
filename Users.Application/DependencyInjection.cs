@@ -72,6 +72,7 @@ namespace Users.Application
             services.AddScoped<IValidator<GoogleSignInRequest>, GoogleSignInRequestValidator>();
             services.AddScoped<IValidator<VerifyOtpRequest>, VerifyOtpValidator>();
             services.AddScoped<IValidator<ResendOtpRequest>, ResendOtpValidator>();
+            services.AddScoped<IValidator<RegisterExplorerDto>, RegisterExplorerDtoValidator>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();

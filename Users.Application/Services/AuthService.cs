@@ -1,4 +1,6 @@
 using MediatR;
+using Gamification.Application.CQRS.Orchestrators.ExplorerProfiles;
+using Gamification.Application.DTOs.Explorer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -136,9 +138,9 @@ namespace Users.Application.Services
             _logger.LogInformation("User {UserId} successfully logged out", userId);
         }
 
-        public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> RegisterAsync(RegisterExplorerDto userDto, IFormFile? profilePicture = null, CancellationToken cancellationToken = default)
         {
-            var user = MappingExtension.CreateUser(userDto);
+            var user = MappingExtension.CreateUser(userDto.ToBaseRegisterDto());
 
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
 
@@ -152,7 +154,7 @@ namespace Users.Application.Services
             try
             {
                 
-                var result = await _userManager.CreateAsync(user, Password);
+                var result = await _userManager.CreateAsync(user, userDto.Password);
 
                 if (!result.Succeeded)
                 {
@@ -171,6 +173,31 @@ namespace Users.Application.Services
 
                     await _userManager.DeleteAsync(user);
                     return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                var profileResult = await _mediator.Send(
+                    new CreateExplorerProfileWithUserStatsOrchestrator(
+                        new AddExplorerDto(
+                            userDto.Name,
+                            user.Id,
+                            userDto.BirthDate,
+                            userDto.Gender,
+                            userDto.Bio,
+                            userDto.CountryCode,
+                            userDto.IsPublic,
+                            false),
+                        profilePicture),
+                    cancellationToken);
+
+                if (!profileResult.IsSuccess)
+                {
+                    _logger.LogError(
+                        "Registration failed: Could not create explorer profile for user {UserId}. ErrorCode: {ErrorCode}",
+                        user.Id,
+                        profileResult.errorCode);
+
+                    await _userManager.DeleteAsync(user);
+                    return ApiResponse<string>.Failure(profileResult.errorCode);
                 }
 
                 // Send verification OTP
