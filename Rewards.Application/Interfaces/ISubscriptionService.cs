@@ -8,7 +8,7 @@ namespace Rewards.Application.Interfaces
     {
         Task<ApiResponse<GetSubscriptionDto>> PurchaseAsync(Guid explorerId, PurchaseSubscriptionDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<GetSubscriptionDto>> GetActiveAsync(Guid explorerId, CancellationToken cancellationToken = default);
-        Task<ApiResponse<string>> CancelAsync(Guid explorerId, Guid subscriptionId, CancellationToken cancellationToken = default);
-        Task<ApiResponse<PagedResult<GetSubscriptionDto>>> GetByExplorerAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> CancelAsync(Guid explorerId, CancellationToken cancellationToken = default);
+        Task<ApiResponse<GetSubscriptionDto>> GetByExplorerAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default);
     }
 }

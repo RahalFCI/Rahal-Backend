@@ -11,6 +11,7 @@ namespace Rewards.Application.Interfaces
         Task<ApiResponse<GetCouponDto>> UpdateAsync(Guid id, UpdateCouponDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<string>> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<GetCouponDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<PagedResult<GetCouponDto>>> GetByVendorIdAsync(Guid vendorId, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResult<GetCouponDto>>> GetAllAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default);
         Task<ApiResponse<SearchResult<GetCouponDto>>> SearchAsync(CouponSearchRequestDto request, CancellationToken cancellationToken = default);
     }

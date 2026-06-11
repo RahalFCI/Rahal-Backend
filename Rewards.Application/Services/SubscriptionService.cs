@@ -118,10 +118,10 @@ namespace Rewards.Application.Services
                 : ApiResponse<GetSubscriptionDto>.Success(RewardsMapper.ToDto(subscription));
         }
 
-        public async Task<ApiResponse<string>> CancelAsync(Guid explorerId, Guid subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<string>> CancelAsync(Guid explorerId, CancellationToken cancellationToken = default)
         {
             var subscription = await _subscriptionRepository.GetTable()
-                .FirstOrDefaultAsync(s => s.Id == subscriptionId && s.ExplorerId == explorerId, cancellationToken);
+                .FirstOrDefaultAsync(s => s.ExplorerId == explorerId && s.Status == SubscriptionStatus.Active, cancellationToken);
             if (subscription is null)
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
 
@@ -133,30 +133,23 @@ namespace Rewards.Application.Services
             subscription.UpdatedAt = DateTime.UtcNow;
             await _subscriptionRepository.SaveChangesAsync(cancellationToken);
 
-            var hasOtherActive = await _subscriptionRepository.GetTable()
-                .AnyAsync(s => s.ExplorerId == explorerId
-                    && s.Id != subscriptionId
-                    && s.Status == SubscriptionStatus.Active
-                    && s.ExpiresAt > DateTime.UtcNow,
-                    cancellationToken);
-
-            if (!hasOtherActive)
-                await _gamificationService.SetPremiumAsync(subscription.Id, explorerId, false, null, cancellationToken);
-
             return ApiResponse<string>.Success("Subscription cancelled successfully");
         }
 
-        public async Task<ApiResponse<PagedResult<GetSubscriptionDto>>> GetByExplorerAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<GetSubscriptionDto>> GetByExplorerAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
-            var query = _subscriptionRepository.GetTable()
+            var subscription = await _subscriptionRepository.GetTable()
                 .AsNoTracking()
                 .Include(s => s.PlanTier)
                 .Where(s => s.ExplorerId == explorerId)
                 .OrderByDescending(s => s.CreatedAt)
-                .Select(s => RewardsMapper.ToDto(s));
+                .Select(s => RewardsMapper.ToDto(s))
+                .FirstOrDefaultAsync(cancellationToken);
 
-            var result = await PaginationExtensions.ToPagedResultAsync(query, request, cancellationToken);
-            return ApiResponse<PagedResult<GetSubscriptionDto>>.Success(result);
+            if (subscription is null)
+                return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.NotFound);
+
+            return ApiResponse<GetSubscriptionDto>.Success(subscription);
         }
     }
 }

@@ -30,6 +30,12 @@ namespace Rewards.Application.Services
 
         public async Task<ApiResponse<GetCouponDto>> CreateAsync(CreateCouponDto dto, CancellationToken cancellationToken = default)
         {
+            var exisitngCopoun = await _repository.GetTable()
+                .AsNoTracking()
+                .AnyAsync(c => c.Title == dto.Title && c.VendorId == dto.VendorId, cancellationToken);
+            if (exisitngCopoun)
+                return ApiResponse<GetCouponDto>.Failure(ErrorCode.AlreadyExists);
+
             var coupon = RewardsMapper.ToEntity(dto);
             _repository.Add(coupon);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -44,6 +50,9 @@ namespace Rewards.Application.Services
             var coupon = await _repository.GetByIdAsync(id, cancellationToken);
             if (coupon is null)
                 return ApiResponse<GetCouponDto>.Failure(ErrorCode.NotFound);
+
+            if(coupon.Title != dto.Title)
+                return ApiResponse<GetCouponDto>.Failure(ErrorCode.BusinessRuleViolation);
 
             if (dto.MaxClaims < coupon.CurrentClaims)
                 return ApiResponse<GetCouponDto>.Failure(ErrorCode.BusinessRuleViolation);
@@ -78,6 +87,18 @@ namespace Rewards.Application.Services
             return coupon is null
                 ? ApiResponse<GetCouponDto>.Failure(ErrorCode.NotFound)
                 : ApiResponse<GetCouponDto>.Success(RewardsMapper.ToDto(coupon));
+        }
+
+        public async Task<ApiResponse<PagedResult<GetCouponDto>>> GetByVendorIdAsync(Guid vendorId, CancellationToken cancellationToken = default)
+        {
+            var query = _repository.GetTable()
+                .AsNoTracking()
+                .Where(c => c.VendorId == vendorId)
+                .OrderBy(c => c.ExpiresAt)
+                .Select(c => RewardsMapper.ToDto(c));
+
+            var result = await PaginationExtensions.ToPagedResultAsync(query, new OffsetPaginationRequest(), cancellationToken);
+            return ApiResponse<PagedResult<GetCouponDto>>.Success(result);
         }
 
         public async Task<ApiResponse<PagedResult<GetCouponDto>>> GetAllAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default)

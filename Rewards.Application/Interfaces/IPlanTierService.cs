@@ -10,5 +10,6 @@ namespace Rewards.Application.Interfaces
         Task<ApiResponse<GetPlanTierDto>> UpdateAsync(Guid id, UpdatePlanTierDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<GetPlanTierDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResult<GetPlanTierDto>>> GetAllAsync(OffsetPaginationRequest request, CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

@@ -27,6 +27,8 @@ namespace Rewards.Application.Services
         public async Task<ApiResponse<GetTravelPlanDto>> CreateAsync(Guid explorerId, CreateTravelPlanDto dto, CancellationToken cancellationToken = default)
         {
             // TODO: integrate RAG system. For now the generated JSON is provided by the caller.
+            string testPlan = "{}";
+
             var activeSubscription = await _subscriptionRepository.GetTable()
                 .Include(s => s.PlanTier)
                 .Where(s => s.ExplorerId == explorerId
@@ -58,7 +60,7 @@ namespace Rewards.Application.Services
                 BudgetLimit = dto.BudgetLimit,
                 StayDurationDays = dto.StayDurationDays,
                 Prompt = dto.Prompt,
-                GeneratedPlanJson = dto.GeneratedPlanJson
+                GeneratedPlanJson = testPlan
             };
 
             _travelPlanRepository.Add(travelPlan);

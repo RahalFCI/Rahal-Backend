@@ -19,6 +19,19 @@ namespace Rewards.Application.Services
             _repository = repository;
         }
 
+        public async Task<ApiResponse<string>> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var planTier = await _repository.GetByIdAsync(id, cancellationToken);
+            if (planTier is null)
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+
+            planTier.IsDeleted = true;
+            planTier.DeletedAt = DateTime.UtcNow;
+            await _repository.SaveChangesAsync(cancellationToken);
+            
+            return ApiResponse<string>.Success("Plan tier deleted successfully.");
+        }
+
         public async Task<ApiResponse<GetPlanTierDto>> CreateAsync(CreatePlanTierDto dto, CancellationToken cancellationToken = default)
         {
             var exists = await _repository.GetTable().AnyAsync(p => p.Name == dto.Name, cancellationToken);
