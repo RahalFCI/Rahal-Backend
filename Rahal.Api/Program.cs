@@ -19,6 +19,7 @@ using Rahal.Api.Filters;
 using Rahal.Api.Middlewares;
 using Serilog;
 using Shared.Application.Services;
+using Shared.Application.Events.Payments;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
 using StackExchange.Redis;
@@ -74,6 +75,11 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<DeleteProfileEventConsumer>();
     x.AddConsumer<RestoreProfileEventConsumer>();
     x.AddConsumer<CreateCheckInEventConsumer>();
+    x.AddConsumer<SpendXpRequestConsumer>();
+    x.AddConsumer<SetExplorerPremiumRequestConsumer>();
+    x.AddRequestClient<SpendXpRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<SetExplorerPremiumRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<ProcessPaymentRequest>(RequestTimeout.After(s: 30));
 
     x.UsingRabbitMq((context, cfg) =>
     {

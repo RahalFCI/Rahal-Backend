@@ -39,8 +39,6 @@ namespace Gamification.Application.EventConsumers
             {
                 await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-                var xpAmount = 10;
-
                 var xpTransactionResult = await _mediator.Send(
                     new CreateXpTransactionCommand(new CreateXpTransactionDto
                     {
@@ -62,7 +60,7 @@ namespace Gamification.Application.EventConsumers
                     explorerId, checkInId);
 
                 var checkInStatsResult = await _mediator.Send(
-                    new UpdateCheckInStatsOrchestrator(explorerId, checkInId, xpAmount),
+                    new UpdateCheckInStatsOrchestrator(explorerId, checkInId, xpTransactionResult.Data.Amount),
                     cancellationToken);
 
                 if (!checkInStatsResult.IsSuccess)

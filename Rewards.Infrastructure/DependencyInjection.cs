@@ -1,8 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rewards.Application.Interfaces;
 using Rewards.Infrastructure.Persistence;
 using Rewards.Infrastructure.Repositories;
+using Rewards.Infrastructure.Search;
+using Rewards.Infrastructure.Services;
 using Shared.Application.Interfaces;
 
 namespace Rewards.Infrastructure
@@ -25,7 +28,10 @@ namespace Rewards.Infrastructure
                 )
             );
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(RewardsRepository<>));
+            services.AddScoped(typeof(IRewardsRepository<>), typeof(RewardsRepository<>));
+            services.AddScoped<ISearchIndexInitializer, CouponIndexConfig>();
+            services.AddScoped<IRewardsGamificationService, RewardsGamificationService>();
+            services.AddScoped<ICouponSearchService, CouponSearchService>();
 
             return services;
         }

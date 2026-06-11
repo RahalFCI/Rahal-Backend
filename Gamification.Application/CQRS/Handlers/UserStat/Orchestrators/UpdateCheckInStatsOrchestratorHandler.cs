@@ -65,23 +65,6 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
                 _logger.LogInformation("User stats updated for explorer {ExplorerId}", request.ExplorerId);
 
 
-                //Create Xp Transaction
-                var xpTransactionResult = await _mediator.Send(new CreateXpTransactionCommand(new CreateXpTransactionDto()
-                {
-                        ExplorerId = request.ExplorerId,
-                        ReferenceId = request.CheckInId,
-                        SourceType = XpSourceType.CheckIn.ToString()
-                }), cancellationToken);
-
-                if (!xpTransactionResult.IsSuccess)
-                {
-                    _logger.LogError("Failed to create XP transaction for explorer {ExplorerId}. Error: {ErrorCode}", request.ExplorerId, xpTransactionResult.errorCode);
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    return ApiResponse<string>.Failure(xpTransactionResult.errorCode);
-                }
-
-
-
                 //Update Streak
                 var streakResult = await _mediator.Send(new UpdateStreakCommand(request.ExplorerId, userStats), cancellationToken);
                 if (!streakResult.IsSuccess)

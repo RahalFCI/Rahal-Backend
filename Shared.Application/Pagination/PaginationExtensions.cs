@@ -15,19 +15,21 @@ namespace Shared.Infrastructure.Pagination
             OffsetPaginationRequest request,
             CancellationToken ct = default)
         {
-            var totalCount = await query.CountAsync(ct);
 
+            var page = request.Page < 1 ? 1 : request.Page;
+            var pageSize = request.PageSize < 1 ? 10 : request.PageSize;
+            var total = await query.CountAsync(ct);
             var items = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(ct);
 
             return new PagedResult<T>
             {
                 Items = items,
-                TotalCount = totalCount,
-                Page = request.Page,
-                PageSize = request.PageSize
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
             };
         }
 
