@@ -116,6 +116,13 @@ namespace Places.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
+            if (place.PlaceCategoryId == Guid.Parse("c6666666-6666-6666-6666-666666666666"))
+            {
+                _logger.LogWarning("Check-in attempt to a restricted place category for explorer {ExplorerId} at place {PlaceId}", 
+                    explorerId, request.PlaceId);
+                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+            }
+
             var validationResult = await _validator.ValidateAsync(
                 request, explorerId, place, ct);
 

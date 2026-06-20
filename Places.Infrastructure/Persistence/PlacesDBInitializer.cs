@@ -43,7 +43,8 @@ namespace Places.Infrastructure.Persistence
                 new PlaceCategory { Id = Guid.Parse("c2222222-2222-2222-2222-222222222222"), Name = "Zoos and Aquariums" },
                 new PlaceCategory { Id = Guid.Parse("c3333333-3333-3333-3333-333333333333"), Name = "Amusement Parks" },
                 new PlaceCategory { Id = Guid.Parse("c4444444-4444-4444-4444-444444444444"), Name = "Local Experiences" },
-                new PlaceCategory { Id = Guid.Parse("c5555555-5555-5555-5555-555555555555"), Name = "Viewpoints" }
+                new PlaceCategory { Id = Guid.Parse("c5555555-5555-5555-5555-555555555555"), Name = "Viewpoints" },
+                new PlaceCategory { Id = Guid.Parse("c6666666-6666-6666-6666-666666666666"), Name = "Vendor" }
 
             );
 
