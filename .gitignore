@@ -363,3 +363,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# personal compose for dev
+docker-compose.dev.yml
+
+# personal local run script
+run-local.sh
+
+# personal VS Code debug config
+.vscode/launch.json
