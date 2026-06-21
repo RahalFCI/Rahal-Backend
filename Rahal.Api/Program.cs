@@ -118,9 +118,6 @@ builder.Services.AddControllers(
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); //Automatically serialize enums as strings in JSON responses
     });
 
-builder.Services.AddFluentValidationAutoValidation();
-
-
 //Register ValidationActionFilter as a scoped service to enable dependency injection in the filter
 builder.Services.AddScoped<ValidationActionFilter>();
 
