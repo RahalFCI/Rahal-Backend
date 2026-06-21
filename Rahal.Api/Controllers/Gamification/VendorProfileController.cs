@@ -50,6 +50,8 @@ namespace Rahal.Api.Controllers.Gamification
             return result.IsSuccess ? Ok(result) : NotFound(result);
         }
 
+
+
         [HttpPut("{vendorId}")]
         [Authorize(Roles = "Vendor")]
         [ProducesResponseType(StatusCodes.Status200OK)]
