@@ -12,6 +12,8 @@ namespace Gamification.Domain.Enums
         ChallengeRevoked,
         BadgeRevoked,
         CouponPurchase,
-        SubscriptionPurchase
+        SubscriptionPurchase,
+        Payment,
+
     }
 }

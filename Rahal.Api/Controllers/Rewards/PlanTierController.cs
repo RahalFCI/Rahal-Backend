@@ -48,5 +48,21 @@ namespace Rahal.Api.Controllers.Rewards
             var result = await _planTierService.GetAllAsync(new OffsetPaginationRequest { Page = page, PageSize = pageSize }, cancellationToken);
             return Ok(result);
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _planTierService.DeleteAsync(id, cancellationToken);
+            return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
+        }
+
+        [HttpDelete("permanent/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PermanentDeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _planTierService.PermanentDeleteAsync(id, cancellationToken);
+            return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
+        }
     }
 }

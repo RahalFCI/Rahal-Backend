@@ -21,7 +21,7 @@ namespace Gamification.Application.EventConsumers
         {
             var request = context.Message;
             var result = await _mediator.Send(
-                new SetExplorerPremiumCommand(request.ExplorerId, request.IsPremium, request.PlanTierId),
+                new SetExplorerPremiumCommand(request.ExplorerId, request.IsPremium),
                 context.CancellationToken);
 
             if (!result.IsSuccess)

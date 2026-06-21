@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Rewards.Application.DTOs.Subscriptions;
 using Rewards.Application.Interfaces;
 using Rewards.Application.Mappers;
@@ -16,24 +17,32 @@ namespace Rewards.Application.Services
         private readonly IRewardsRepository<Subscription> _subscriptionRepository;
         private readonly IRewardsRepository<PlanTier> _planTierRepository;
         private readonly IRewardsGamificationService _gamificationService;
+        private readonly ILogger<SubscriptionService> _logger;
 
         public SubscriptionService(
             IRewardsRepository<Subscription> subscriptionRepository,
             IRewardsRepository<PlanTier> planTierRepository,
-            IRewardsGamificationService gamificationService)
+            IRewardsGamificationService gamificationService,
+            ILogger<SubscriptionService> logger)
         {
             _subscriptionRepository = subscriptionRepository;
             _planTierRepository = planTierRepository;
             _gamificationService = gamificationService;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<GetSubscriptionDto>> PurchaseAsync(Guid explorerId, PurchaseSubscriptionDto dto, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Explorer {ExplorerId} is purchasing subscription plan tier {PlanTierId} using {PaymentMethod}", explorerId, dto.PlanTierId, dto.PaymentMethod);
+
             //Get Plan tier and validate
             var planTier = await _planTierRepository.GetTable()
                 .FirstOrDefaultAsync(p => p.Id == dto.PlanTierId && p.IsActive, cancellationToken);
             if (planTier is null)
+            {
+                _logger.LogWarning("Active plan tier {PlanTierId} not found for explorer {ExplorerId}", dto.PlanTierId, explorerId);
                 return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.NotFound);
+            }
 
 
             // Check if there's an active subscription
@@ -44,7 +53,10 @@ namespace Rewards.Application.Services
                     && s.ExpiresAt > now,
                     cancellationToken);
             if (activeSubscription)
+            {
+                _logger.LogWarning("Explorer {ExplorerId} already has an active subscription", explorerId);
                 return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.Conflict);
+            }
 
             // Create subscription with pending status
             var subscription = new Subscription
@@ -58,6 +70,8 @@ namespace Rewards.Application.Services
             _subscriptionRepository.Add(subscription);
             await _subscriptionRepository.SaveChangesAsync(cancellationToken);
 
+            _logger.LogInformation("Subscription {SubscriptionId} created as pending for explorer {ExplorerId}", subscription.Id, explorerId);
+
             if (dto.PaymentMethod == SubscriptionPaymentMethod.Xp)
             {
                 var spendResult = await _gamificationService.SpendXpAsync(
@@ -70,12 +84,16 @@ namespace Rewards.Application.Services
 
                 if (!spendResult.IsSuccess)
                 {
+                    _logger.LogWarning("XP spend failed for subscription {SubscriptionId}. ErrorCode: {ErrorCode}", subscription.Id, spendResult.errorCode);
+
                     if (spendResult.errorCode is not ErrorCode.Timeout and not ErrorCode.ExternalServiceError)
                     {
                         subscription.Status = SubscriptionStatus.Cancelled;
                         subscription.CancelledAt = DateTime.UtcNow;
                         subscription.UpdatedAt = DateTime.UtcNow;
                         await _subscriptionRepository.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation("Subscription {SubscriptionId} cancelled after XP spend failure", subscription.Id);
                     }
 
                     return ApiResponse<GetSubscriptionDto>.Failure(spendResult.errorCode);
@@ -89,13 +107,18 @@ namespace Rewards.Application.Services
                     cancellationToken);
 
                 if (!premiumResult.IsSuccess)
+                {
+                    _logger.LogWarning("Setting premium failed for subscription {SubscriptionId}. ErrorCode: {ErrorCode}", subscription.Id, premiumResult.errorCode);
                     return ApiResponse<GetSubscriptionDto>.Failure(premiumResult.errorCode);
+                }
 
                 subscription.Status = SubscriptionStatus.Active;
                 subscription.StartedAt = now;
                 subscription.ExpiresAt = now.AddDays(7);
                 subscription.UpdatedAt = DateTime.UtcNow;
                 await _subscriptionRepository.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Subscription {SubscriptionId} activated for explorer {ExplorerId}", subscription.Id, explorerId);
             }
 
             subscription.PlanTier = planTier;
@@ -104,6 +127,8 @@ namespace Rewards.Application.Services
 
         public async Task<ApiResponse<GetSubscriptionDto>> GetActiveAsync(Guid explorerId, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Fetching active subscription for explorer {ExplorerId}", explorerId);
+
             var subscription = await _subscriptionRepository.GetTable()
                 .AsNoTracking()
                 .Include(s => s.PlanTier)
@@ -113,6 +138,9 @@ namespace Rewards.Application.Services
                 .OrderByDescending(s => s.ExpiresAt)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            if (subscription is null)
+                _logger.LogWarning("Active subscription not found for explorer {ExplorerId}", explorerId);
+
             return subscription is null
                 ? ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.NotFound)
                 : ApiResponse<GetSubscriptionDto>.Success(RewardsMapper.ToDto(subscription));
@@ -120,24 +148,36 @@ namespace Rewards.Application.Services
 
         public async Task<ApiResponse<string>> CancelAsync(Guid explorerId, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Cancelling active subscription for explorer {ExplorerId}", explorerId);
+
             var subscription = await _subscriptionRepository.GetTable()
                 .FirstOrDefaultAsync(s => s.ExplorerId == explorerId && s.Status == SubscriptionStatus.Active, cancellationToken);
             if (subscription is null)
+            {
+                _logger.LogWarning("Active subscription not found for cancellation for explorer {ExplorerId}", explorerId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
 
             if (subscription.Status != SubscriptionStatus.Active && subscription.Status != SubscriptionStatus.Pending)
+            {
+                _logger.LogWarning("Subscription {SubscriptionId} cannot be cancelled from status {Status}", subscription.Id, subscription.Status);
                 return ApiResponse<string>.Failure(ErrorCode.BusinessRuleViolation);
+            }
 
             subscription.Status = SubscriptionStatus.Cancelled;
             subscription.CancelledAt = DateTime.UtcNow;
             subscription.UpdatedAt = DateTime.UtcNow;
             await _subscriptionRepository.SaveChangesAsync(cancellationToken);
 
+            _logger.LogInformation("Subscription {SubscriptionId} cancelled for explorer {ExplorerId}", subscription.Id, explorerId);
+
             return ApiResponse<string>.Success("Subscription cancelled successfully");
         }
 
         public async Task<ApiResponse<GetSubscriptionDto>> GetByExplorerAsync(Guid explorerId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Fetching latest subscription for explorer {ExplorerId} - page {Page}, pageSize {PageSize}", explorerId, request.Page, request.PageSize);
+
             var subscription = await _subscriptionRepository.GetTable()
                 .AsNoTracking()
                 .Include(s => s.PlanTier)
@@ -147,7 +187,10 @@ namespace Rewards.Application.Services
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (subscription is null)
+            {
+                _logger.LogWarning("Subscription not found for explorer {ExplorerId}", explorerId);
                 return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.NotFound);
+            }
 
             return ApiResponse<GetSubscriptionDto>.Success(subscription);
         }

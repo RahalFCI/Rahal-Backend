@@ -26,7 +26,6 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
 
             explorerProfile.IsPremium = request.IsPremium;
-            explorerProfile.PlanTierId = request.PlanTierId;
             explorerProfile.UpdatedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync(cancellationToken);
 

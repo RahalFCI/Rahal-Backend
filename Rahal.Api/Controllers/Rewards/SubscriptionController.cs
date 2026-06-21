@@ -44,11 +44,11 @@ namespace Rahal.Api.Controllers.Rewards
             return Ok(result);
         }
 
-        [HttpPut("cancel/{subscriptionId}")]
+        [HttpPut("cancel/{userId}")]
         [Authorize(Roles = "Explorer")]
-        public async Task<IActionResult> CancelAsync([FromRoute] Guid subscriptionId, CancellationToken cancellationToken)
+        public async Task<IActionResult> CancelAsync([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
-            var result = await _subscriptionService.CancelAsync(GetCurrentUserId(), subscriptionId, cancellationToken);
+            var result = await _subscriptionService.CancelAsync(userId, cancellationToken);
             return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
         }
     }

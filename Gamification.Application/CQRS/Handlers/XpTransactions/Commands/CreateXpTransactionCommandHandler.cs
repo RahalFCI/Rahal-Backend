@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Gamification.Application.Interfaces;
+using Gamification.Application.CQRS.Queries.ExplorerProfiles;
+using Shared.Domain.Enums;
 
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
@@ -42,11 +44,22 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
         {
             _logger.LogInformation("Creating XP transaction for explorer {ExplorerId}", request.Dto.ExplorerId);
 
+            var user = await _mediator.Send(new GetExplorerProfileByIdQuery(request.Dto.ExplorerId ), cancellationToken);
+            if(user == null)
+            {
+                _logger.LogWarning("Explorer {ExplorerId} not found", request.Dto.ExplorerId);
+                return ApiResponse<GetXpTransactionDto>.Failure(ErrorCode.NotFound);
+            }
+
             var sourceType = Enum.Parse<XpSourceType>(request.Dto.SourceType);
             var strategy = _strategyResolver.ResolveStrategy(sourceType);
 
             int xpAmount = await strategy.CalculateXpAsync(request.Dto.ReferenceId, cancellationToken);
 
+            if (user.Data.IsPremium)
+            {
+                xpAmount = (int)(xpAmount * 1.5);
+            }
 
             var transaction = new XpTransaction
             {
