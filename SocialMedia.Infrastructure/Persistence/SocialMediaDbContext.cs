@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SocialMedia.Domain.Entities;
 
 namespace SocialMedia.Infrastructure.Persistence
 {
@@ -10,7 +8,13 @@ namespace SocialMedia.Infrastructure.Persistence
         public SocialMediaDbContext(DbContextOptions<SocialMediaDbContext> options) : base(options)
         {
         }
-        //TODO: DbSets to be added and make its configuration file
+
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Follow> Follows { get; set; }
+        public DbSet<Like> Likes { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<PostPlace> PostPlaces { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

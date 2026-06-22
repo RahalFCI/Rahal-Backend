@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SocialMedia.Application.Interfaces;
 using SocialMedia.Infrastructure.Persistence;
 using SocialMedia.Infrastructure.Repositories;
-using Shared.Application.Interfaces;
 
 namespace SocialMedia.Infrastructure
 {
@@ -11,8 +11,9 @@ namespace SocialMedia.Infrastructure
     {
         public static IServiceCollection AddSocialMediaInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            string connectionstringtemplate = configuration.GetConnectionString("DefaultConnection")!;
-            string connectionstring = connectionstringtemplate.Replace("$DATABASE_HOST", Environment.GetEnvironmentVariable("DATABASE_HOST"))
+            string connectionStringTemplate = configuration.GetConnectionString("DefaultConnection")!;
+            string connectionString = connectionStringTemplate
+                .Replace("$DATABASE_HOST", Environment.GetEnvironmentVariable("DATABASE_HOST"))
                 .Replace("$DATABASE_PORT", Environment.GetEnvironmentVariable("DATABASE_PORT"))
                 .Replace("$DATABASE_NAME", Environment.GetEnvironmentVariable("DATABASE_NAME"))
                 .Replace("$DATABASE_USERNAME", Environment.GetEnvironmentVariable("DATABASE_USERNAME"))
@@ -20,12 +21,18 @@ namespace SocialMedia.Infrastructure
 
             services.AddDbContext<SocialMediaDbContext>(options =>
                 options.UseNpgsql(
-                    connectionstring,
+                    connectionString,
                     b => b.MigrationsHistoryTable("__EFMigrationsHistory", "socialmedia")
                 )
             );
 
-            services.AddScoped(typeof(IGenericRepository<>), typeof(SocialMediaRepository<>));
+            // Generic repository for BaseEntity-based entities (Post, Comment)
+            services.AddScoped(typeof(ISocialMediaRepository<>), typeof(SocialMediaRepository<>));
+
+            // Dedicated repositories for junction tables (composite PKs)
+            services.AddScoped<IFollowRepository, FollowRepository>();
+            services.AddScoped<ILikeRepository, LikeRepository>();
+            services.AddScoped<IPostPlaceRepository, PostPlaceRepository>();
 
             return services;
         }
