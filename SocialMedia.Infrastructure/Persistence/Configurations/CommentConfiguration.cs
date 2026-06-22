@@ -62,17 +62,15 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
 
             // Indexes
 
-            // Composite index: fetch root comments for a post (ParentCommentId IS NULL)
-            // and all comments for a post ordered by creation — covers both use cases
+            // Composite Partial Index: fetch root comments for a post (ParentCommentId IS NULL)
             builder.HasIndex(e => new { e.PostId, e.ParentCommentId })
-                .HasDatabaseName("IX_Comments_PostId_ParentCommentId");
+                .HasDatabaseName("IX_Comments_PostId_ParentCommentId")
+                .HasFilter("\"IsDeleted\" = false");
 
-            // B-Tree index on ParentCommentId — fetch nested replies for a specific comment
+            // B-Tree Partial Index on ParentCommentId — fetch nested replies for a specific active comment
             builder.HasIndex(e => e.ParentCommentId)
-                .HasDatabaseName("IX_Comments_ParentCommentId");
-
-            builder.HasIndex(e => e.IsDeleted)
-                .HasDatabaseName("IX_Comments_IsDeleted");
+                .HasDatabaseName("IX_Comments_ParentCommentId")
+                .HasFilter("\"IsDeleted\" = false");
         }
     }
 }

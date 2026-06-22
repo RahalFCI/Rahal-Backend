@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialMedia.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class SocialMediaModuleInitial : Migration
+    public partial class SocialMediaInitial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -124,22 +124,18 @@ namespace SocialMedia.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Comments_IsDeleted",
-                schema: "socialmedia",
-                table: "Comments",
-                column: "IsDeleted");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Comments_ParentCommentId",
                 schema: "socialmedia",
                 table: "Comments",
-                column: "ParentCommentId");
+                column: "ParentCommentId",
+                filter: "\"IsDeleted\" = false");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_PostId_ParentCommentId",
                 schema: "socialmedia",
                 table: "Comments",
-                columns: new[] { "PostId", "ParentCommentId" });
+                columns: new[] { "PostId", "ParentCommentId" },
+                filter: "\"IsDeleted\" = false");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Follows_FolloweeId",
@@ -166,17 +162,12 @@ namespace SocialMedia.Infrastructure.Migrations
                 column: "PlaceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_IsDeleted",
-                schema: "socialmedia",
-                table: "Posts",
-                column: "IsDeleted");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Posts_UserId_CreatedAt",
                 schema: "socialmedia",
                 table: "Posts",
                 columns: new[] { "UserId", "CreatedAt" },
-                descending: new[] { false, true });
+                descending: new[] { false, true },
+                filter: "\"IsDeleted\" = false");
         }
 
         /// <inheritdoc />

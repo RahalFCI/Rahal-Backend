@@ -67,13 +67,12 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
 
             // Indexes
 
-            // Composite index: profile timeline — fetch all posts by a user ordered by newest first
+            // Composite Partial Index: profile timeline — fetch all ACTIVE posts by a user ordered by newest first.
+            // The filter exactly matches EF's Global Query Filter, so PostgreSQL uses this index perfectly.
             builder.HasIndex(e => new { e.UserId, e.CreatedAt })
                 .HasDatabaseName("IX_Posts_UserId_CreatedAt")
-                .IsDescending(false, true); // UserId ASC, CreatedAt DESC
-
-            builder.HasIndex(e => e.IsDeleted)
-                .HasDatabaseName("IX_Posts_IsDeleted");
+                .IsDescending(false, true) // UserId ASC, CreatedAt DESC
+                .HasFilter("\"IsDeleted\" = false");
         }
     }
 }

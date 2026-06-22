@@ -61,14 +61,13 @@ namespace SocialMedia.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsDeleted")
-                        .HasDatabaseName("IX_Comments_IsDeleted");
-
                     b.HasIndex("ParentCommentId")
-                        .HasDatabaseName("IX_Comments_ParentCommentId");
+                        .HasDatabaseName("IX_Comments_ParentCommentId")
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.HasIndex("PostId", "ParentCommentId")
-                        .HasDatabaseName("IX_Comments_PostId_ParentCommentId");
+                        .HasDatabaseName("IX_Comments_PostId_ParentCommentId")
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("Comments", "socialmedia");
                 });
@@ -162,12 +161,10 @@ namespace SocialMedia.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsDeleted")
-                        .HasDatabaseName("IX_Posts_IsDeleted");
-
                     b.HasIndex("UserId", "CreatedAt")
                         .IsDescending(false, true)
-                        .HasDatabaseName("IX_Posts_UserId_CreatedAt");
+                        .HasDatabaseName("IX_Posts_UserId_CreatedAt")
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("Posts", "socialmedia");
                 });
