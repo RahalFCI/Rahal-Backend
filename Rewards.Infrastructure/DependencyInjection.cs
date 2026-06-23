@@ -32,6 +32,7 @@ namespace Rewards.Infrastructure
             services.AddScoped<ISearchIndexInitializer, CouponIndexConfig>();
             services.AddScoped<IRewardsGamificationService, RewardsGamificationService>();
             services.AddScoped<ICouponSearchService, CouponSearchService>();
+            services.AddScoped<IRewardsUnitOfWork, RewardsUnitOfWork>();
 
             return services;
         }

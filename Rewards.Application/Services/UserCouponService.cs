@@ -17,104 +17,129 @@ namespace Rewards.Application.Services
         private readonly IRewardsRepository<Coupon> _couponRepository;
         private readonly IRewardsRepository<UserCoupon> _userCouponRepository;
         private readonly IRewardsGamificationService _gamificationService;
+        private readonly IRewardsUnitOfWork _rewardsUnitOfWork;
         private readonly ILogger<UserCouponService> _logger;
 
         public UserCouponService(
             IRewardsRepository<Coupon> couponRepository,
             IRewardsRepository<UserCoupon> userCouponRepository,
             IRewardsGamificationService gamificationService,
+            IRewardsUnitOfWork rewardsUnitOfWork,
             ILogger<UserCouponService> logger)
         {
             _couponRepository = couponRepository;
             _userCouponRepository = userCouponRepository;
             _gamificationService = gamificationService;
+            _rewardsUnitOfWork = rewardsUnitOfWork;
             _logger = logger;
         }
 
         public async Task<ApiResponse<GetUserCouponDto>> ClaimAsync(Guid explorerId, Guid couponId, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Explorer {ExplorerId} is claiming coupon {CouponId}", explorerId, couponId);
-
-            var coupon = await _couponRepository.GetTable()
-                .FirstOrDefaultAsync(c => c.Id == couponId, cancellationToken);
-
-            if (coupon is null)
+            try
             {
-                _logger.LogWarning("Coupon {CouponId} not found for explorer {ExplorerId} claim", couponId, explorerId);
-                return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.NotFound);
-            }
+                await _rewardsUnitOfWork.BeginTransactionAsync(cancellationToken);
+                _logger.LogInformation("Explorer {ExplorerId} is claiming coupon {CouponId}", explorerId, couponId);
 
-            if (!coupon.IsActive || coupon.ExpiresAt <= DateTime.UtcNow || coupon.CurrentClaims >= coupon.MaxClaims)
-            {
-                _logger.LogWarning(
-                    "Coupon {CouponId} claim rejected for explorer {ExplorerId}. IsActive {IsActive}, ExpiresAt {ExpiresAt}, CurrentClaims {CurrentClaims}, MaxClaims {MaxClaims}",
-                    couponId,
-                    explorerId,
-                    coupon.IsActive,
-                    coupon.ExpiresAt,
-                    coupon.CurrentClaims,
-                    coupon.MaxClaims);
-                return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.BusinessRuleViolation);
-            }
-
-            var alreadyClaimed = await _userCouponRepository.GetTable()
-                .AnyAsync(c => c.ExplorerId == explorerId && c.CouponId == couponId, cancellationToken);
-            if (alreadyClaimed)
-            {
-                _logger.LogWarning("Explorer {ExplorerId} already claimed coupon {CouponId}", explorerId, couponId);
-                return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.AlreadyExists);
-            }
-
-            var userCoupon = new UserCoupon
-            {
-                ExplorerId = explorerId,
-                CouponId = coupon.Id,
-                Code = GenerateCode(),
-                Status = UserCouponStatus.Pending,
-                IsRedeemed = false,
-                ExpiresAt = coupon.ExpiresAt
-            };
-
-            coupon.CurrentClaims += 1;
-            _userCouponRepository.Add(userCoupon);
-            await _userCouponRepository.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("User coupon {UserCouponId} created as pending for explorer {ExplorerId}", userCoupon.Id, explorerId);
-
-            var spendResult = await _gamificationService.SpendXpAsync(
-                userCoupon.Id,
-                explorerId,
-                coupon.XpCost,
-                "CouponPurchase",
-                userCoupon.Id,
-                cancellationToken);
-
-            if (!spendResult.IsSuccess)
-            {
-                _logger.LogWarning("XP spend failed for user coupon {UserCouponId}. ErrorCode: {ErrorCode}", userCoupon.Id, spendResult.errorCode);
-
-                if (spendResult.errorCode is not ErrorCode.Timeout and not ErrorCode.ExternalServiceError)
+                var alreadyClaimed = await _userCouponRepository.GetTable()
+                    .AnyAsync(c => c.ExplorerId == explorerId && c.CouponId == couponId, cancellationToken);
+                if (alreadyClaimed)
                 {
-                    userCoupon.Status = UserCouponStatus.Cancelled;
-                    userCoupon.UpdatedAt = DateTime.UtcNow;
-                    coupon.CurrentClaims = Math.Max(0, coupon.CurrentClaims - 1);
-                    await _userCouponRepository.SaveChangesAsync(cancellationToken);
-
-                    _logger.LogInformation("User coupon {UserCouponId} cancelled and coupon {CouponId} claim count reverted", userCoupon.Id, couponId);
+                    _logger.LogWarning("Explorer {ExplorerId} already claimed coupon {CouponId}", explorerId, couponId);
+                    await _rewardsUnitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.AlreadyExists);
                 }
 
-                return ApiResponse<GetUserCouponDto>.Failure(spendResult.errorCode);
+                var affectedRows = await _couponRepository.GetTable()
+                    .Where(c =>
+                        c.Id == couponId &&
+                        c.IsActive &&
+                        c.ExpiresAt > DateTime.UtcNow &&
+                        c.CurrentClaims < c.MaxClaims)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(c => c.CurrentClaims, c => c.CurrentClaims + 1),
+                        cancellationToken);
+
+                if (affectedRows == 0)
+                {
+                    _logger.LogWarning("Coupon {CouponId} is not available for claiming by explorer {ExplorerId}", couponId, explorerId);
+                    await _rewardsUnitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.BusinessRuleViolation);
+                }
+
+                var coupon = await _couponRepository.GetTable().Where(c => c.Id == couponId).FirstOrDefaultAsync(cancellationToken);
+
+                var userCoupon = new UserCoupon
+                {
+                    ExplorerId = explorerId,
+                    CouponId = couponId,
+                    Code = GenerateCode(),
+                    Status = UserCouponStatus.Pending,
+                    IsRedeemed = false,
+                    ExpiresAt = coupon!.ExpiresAt
+                };
+
+                _userCouponRepository.Add(userCoupon);
+                await _userCouponRepository.SaveChangesAsync(cancellationToken);
+                await _rewardsUnitOfWork.CommitTransactionAsync(cancellationToken);
+
+
+                _logger.LogInformation("User coupon {UserCouponId} created as pending for explorer {ExplorerId}", userCoupon.Id, explorerId);
+
+                var spendResult = await _gamificationService.SpendXpAsync(
+                    userCoupon.Id,
+                    explorerId,
+                    coupon.XpCost,
+                    "CouponPurchase",
+                    userCoupon.Id,
+                    cancellationToken);
+
+                await _rewardsUnitOfWork.BeginTransactionAsync(cancellationToken);
+
+                if (!spendResult.IsSuccess)
+                {
+                    _logger.LogWarning("XP spend failed for user coupon {UserCouponId}. ErrorCode: {ErrorCode}", userCoupon.Id, spendResult.errorCode);
+
+                    if (spendResult.errorCode is not ErrorCode.Timeout and not ErrorCode.ExternalServiceError)
+                    {
+                        userCoupon.Status = UserCouponStatus.Cancelled;
+                        userCoupon.UpdatedAt = DateTime.UtcNow;
+                        await _userCouponRepository.SaveChangesAsync(cancellationToken);              
+
+                        _logger.LogInformation("User coupon {UserCouponId} cancelled and coupon {CouponId} claim count reverted", userCoupon.Id, couponId);
+                    }
+
+                    await _couponRepository.GetTable()
+                            .Where(c => c.Id == couponId && c.CurrentClaims > 0)
+                            .ExecuteUpdateAsync(setters => setters
+                                .SetProperty(c => c.CurrentClaims, c => c.CurrentClaims - 1),
+                                cancellationToken);
+
+                    await _rewardsUnitOfWork.CommitTransactionAsync(cancellationToken);
+                    return ApiResponse<GetUserCouponDto>.Failure(spendResult.errorCode);
+                }
+
+
+
+                userCoupon.Status = UserCouponStatus.Claimed;
+                userCoupon.ClaimedAt = DateTime.UtcNow;
+                userCoupon.UpdatedAt = DateTime.UtcNow;
+                userCoupon.Coupon = coupon;
+                _userCouponRepository.Update(userCoupon);
+                await _userCouponRepository.SaveChangesAsync(cancellationToken);
+                await _rewardsUnitOfWork.CommitTransactionAsync(cancellationToken);
+
+
+                _logger.LogInformation("Explorer {ExplorerId} claimed coupon {CouponId} successfully with user coupon {UserCouponId}", explorerId, couponId, userCoupon.Id);
+
+
+                return ApiResponse<GetUserCouponDto>.Success(RewardsMapper.ToDto(userCoupon));
             }
-
-            userCoupon.Status = UserCouponStatus.Claimed;
-            userCoupon.ClaimedAt = DateTime.UtcNow;
-            userCoupon.UpdatedAt = DateTime.UtcNow;
-            await _userCouponRepository.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Explorer {ExplorerId} claimed coupon {CouponId} successfully with user coupon {UserCouponId}", explorerId, couponId, userCoupon.Id);
-
-            userCoupon.Coupon = coupon;
-            return ApiResponse<GetUserCouponDto>.Success(RewardsMapper.ToDto(userCoupon));
+            catch (Exception)
+            {
+                await _rewardsUnitOfWork.RollbackTransactionAsync(cancellationToken);
+                return ApiResponse<GetUserCouponDto>.Failure(ErrorCode.UnknownError);
+            }
         }
 
         public async Task<ApiResponse<GetUserCouponDto>> RedeemAsync(RedeemCouponDto dto, CancellationToken cancellationToken = default)
