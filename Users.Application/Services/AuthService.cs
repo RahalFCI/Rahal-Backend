@@ -138,6 +138,12 @@ namespace Users.Application.Services
 
         public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default)
         {
+            if (userDto.UserRole == UserRoleEnum.Admin)
+            {
+                _logger.LogWarning("Registration failed: You are not authorized to register an admin");
+                return ApiResponse<string>.Failure(ErrorCode.Forbidden);
+            }
+
             var userCreationResult = await CreateUserAsync(userDto, Password, cancellationToken);
 
             if (userCreationResult.IsSuccess)
@@ -204,12 +210,6 @@ namespace Users.Application.Services
             var user = MappingExtension.CreateUser(userDto);
 
             _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
-
-            if (userDto.UserRole == UserRoleEnum.Admin)
-            {
-                _logger.LogWarning("Registration failed: You are not authorized to register an admin");
-                return ApiResponse<User>.Failure(ErrorCode.Forbidden);
-            }
 
             var existingUser = await _userManager.FindByEmailAsync(user.Email!);
             if (existingUser != null)

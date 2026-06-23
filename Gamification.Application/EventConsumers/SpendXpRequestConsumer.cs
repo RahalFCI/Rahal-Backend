@@ -28,7 +28,7 @@ namespace Gamification.Application.EventConsumers
         {
             var request = context.Message;
             var result = await _mediator.Send(
-                new CreateXpTransactionCommand(new CreateXpTransactionDto {ExplorerId = request.ExplorerId, SourceType =  XpSourceType.Payment.ToString(), ReferenceId = request.ReferenceId }),
+                new CreateCustomXpTransactionCommand(request.ExplorerId, -1 * request.Amount, XpSourceType.Payment.ToString(), request.ReferenceId),
                 context.CancellationToken);
 
 
