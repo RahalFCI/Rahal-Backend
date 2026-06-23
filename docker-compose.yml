@@ -46,6 +46,8 @@ services:
     - "5432:5432"
    networks:
     - rahal-network
+   volumes:
+    - postgres_data:/var/lib/postgresql/data
 
   redis:
    image: redis:8
@@ -79,3 +81,4 @@ networks:
 
 volumes:
   meilisearch_data:
+  postgres_data:

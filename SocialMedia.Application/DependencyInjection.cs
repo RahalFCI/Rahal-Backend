@@ -15,6 +15,9 @@ namespace SocialMedia.Application
             // Media service
             services.AddScoped<IMediaService, MediaService>();
 
+            // Post service
+            services.AddScoped<IPostService, PostService>();
+
             // Validators
             services.AddScoped<IValidator<GenerateUploadSignaturesRequest>, GenerateUploadSignaturesRequestValidator>();
 

@@ -129,8 +129,12 @@ builder.Services.AddHttpLogging(options =>
 builder.Host.UseSerilog((HostBuilderContext context, IServiceProvider services, LoggerConfiguration loggerConfiguration)
     =>
 {
-    loggerConfiguration.ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
-    .ReadFrom.Services(services);//Read app services and make them availavle to serilog
+    //     loggerConfiguration.ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
+    // .ReadFrom.Services(services);//Read app services and make them availavle to serilog
+    loggerConfiguration
+    .ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
+    .ReadFrom.Services(services) //Read app services and make them availavle to serilog
+    .WriteTo.Console(); // Force console output regardless of appsettings
 });
 
 
