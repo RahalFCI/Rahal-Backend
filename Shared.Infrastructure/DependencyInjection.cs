@@ -1,4 +1,5 @@
-﻿using Meilisearch;
+using CloudinaryDotNet;
+using Meilisearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,10 +12,12 @@ using Shared.Application.Settings;
 using Shared.Application.Settings.ReslilienceSettings;
 using Shared.Infrastructure.Email;
 using Shared.Infrastructure.FileStorage;
+using Shared.Infrastructure.ObjectStorage;
 using Shared.Infrastructure.Persistence;
 using Shared.Infrastructure.Repositories;
 using Shared.Infrastructure.Resilience;
 using Shared.Infrastructure.Search;
+using Shared.Infrastructure.Settings;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -126,10 +129,26 @@ namespace Shared.Infrastructure
             // Register MeilisearchService as open generic
             services.AddScoped(typeof(ISearchService<>), typeof(MeilisearchService<>));
 
+            // Object Storage (Cloudinary) — swappable by replacing CloudinaryStorageService
+            services.Configure<CloudinarySettings>(options =>
+            {
+                options.CloudName = ResolveEnvPlaceholder(configuration["Cloudinary:CloudName"]);
+                options.ApiKey    = ResolveEnvPlaceholder(configuration["Cloudinary:ApiKey"]);
+                options.ApiSecret = ResolveEnvPlaceholder(configuration["Cloudinary:ApiSecret"]);
+            });
+            services.AddScoped<IObjectStorageService, CloudinaryStorageService>();
 
             return services;
         }
 
+        /// <summary>Resolves a $VAR_NAME placeholder against actual environment variables.</summary>
+        private static string ResolveEnvPlaceholder(string? value)
+        {
+            if (value is null) return string.Empty;
+            if (value.StartsWith('$'))
+                return Environment.GetEnvironmentVariable(value[1..]) ?? string.Empty;
+            return value;
+        }
     }
 }
 

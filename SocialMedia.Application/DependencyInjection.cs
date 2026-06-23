@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SocialMedia.Application.DTOs.Media;
+using SocialMedia.Application.Interfaces;
+using SocialMedia.Application.Services;
+using SocialMedia.Application.Validators;
 
 namespace SocialMedia.Application
 {
@@ -10,7 +12,11 @@ namespace SocialMedia.Application
     {
         public static IServiceCollection AddSocialMediaApplication(this IServiceCollection services, IConfiguration configuration)
         {
+            // Media service
+            services.AddScoped<IMediaService, MediaService>();
 
+            // Validators
+            services.AddScoped<IValidator<GenerateUploadSignaturesRequest>, GenerateUploadSignaturesRequestValidator>();
 
             return services;
         }

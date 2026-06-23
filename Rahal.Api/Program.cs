@@ -104,7 +104,8 @@ builder.Services.AddControllers(
     options =>
     {
         options.Filters.Add<ValidationActionFilter>();
-        options.Filters.Add<ProfileSetupRequiredFilter>();
+        // TODO(Ziad): uncomment this line in prod
+        // options.Filters.Add<ProfileSetupRequiredFilter>();
 
     })
     .AddJsonOptions(options =>
