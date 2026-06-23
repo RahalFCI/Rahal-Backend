@@ -22,5 +22,10 @@ namespace Shared.Application.Interfaces
             string publicId,
             string resourceType,
             long maxFileSize);
+
+        /// <summary>
+        /// Reconstructs the full HTTPS delivery URL for a given publicId.
+        /// </summary>
+        string BuildMediaUrl(string publicId);
     }
 }

@@ -46,5 +46,16 @@ namespace Shared.Infrastructure.ObjectStorage
 
             return (signature, timestamp, _settings.ApiKey, _settings.CloudName);
         }
+
+        public string BuildMediaUrl(string publicId)
+        {
+            var isVideo = publicId.StartsWith("post_video_", StringComparison.OrdinalIgnoreCase);
+            var isGif   = publicId.StartsWith("post_gif_", StringComparison.OrdinalIgnoreCase);
+            
+            var resourceType = isVideo ? "video" : "image";
+            var extension = isVideo ? ".mp4" : (isGif ? ".gif" : ".jpg");
+
+            return $"https://res.cloudinary.com/{_settings.CloudName}/{resourceType}/upload/{publicId}{extension}";
+        }
     }
 }

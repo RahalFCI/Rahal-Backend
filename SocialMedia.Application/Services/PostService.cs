@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Shared.Application.DTOs;
 using Shared.Application.Events.Posts;
+using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
 using SocialMedia.Application.DTOs.Posts;
 using SocialMedia.Application.Interfaces;
@@ -13,34 +14,26 @@ namespace SocialMedia.Application.Services
 {
     public class PostService : IPostService
     {
-        // Cloudinary base URL template
-        private const string CloudinaryBaseUrl = "https://res.cloudinary.com";
-
         private static readonly TimeSpan PostCacheTtl = TimeSpan.FromDays(14);
 
         private readonly ISocialMediaRepository<Post> _postRepository;
         private readonly IConnectionMultiplexer _redis;
         private readonly IPublishEndpoint _publisher;
         private readonly ILogger<PostService> _logger;
-        private readonly string _cloudName;
+        private readonly IObjectStorageService _storageService;
 
         public PostService(
             ISocialMediaRepository<Post> postRepository,
             IConnectionMultiplexer redis,
             IPublishEndpoint publisher,
             ILogger<PostService> logger,
-            IConfiguration configuration)
+            IObjectStorageService storageService)
         {
             _postRepository = postRepository;
             _redis          = redis;
             _publisher      = publisher;
             _logger         = logger;
-
-            // Read the already-resolved cloud name from configuration
-            // (Cloudinary:CloudName is bound and env-var-replaced in DependencyInjection.cs)
-            _cloudName = configuration["Cloudinary:CloudName"]
-                         ?? Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")
-                         ?? throw new InvalidOperationException("Cloudinary CloudName is not configured.");
+            _storageService = storageService;
         }
 
         public async Task<ApiResponse<PostResponse>> CreatePostAsync(
@@ -86,7 +79,7 @@ namespace SocialMedia.Application.Services
 
             // ── 3. Build full Cloudinary HTTPS URLs from public_ids ────────────
             var mediaUrls = request.MediaIds
-                .Select(publicId => BuildCloudinaryUrl(publicId))
+                .Select(publicId => _storageService.BuildMediaUrl(publicId))
                 .ToList();
 
             // ── 4. Persist to PostgreSQL ───────────────────────────────────────
@@ -149,20 +142,6 @@ namespace SocialMedia.Application.Services
         }
 
         // ── Helpers ────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Converts a Cloudinary public_id to a full HTTPS delivery URL.
-        /// Resource type is inferred from the public_id prefix stamped by MediaService:
-        ///   "post_video_…" → /video/upload/   |   all others → /image/upload/
-        /// </summary>
-        private string BuildCloudinaryUrl(string publicId)
-        {
-            var resourceType = publicId.StartsWith("post_video_", StringComparison.OrdinalIgnoreCase)
-                ? "video"
-                : "image";
-
-            return $"{CloudinaryBaseUrl}/{_cloudName}/{resourceType}/upload/{publicId}";
-        }
 
         private static async Task CachePostAsync(IDatabase db, Post post)
         {

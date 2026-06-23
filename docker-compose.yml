@@ -55,6 +55,8 @@ services:
     - "6379:6379"
    networks:
     - rahal-network
+   volumes:
+    - redis_data:/data
 
   meilisearch:
    image: getmeili/meilisearch:v1.41.0
@@ -82,3 +84,4 @@ networks:
 volumes:
   meilisearch_data:
   postgres_data:
+  redis_data:
