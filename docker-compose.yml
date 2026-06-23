@@ -26,6 +26,9 @@ services:
      - RabbitMQ__VirtualHost=/
      - RabbitMQ__Username=guest
      - RabbitMQ__Password=guest
+     - Mail__Username=${MAIL_USERNAME:-}
+     - Mail__Password=${MAIL_PASSWORD:-}
+     - Mail__FromEmail=${MAIL_FROM_EMAIL:-}
 
     ports:
      - "7145:8080"
