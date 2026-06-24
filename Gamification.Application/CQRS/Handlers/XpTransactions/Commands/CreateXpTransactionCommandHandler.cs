@@ -1,17 +1,20 @@
 ﻿using Gamification.Application.CQRS.Commands.XpTransactions;
+using Gamification.Application.CQRS.Queries.ExplorerProfiles;
 using Gamification.Application.CQRS.Queries.UserStats;
 using Gamification.Application.DTOs.XpTransaction;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Strategies;
 using Gamification.Domain.Entities;
 using Gamification.Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Gamification.Application.Interfaces;
 
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
@@ -42,11 +45,34 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
         {
             _logger.LogInformation("Creating XP transaction for explorer {ExplorerId}", request.Dto.ExplorerId);
 
+            var existingTransaction = await _repository.GetTable()
+            .FirstOrDefaultAsync(x =>
+                x.ExplorerProfileId == request.Dto.ExplorerId &&
+                x.Source == Enum.Parse<XpSourceType>(request.Dto.SourceType) &&
+                x.ReferenceId == request.Dto.ReferenceId,
+                cancellationToken);
+
+            if (existingTransaction is not null)
+            {
+                return ApiResponse<GetXpTransactionDto>.Failure(ErrorCode.AlreadyExists);
+            }
+
+            var user = await _mediator.Send(new GetExplorerProfileByIdQuery(request.Dto.ExplorerId ), cancellationToken);
+            if(user == null)
+            {
+                _logger.LogWarning("Explorer {ExplorerId} not found", request.Dto.ExplorerId);
+                return ApiResponse<GetXpTransactionDto>.Failure(ErrorCode.NotFound);
+            }
+
             var sourceType = Enum.Parse<XpSourceType>(request.Dto.SourceType);
             var strategy = _strategyResolver.ResolveStrategy(sourceType);
 
             int xpAmount = await strategy.CalculateXpAsync(request.Dto.ReferenceId, cancellationToken);
 
+            if (user.Data.IsPremium)
+            {
+                xpAmount = (int)(xpAmount * 1.5);
+            }
 
             var transaction = new XpTransaction
             {

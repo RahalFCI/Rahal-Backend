@@ -17,7 +17,6 @@ namespace Places.Infrastructure.Search
                 CategoryName = place.PlaceCategory?.Name ?? string.Empty,
                 Latitude = place.Latitude,
                 Longitude = place.Longitude,
-                TicketPrice = place.TicketPrice,
                 City = place.Address?.City ?? string.Empty,
                 Country = place.Address?.Country ?? string.Empty,
                 Government = place.Address?.Government ?? string.Empty

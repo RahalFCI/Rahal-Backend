@@ -31,9 +31,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.BirthDate)
                 .IsRequired();
 
-            builder.Property(e => e.PlanTierId)
-                .IsRequired(false);
-
             builder.Property(e => e.Level)
                 .HasDefaultValue(1)
                 .IsRequired();

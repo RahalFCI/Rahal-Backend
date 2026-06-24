@@ -18,9 +18,9 @@ services:
      - MEILI_PORT=7700 
      - MEILI_API_KEY=masterKey123 
      - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
-     - AdminUser__Email=${ADMIN_USER_EMAIL:-}
-     - AdminUser__Password=${ADMIN_USER_PASSWORD:-}
-     - AdminUser__DisplayName=${ADMIN_USER_DISPLAY_NAME:-}
+     - AdminUser__Email=admin@example.com
+     - AdminUser__Password=ChangeMe!123
+     - AdminUser__DisplayName=Admin
      - ASPNETCORE_ENVIRONMENT=Development
      - RabbitMQ__Host=rabbitmq
      - RabbitMQ__VirtualHost=/

@@ -403,9 +403,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
 
-                    b.Property<Guid?>("PlanTierId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ProfilePictureURL")
                         .IsRequired()
                         .HasMaxLength(500)
