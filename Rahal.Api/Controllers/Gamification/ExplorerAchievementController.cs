@@ -28,6 +28,8 @@ namespace Rahal.Api.Controllers.Gamification
             [FromBody] CreateExplorerAchievementDto dto,
             CancellationToken cancellationToken)
         {
+            dto.ExplorerId = GetCurrentUserId();
+            
             var result = await _mediator.Send(
                 new CreateExplorerAchievementWithItsRewardOrchestrator(dto),
                 cancellationToken);

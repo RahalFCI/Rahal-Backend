@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Gamification.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
 {
@@ -34,8 +35,8 @@ namespace Gamification.Application.CQRS.Handlers.Challenges.Commands
         {
             _logger.LogInformation("Updating challenge {ChallengeId}", request.Id);
 
-            var existingChallenge = await _mediator.Send(new GetChallengeByNameQuery(request.Dto.Name), cancellationToken);
-            if (existingChallenge.IsSuccess)
+            var existingChallenge = await _repository.GetTable().Where(c => c.Name == request.Dto.Name && c.Id != request.Id).AnyAsync(cancellationToken);
+            if (existingChallenge)
             {
                 _logger.LogWarning("Challenge {ChallengeName} already exists", request.Dto.Name);
                 return ApiResponse<string>.Failure(ErrorCode.Conflict);

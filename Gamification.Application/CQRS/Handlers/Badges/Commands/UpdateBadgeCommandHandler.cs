@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Gamification.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
@@ -37,10 +38,12 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
         {
             _logger.LogInformation("Updating badge {BadgeId}", request.Id);
 
-            var existingBadge = await _mediator.Send(new GetBadgeByNameQuery(request.Dto.Name));
-
-            if (existingBadge.IsSuccess)
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+            var existingBadge = await _repository.GetTable().Where(c => c.Name == request.Dto.Name && c.Id != request.Id).AnyAsync(cancellationToken);
+            if (existingBadge)
+            {
+                _logger.LogWarning("Badge {badge} already exists", request.Dto.Name);
+                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+            }
 
             var badge = await _repository.GetByIdAsync(request.Id, cancellationToken);
             if (badge is null)

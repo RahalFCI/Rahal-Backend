@@ -35,6 +35,13 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
         {
             _logger.LogInformation("Updating achievement {AchievementId}", request.Id);
 
+            var existingAchievement = await _repository.GetTable().Where(c => c.Title == request.Dto.Title && c.Id != request.Id).AnyAsync(cancellationToken);
+            if (existingAchievement)
+            {
+                _logger.LogWarning("Achievement {achievement} already exists", request.Dto.Title);
+                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+            }
+
             var achievement = await _repository.GetByIdAsync(request.Id, cancellationToken);
             if (achievement is null)
             {
