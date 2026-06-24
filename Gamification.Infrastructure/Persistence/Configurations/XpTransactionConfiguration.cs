@@ -57,6 +57,13 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.HasIndex(e => e.ExplorerProfileId)
                 .HasDatabaseName("IX_XpTransactions_ExplorerProfileId");
 
+            builder.HasIndex(x => new
+            {
+                x.ExplorerProfileId,
+                x.Source,
+                x.ReferenceId
+            }).IsUnique();
+
         }
     }
 }

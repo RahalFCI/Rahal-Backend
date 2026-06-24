@@ -7,6 +7,7 @@ using Gamification.Application.Strategies;
 using Gamification.Domain.Entities;
 using Gamification.Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -38,6 +39,25 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
         public async Task<ApiResponse<GetXpTransactionDto>> Handle(CreateCustomXpTransactionCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating XP transaction for explorer {ExplorerId}", request.ExplorerId);
+
+            var existingTransaction = await _repository.GetTable()
+                .FirstOrDefaultAsync(x =>
+                    x.ExplorerProfileId == request.ExplorerId &&
+                    x.Source == Enum.Parse<XpSourceType>(request.SourceType) &&
+                    x.ReferenceId == request.ReferenceId,
+                    cancellationToken);
+
+            if (existingTransaction is not null)
+            {
+                return ApiResponse<GetXpTransactionDto>.Success(new GetXpTransactionDto
+                {
+                    Id = existingTransaction.Id,
+                    ExplorerId = existingTransaction.ExplorerProfileId,
+                    Amount = existingTransaction.Amount,
+                    SourceType = existingTransaction.Source.ToString(),
+                    ReferenceId = existingTransaction.ReferenceId
+                });
+            }
 
             var user = await _mediator.Send(new GetExplorerProfileByIdQuery(request.ExplorerId), cancellationToken);
             if (user == null)

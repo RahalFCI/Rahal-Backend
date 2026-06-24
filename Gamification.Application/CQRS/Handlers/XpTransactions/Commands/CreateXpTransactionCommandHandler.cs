@@ -1,19 +1,20 @@
 ﻿using Gamification.Application.CQRS.Commands.XpTransactions;
+using Gamification.Application.CQRS.Queries.ExplorerProfiles;
 using Gamification.Application.CQRS.Queries.UserStats;
 using Gamification.Application.DTOs.XpTransaction;
+using Gamification.Application.Interfaces;
 using Gamification.Application.Strategies;
 using Gamification.Domain.Entities;
 using Gamification.Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
+using Shared.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Gamification.Application.Interfaces;
-using Gamification.Application.CQRS.Queries.ExplorerProfiles;
-using Shared.Domain.Enums;
 
 
 namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
@@ -43,6 +44,25 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
         public async Task<ApiResponse<GetXpTransactionDto>> Handle(CreateXpTransactionCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating XP transaction for explorer {ExplorerId}", request.Dto.ExplorerId);
+
+            var existingTransaction = await _repository.GetTable()
+            .FirstOrDefaultAsync(x =>
+                x.ExplorerProfileId == request.Dto.ExplorerId &&
+                x.Source == Enum.Parse<XpSourceType>(request.Dto.SourceType) &&
+                x.ReferenceId == request.Dto.ReferenceId,
+                cancellationToken);
+
+            if (existingTransaction is not null)
+            {
+                return ApiResponse<GetXpTransactionDto>.Success(new GetXpTransactionDto
+                {
+                    Id = existingTransaction.Id,
+                    ExplorerId = existingTransaction.ExplorerProfileId,
+                    Amount = existingTransaction.Amount,
+                    SourceType = existingTransaction.Source.ToString(),
+                    ReferenceId = existingTransaction.ReferenceId
+                });
+            }
 
             var user = await _mediator.Send(new GetExplorerProfileByIdQuery(request.Dto.ExplorerId ), cancellationToken);
             if(user == null)
