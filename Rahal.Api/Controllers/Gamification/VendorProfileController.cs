@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Rahal.Api.Attributes;
 using Rahal.Api.Controllers._Common;
 using Shared.Application.Pagination;
 using Shared.Domain.Enums;
@@ -22,6 +23,7 @@ namespace Rahal.Api.Controllers.Gamification
         }
 
         [HttpPost("create")]
+        [SkipProfileCheckAttribute]
         [Authorize(Roles = "Vendor")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
