@@ -146,9 +146,10 @@ namespace Rewards.Application.Services
         {
             _logger.LogInformation("Redeeming user coupon for vendor {VendorId}", dto.VendorId);
 
+
             var userCoupon = await _userCouponRepository.GetTable()
                 .Include(c => c.Coupon)
-                .FirstOrDefaultAsync(c => c.Code == dto.Code, cancellationToken);
+                .FirstOrDefaultAsync(c => c.Code == dto.Code && c.Coupon!.VendorId == dto.VendorId, cancellationToken);
 
             if (userCoupon is null || userCoupon.Coupon is null)
             {
