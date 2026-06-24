@@ -19,5 +19,11 @@ namespace SocialMedia.Application.Interfaces
             Guid postId,
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>> CreateCommentAsync(
+            Guid postId,
+            Guid userId,
+            SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
+            CancellationToken cancellationToken = default);
     }
 }

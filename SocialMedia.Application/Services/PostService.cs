@@ -19,6 +19,7 @@ namespace SocialMedia.Application.Services
         private static readonly TimeSpan UserLikesTtl = TimeSpan.FromDays(7);
 
         private readonly ISocialMediaRepository<Post> _postRepository;
+        private readonly ISocialMediaRepository<Comment> _commentRepository;
         private readonly ILikeRepository _likeRepository;
         private readonly IConnectionMultiplexer _redis;
         private readonly IPublishEndpoint _publisher;
@@ -27,18 +28,20 @@ namespace SocialMedia.Application.Services
 
         public PostService(
             ISocialMediaRepository<Post> postRepository,
+            ISocialMediaRepository<Comment> commentRepository,
             ILikeRepository likeRepository,
             IConnectionMultiplexer redis,
             IPublishEndpoint publisher,
             ILogger<PostService> logger,
             IObjectStorageService storageService)
         {
-            _postRepository = postRepository;
-            _likeRepository = likeRepository;
-            _redis          = redis;
-            _publisher      = publisher;
-            _logger         = logger;
-            _storageService = storageService;
+            _postRepository    = postRepository;
+            _commentRepository = commentRepository;
+            _likeRepository    = likeRepository;
+            _redis             = redis;
+            _publisher         = publisher;
+            _logger            = logger;
+            _storageService    = storageService;
         }
 
         public async Task<ApiResponse<PostResponse>> CreatePostAsync(
@@ -204,6 +207,11 @@ namespace SocialMedia.Application.Services
                     .SelectMany(p => p.Likes)
                     .CountAsync(cancellationToken);
 
+                var commentsCount = await _commentRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(c => c.PostId == postId && !c.IsDeleted)
+                    .CountAsync(cancellationToken);
+
                 await db.HashSetAsync(postCacheKey, new HashEntry[]
                 {
                     new("UserId",        post.UserId.ToString()),
@@ -211,7 +219,7 @@ namespace SocialMedia.Application.Services
                     new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
                     new("IsPublic",      post.IsPublic.ToString()),
                     new("LikesCount",    likesCount),
-                    new("CommentsCount", 0),
+                    new("CommentsCount", commentsCount),
                     new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
                 });
 
@@ -306,6 +314,11 @@ namespace SocialMedia.Application.Services
                     .SelectMany(p => p.Likes)
                     .CountAsync(cancellationToken);
 
+                var commentsCount = await _commentRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(c => c.PostId == postId && !c.IsDeleted)
+                    .CountAsync(cancellationToken);
+
                 await db.HashSetAsync(postCacheKey, new HashEntry[]
                 {
                     new("UserId",        post.UserId.ToString()),
@@ -313,7 +326,7 @@ namespace SocialMedia.Application.Services
                     new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
                     new("IsPublic",      post.IsPublic.ToString()),
                     new("LikesCount",    likesCount),
-                    new("CommentsCount", 0),
+                    new("CommentsCount", commentsCount),
                     new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
                 });
 
@@ -335,11 +348,93 @@ namespace SocialMedia.Application.Services
 
             return ApiResponse<string>.Success("Post unliked successfully");
         }
+        public async Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>> CreateCommentAsync(
+            Guid postId,
+            Guid userId,
+            SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var db = _redis.GetDatabase();
+            var postCacheKey = $"Post:{postId}";
+
+            // ── 1. Post Cache Hydration + Increment ───────────────────────────
+            if (!await db.KeyExistsAsync(postCacheKey))
+            {
+                _logger.LogDebug("Cache miss for Post:{PostId} — hydrating from DB", postId);
+
+                var post = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+                if (post is null)
+                {
+                    _logger.LogWarning("Comment rejected: post {PostId} not found", postId);
+                    return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Failure(ErrorCode.NotFound);
+                }
+
+                var likesCount = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(p => p.Id == postId)
+                    .SelectMany(p => p.Likes)
+                    .CountAsync(cancellationToken);
+
+                var commentsCount = await _commentRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(c => c.PostId == postId && !c.IsDeleted)
+                    .CountAsync(cancellationToken);
+
+                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                {
+                    new("UserId",        post.UserId.ToString()),
+                    new("Content",       post.Content),
+                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
+                    new("IsPublic",      post.IsPublic.ToString()),
+                    new("LikesCount",    likesCount),
+                    new("CommentsCount", commentsCount),
+                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                });
+
+                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
+            }
+
+            // Atomically increment CommentsCount in the cache
+            await db.HashIncrementAsync(postCacheKey, "CommentsCount", 1);
+            _logger.LogDebug("Incremented CommentsCount for Post:{PostId}", postId);
+
+            // ── 2. Persist Comment to PostgreSQL ──────────────────────────────
+            var comment = new Comment
+            {
+                PostId = postId,
+                UserId = userId,
+                Content = request.Content,
+                ParentCommentId = request.ParentCommentId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _commentRepository.Add(comment);
+            await _commentRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("User {UserId} commented on post {PostId}", userId, postId);
+
+            // ── 3. Map and Return Response ────────────────────────────────────
+            var response = new SocialMedia.Application.DTOs.Comments.CommentResponse
+            {
+                Id = comment.Id,
+                PostId = comment.PostId,
+                UserId = comment.UserId,
+                ParentCommentId = comment.ParentCommentId,
+                Content = comment.Content,
+                CreatedAt = comment.CreatedAt
+            };
+
+            return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Success(response);
+        }
+
         // ── Helpers ────────────────────────────────────────────────────────────
 
         private static async Task CachePostAsync(IDatabase db, Post post)
         {
-            var key = $"post:{post.Id}";
+            var key = $"Post:{post.Id}";
 
             await db.HashSetAsync(key, new HashEntry[]
             {

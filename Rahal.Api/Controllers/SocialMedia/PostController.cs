@@ -87,5 +87,29 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             return Ok(result);
         }
+
+        /// <summary>
+        /// Creates a new comment or reply on a post.
+        /// </summary>
+        [HttpPost("{postId:guid}/comments")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateCommentAsync(
+            Guid postId,
+            [FromBody] SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _postService.CreateCommentAsync(postId, userId, request, cancellationToken);
+
+            if (!result.IsSuccess)
+                return result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound
+                    ? NotFound(result)
+                    : BadRequest(result);
+
+            return StatusCode(StatusCodes.Status201Created, result);
+        }
     }
 }
