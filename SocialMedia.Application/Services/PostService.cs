@@ -251,7 +251,90 @@ namespace SocialMedia.Application.Services
 
             return ApiResponse<string>.Success("Post liked successfully");
         }
+        public async Task<ApiResponse<string>> UnlikePostAsync(
+            Guid postId,
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var db           = _redis.GetDatabase();
+            var userLikesKey = $"UserLikes:{userId}";
+            var postCacheKey = $"Post:{postId}";
 
+            // ── 1. User Like Validation (Redis Set) ───────────────────────────
+            if (!await db.KeyExistsAsync(userLikesKey))
+            {
+                _logger.LogDebug("Cache miss for UserLikes:{UserId} — hydrating from DB", userId);
+                var likedPostIds = await _likeRepository.GetPostIdsLikedByUserAsync(userId, cancellationToken);
+
+                if (likedPostIds.Count > 0)
+                {
+                    var redisValues = likedPostIds.Select(id => (RedisValue)id.ToString()).ToArray();
+                    await db.SetAddAsync(userLikesKey, redisValues);
+                }
+
+                await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
+            }
+
+            // SREM returns 1 if element was removed, 0 if it didn't exist
+            var wasRemoved = await db.SetRemoveAsync(userLikesKey, postId.ToString());
+            if (!wasRemoved)
+            {
+                _logger.LogWarning("User {UserId} tried to unlike post {PostId} they haven't liked", userId, postId);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            // ── 2. Post Cache Hydration + Decrement ───────────────────────────
+            if (!await db.KeyExistsAsync(postCacheKey))
+            {
+                _logger.LogDebug("Cache miss for Post:{PostId} — hydrating from DB", postId);
+
+                var post = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+                if (post is null)
+                {
+                    // Rollback the SREM
+                    await db.SetAddAsync(userLikesKey, postId.ToString());
+                    _logger.LogWarning("Unlike rejected: post {PostId} not found", postId);
+                    return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                }
+
+                var likesCount = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(p => p.Id == postId)
+                    .SelectMany(p => p.Likes)
+                    .CountAsync(cancellationToken);
+
+                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                {
+                    new("UserId",        post.UserId.ToString()),
+                    new("Content",       post.Content),
+                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
+                    new("IsPublic",      post.IsPublic.ToString()),
+                    new("LikesCount",    likesCount),
+                    new("CommentsCount", 0),
+                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                });
+
+                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
+            }
+
+            // Atomically decrement LikesCount in the cache
+            await db.HashDecrementAsync(postCacheKey, "LikesCount", 1);
+            _logger.LogDebug("Decremented LikesCount for Post:{PostId}", postId);
+
+            // ── 3. Delete Like from PostgreSQL ────────────────────────────────
+            var like = await _likeRepository.GetAsync(userId, postId, cancellationToken);
+            if (like is not null)
+            {
+                _likeRepository.Remove(like);
+                await _likeRepository.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("User {UserId} unliked post {PostId}", userId, postId);
+            }
+
+            return ApiResponse<string>.Success("Post unliked successfully");
+        }
         // ── Helpers ────────────────────────────────────────────────────────────
 
         private static async Task CachePostAsync(IDatabase db, Post post)

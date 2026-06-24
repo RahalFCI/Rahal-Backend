@@ -14,5 +14,10 @@ namespace SocialMedia.Application.Interfaces
             Guid postId,
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<string>> UnlikePostAsync(
+            Guid postId,
+            Guid userId,
+            CancellationToken cancellationToken = default);
     }
 }

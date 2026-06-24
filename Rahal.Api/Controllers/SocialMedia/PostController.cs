@@ -64,5 +64,28 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             return Ok(result);
         }
+
+        /// <summary>
+        /// Unlikes a post. Returns 400 if the user has not liked the post.
+        /// </summary>
+        [HttpDelete("{postId:guid}/like")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UnlikePostAsync(
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _postService.UnlikePostAsync(postId, userId, cancellationToken);
+
+            if (!result.IsSuccess)
+                return result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound
+                    ? NotFound(result)
+                    : BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }
