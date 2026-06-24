@@ -54,14 +54,7 @@ namespace Gamification.Application.CQRS.Handlers.XpTransactions.Commands
 
             if (existingTransaction is not null)
             {
-                return ApiResponse<GetXpTransactionDto>.Success(new GetXpTransactionDto
-                {
-                    Id = existingTransaction.Id,
-                    ExplorerId = existingTransaction.ExplorerProfileId,
-                    Amount = existingTransaction.Amount,
-                    SourceType = existingTransaction.Source.ToString(),
-                    ReferenceId = existingTransaction.ReferenceId
-                });
+                return ApiResponse<GetXpTransactionDto>.Failure(ErrorCode.AlreadyExists);
             }
 
             var user = await _mediator.Send(new GetExplorerProfileByIdQuery(request.Dto.ExplorerId ), cancellationToken);
