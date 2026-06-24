@@ -14,6 +14,7 @@ namespace Shared.Infrastructure.Persistence
         private readonly TContext _context;
         private readonly ILogger<UnitOfWork<TContext>> _logger;
         private IDbContextTransaction? _transaction;
+        private bool _rollbackRequested;
         private bool _disposed;
         private int depth = 0;
 
@@ -55,6 +56,12 @@ namespace Shared.Infrastructure.Persistence
             if (_transaction == null)
                 throw new InvalidOperationException("No active transaction to commit.");
 
+            if (_rollbackRequested)
+            {
+                await RollbackTransactionAsync(cancellationToken);
+                throw new InvalidOperationException("Transaction was marked for rollback by an inner operation.");
+            }
+
             try
             {
                 await _context.SaveChangesAsync(cancellationToken);
@@ -82,7 +89,14 @@ namespace Shared.Infrastructure.Persistence
                 return;
             }
 
-            try
+            if (depth > 0)
+            {
+                depth--;
+                _rollbackRequested = true;
+                return;
+            }
+
+                try
             {
                 await _transaction.RollbackAsync(cancellationToken);
                 _logger.LogInformation("Transaction {TransactionId} rolled back.", _transaction.TransactionId);
@@ -91,7 +105,7 @@ namespace Shared.Infrastructure.Persistence
             {
                 await DisposeTransactionAsync();
             }
-        }
+        }}
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
