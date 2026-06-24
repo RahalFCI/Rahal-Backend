@@ -26,6 +26,18 @@ namespace SocialMedia.Infrastructure.Repositories
                 .AnyAsync(l => l.UserId == userId && l.PostId == postId, cancellationToken);
         }
 
+        /// <summary>
+        /// Returns all PostIds liked by a user. Used to hydrate the UserLikes:{UserId} Redis Set on cache miss.
+        /// </summary>
+        public async Task<List<Guid>> GetPostIdsLikedByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Likes
+                .AsNoTracking()
+                .Where(l => l.UserId == userId)
+                .Select(l => l.PostId)
+                .ToListAsync(cancellationToken);
+        }
+
         public void Add(Like like) => _context.Likes.Add(like);
 
         public void Remove(Like like) => _context.Likes.Remove(like);

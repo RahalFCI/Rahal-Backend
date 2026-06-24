@@ -39,5 +39,30 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             return StatusCode(StatusCodes.Status201Created, result);
         }
+
+        /// <summary>
+        /// Likes a post. Returns 400 if the user has already liked it.
+        /// The cache is hydrated on miss; only the Redis LikesCount is updated here —
+        /// the DB write is handled by the same request for consistency.
+        /// </summary>
+        [HttpPost("{postId:guid}/like")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> LikePostAsync(
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _postService.LikePostAsync(postId, userId, cancellationToken);
+
+            if (!result.IsSuccess)
+                return result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound
+                    ? NotFound(result)
+                    : BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }

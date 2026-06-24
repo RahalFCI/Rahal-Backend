@@ -1,5 +1,5 @@
 using MassTransit;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Shared.Application.DTOs;
@@ -16,7 +16,10 @@ namespace SocialMedia.Application.Services
     {
         private static readonly TimeSpan PostCacheTtl = TimeSpan.FromDays(14);
 
+        private static readonly TimeSpan UserLikesTtl = TimeSpan.FromDays(7);
+
         private readonly ISocialMediaRepository<Post> _postRepository;
+        private readonly ILikeRepository _likeRepository;
         private readonly IConnectionMultiplexer _redis;
         private readonly IPublishEndpoint _publisher;
         private readonly ILogger<PostService> _logger;
@@ -24,12 +27,14 @@ namespace SocialMedia.Application.Services
 
         public PostService(
             ISocialMediaRepository<Post> postRepository,
+            ILikeRepository likeRepository,
             IConnectionMultiplexer redis,
             IPublishEndpoint publisher,
             ILogger<PostService> logger,
             IObjectStorageService storageService)
         {
             _postRepository = postRepository;
+            _likeRepository = likeRepository;
             _redis          = redis;
             _publisher      = publisher;
             _logger         = logger;
@@ -139,6 +144,112 @@ namespace SocialMedia.Application.Services
                 MediaUrls = post.MediaUrls,
                 CreatedAt = post.CreatedAt
             });
+        }
+
+        public async Task<ApiResponse<string>> LikePostAsync(
+            Guid postId,
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var db           = _redis.GetDatabase();
+            var userLikesKey = $"UserLikes:{userId}";
+            var postCacheKey = $"Post:{postId}";
+
+            // ── 1. User Like Validation (Redis Set) ───────────────────────────
+            // Check for cache miss: if the UserLikes set doesn't exist in Redis,
+            // hydrate it from the DB first.
+            if (!await db.KeyExistsAsync(userLikesKey))
+            {
+                _logger.LogDebug("Cache miss for UserLikes:{UserId} — hydrating from DB", userId);
+                var likedPostIds = await _likeRepository.GetPostIdsLikedByUserAsync(userId, cancellationToken);
+
+                if (likedPostIds.Count > 0)
+                {
+                    var redisValues = likedPostIds.Select(id => (RedisValue)id.ToString()).ToArray();
+                    await db.SetAddAsync(userLikesKey, redisValues);
+                }
+
+                // Set TTL whether the set is empty or not — so we don't query DB on every request
+                await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
+            }
+
+            // SADD returns 1 if the element was added (new like), 0 if it already existed.
+            var wasAdded = await db.SetAddAsync(userLikesKey, postId.ToString());
+            if (!wasAdded)
+            {
+                _logger.LogWarning("User {UserId} already liked post {PostId}", userId, postId);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            // ── 2. Post Cache Hydration + Increment ───────────────────────────
+            if (!await db.KeyExistsAsync(postCacheKey))
+            {
+                _logger.LogDebug("Cache miss for Post:{PostId} — hydrating from DB", postId);
+
+                var post = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+                if (post is null)
+                {
+                    // Rollback the SADD since the post doesn't exist
+                    await db.SetRemoveAsync(userLikesKey, postId.ToString());
+                    _logger.LogWarning("Like rejected: post {PostId} not found", postId);
+                    return ApiResponse<string>.Failure(ErrorCode.NotFound);
+                }
+
+                var likesCount = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(p => p.Id == postId)
+                    .SelectMany(p => p.Likes)
+                    .CountAsync(cancellationToken);
+
+                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                {
+                    new("UserId",        post.UserId.ToString()),
+                    new("Content",       post.Content),
+                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
+                    new("IsPublic",      post.IsPublic.ToString()),
+                    new("LikesCount",    likesCount),
+                    new("CommentsCount", 0),
+                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                });
+
+                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
+            }
+
+            // Atomically increment LikesCount in the cache
+            await db.HashIncrementAsync(postCacheKey, "LikesCount", 1);
+            _logger.LogDebug("Incremented LikesCount for Post:{PostId}", postId);
+
+            // ── 3. Persist Like to PostgreSQL ─────────────────────────────────
+            var like = new Like
+            {
+                UserId    = userId,
+                PostId    = postId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _likeRepository.Add(like);
+            await _likeRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("User {UserId} liked post {PostId}", userId, postId);
+
+            // ── 4. Publish PostLikedEvent to RabbitMQ ─────────────────────────
+            try
+            {
+                await _publisher.Publish(
+                    new PostLikedEvent(postId, userId, DateTime.UtcNow),
+                    cancellationToken);
+
+                _logger.LogInformation("PostLikedEvent published for post {PostId}", postId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PostLikedEvent for post {PostId} — non-fatal", postId);
+            }
+
+            return ApiResponse<string>.Success("Post liked successfully");
         }
 
         // ── Helpers ────────────────────────────────────────────────────────────

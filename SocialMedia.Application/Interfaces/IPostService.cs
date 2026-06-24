@@ -9,5 +9,10 @@ namespace SocialMedia.Application.Interfaces
             CreatePostRequest request,
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<string>> LikePostAsync(
+            Guid postId,
+            Guid userId,
+            CancellationToken cancellationToken = default);
     }
 }
