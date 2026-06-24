@@ -451,6 +451,88 @@ namespace SocialMedia.Application.Services
             return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Success(response);
         }
 
+        public async Task<ApiResponse<string>> DeleteCommentAsync(
+            Guid commentId,
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var comment = await _commentRepository.GetByIdAsync(commentId, cancellationToken);
+
+            // ── 1. Validation ──────────────────────────────────────────────────
+            if (comment is null || comment.IsDeleted)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            if (comment.UserId != userId)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
+            }
+
+            var postId = comment.PostId;
+            var db = _redis.GetDatabase();
+            var postCacheKey = $"Post:{postId}";
+
+            // ── 2. Soft Delete in PostgreSQL ──────────────────────────────────
+            // Only update the target comment to IsDeleted = true.
+            // We do NOT cascade to replies to keep thread context intact.
+            await _commentRepository.GetTable()
+                .Where(c => c.Id == commentId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(c => c.IsDeleted, true),
+                    cancellationToken);
+
+            _logger.LogInformation("User {UserId} soft-deleted comment {CommentId}", userId, commentId);
+
+            // ── 3. Post Cache Hydration + Decrement ───────────────────────────
+            if (!await db.KeyExistsAsync(postCacheKey))
+            {
+                _logger.LogDebug("Cache miss for Post:{PostId} — hydrating from DB", postId);
+
+                var post = await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+                if (post is not null)
+                {
+                    var likesCount = await _postRepository.GetTable()
+                        .AsNoTracking()
+                        .Where(p => p.Id == postId)
+                        .SelectMany(p => p.Likes)
+                        .CountAsync(cancellationToken);
+
+                    var commentsCount = await _commentRepository.GetTable()
+                        .AsNoTracking()
+                        .Where(c => c.PostId == postId && !c.IsDeleted)
+                        .CountAsync(cancellationToken);
+
+                    await db.HashSetAsync(postCacheKey, new HashEntry[]
+                    {
+                        new("UserId",        post.UserId.ToString()),
+                        new("Content",       post.Content),
+                        new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
+                        new("IsPublic",      post.IsPublic.ToString()),
+                        new("LikesCount",    likesCount),
+                        new("CommentsCount", commentsCount),
+                        new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                    });
+
+                    await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
+                }
+            }
+
+            // Decrement CommentsCount and ensure it doesn't go below 0
+            var newCount = await db.HashDecrementAsync(postCacheKey, "CommentsCount", 1);
+            if (newCount < 0)
+            {
+                await db.HashSetAsync(postCacheKey, "CommentsCount", 0);
+            }
+
+            _logger.LogDebug("Decremented CommentsCount for Post:{PostId} to {Count}", postId, Math.Max(0, newCount));
+
+            return ApiResponse<string>.Success(string.Empty);
+        }
+
         // ── Helpers ────────────────────────────────────────────────────────────
 
         private static async Task CachePostAsync(IDatabase db, Post post)

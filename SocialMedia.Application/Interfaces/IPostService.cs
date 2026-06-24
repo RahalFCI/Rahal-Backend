@@ -25,5 +25,10 @@ namespace SocialMedia.Application.Interfaces
             Guid userId,
             SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<string>> DeleteCommentAsync(
+            Guid commentId,
+            Guid userId,
+            CancellationToken cancellationToken = default);
     }
 }

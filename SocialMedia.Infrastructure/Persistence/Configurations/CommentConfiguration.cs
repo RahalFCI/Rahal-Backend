@@ -66,12 +66,15 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
 
             // Composite Index without partial filter — deleted comments stay so their
             // child threads remain intact (Reddit-style soft delete).
-            builder.HasIndex(e => new { e.PostId, e.ParentCommentId })
-                .HasDatabaseName("IX_Comments_PostId_ParentCommentId");
+            // PostId, ParentCommentId, CreatedAt DESC
+            builder.HasIndex(e => new { e.PostId, e.ParentCommentId, e.CreatedAt })
+                .HasDatabaseName("IX_Comments_PostId_ParentCommentId_CreatedAt")
+                .IsDescending(false, false, true);
 
-            // B-Tree Index on ParentCommentId for fetching nested replies
-            builder.HasIndex(e => e.ParentCommentId)
-                .HasDatabaseName("IX_Comments_ParentCommentId");
+            // B-Tree Index on ParentCommentId and CreatedAt for fetching nested replies
+            // ParentCommentId, CreatedAt ASC
+            builder.HasIndex(e => new { e.ParentCommentId, e.CreatedAt })
+                .HasDatabaseName("IX_Comments_ParentCommentId_CreatedAt");
         }
     }
 }

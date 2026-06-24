@@ -112,5 +112,33 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             return StatusCode(StatusCodes.Status201Created, result);
         }
+
+        /// <summary>
+        /// Soft deletes a comment. Child replies remain intact.
+        /// </summary>
+        [HttpDelete("~/api/comments/{commentId:guid}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteCommentAsync(
+            Guid commentId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _postService.DeleteCommentAsync(commentId, userId, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
+                    return NotFound(result);
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
+                    return Unauthorized(result);
+
+                return BadRequest(result);
+            }
+
+            return NoContent();
+        }
     }
 }
