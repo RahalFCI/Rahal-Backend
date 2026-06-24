@@ -13,8 +13,9 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
             // Primary Key
             builder.HasKey(e => e.Id);
 
-            // Query filter for soft deletion
-            builder.HasQueryFilter(e => !e.IsDeleted);
+            // IMPORTANT: No global HasQueryFilter on IsDeleted.
+            // We filter explicitly in LINQ so deleted parents are still visible
+            // in thread context when they have active replies.
 
             // Audit Properties (inherited from BaseEntity)
             builder.Property(e => e.CreatedAt)
@@ -44,6 +45,10 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasColumnType("text");
 
+            builder.Property(e => e.RepliesCount)
+                .HasDefaultValue(0)
+                .IsRequired();
+
             // FK to Post
             builder.HasOne(e => e.Post)
                 .WithMany(p => p.Comments)
@@ -52,25 +57,21 @@ namespace SocialMedia.Infrastructure.Persistence.Configurations
 
             // Self-referencing FK for nested replies
             // DeleteBehavior.Restrict prevents cascade delete cycles on the self-referencing path.
-            // Parent post deletion cascades through Post → Comments (handled above);
-            // this FK only governs direct parent-child comment deletion.
+            // We rely on soft-delete, not hard cascade, for comments.
             builder.HasOne(e => e.ParentComment)
                 .WithMany(c => c.Replies)
                 .HasForeignKey(e => e.ParentCommentId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            // Indexes
-
-            // Composite Partial Index: fetch root comments for a post (ParentCommentId IS NULL)
+            // Composite Index without partial filter — deleted comments stay so their
+            // child threads remain intact (Reddit-style soft delete).
             builder.HasIndex(e => new { e.PostId, e.ParentCommentId })
-                .HasDatabaseName("IX_Comments_PostId_ParentCommentId")
-                .HasFilter("\"IsDeleted\" = false");
+                .HasDatabaseName("IX_Comments_PostId_ParentCommentId");
 
-            // B-Tree Partial Index on ParentCommentId — fetch nested replies for a specific active comment
+            // B-Tree Index on ParentCommentId for fetching nested replies
             builder.HasIndex(e => e.ParentCommentId)
-                .HasDatabaseName("IX_Comments_ParentCommentId")
-                .HasFilter("\"IsDeleted\" = false");
+                .HasDatabaseName("IX_Comments_ParentCommentId");
         }
     }
 }

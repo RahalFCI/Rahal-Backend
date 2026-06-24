@@ -20,6 +20,11 @@ namespace SocialMedia.Domain.Entities
 
         public string Content { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Denormalized count of direct replies to this comment. Updated atomically via ExecuteUpdateAsync.
+        /// </summary>
+        public int RepliesCount { get; set; } = 0;
+
         // Navigation: child replies
         public ICollection<Comment> Replies { get; set; } = new List<Comment>();
     }

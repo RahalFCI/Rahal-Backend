@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rahal.Api.Controllers._Common;
+using SocialMedia.Application.DTOs.Comments;
 using SocialMedia.Application.DTOs.Posts;
 using SocialMedia.Application.Interfaces;
 
@@ -98,7 +99,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateCommentAsync(
             Guid postId,
-            [FromBody] SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
+            [FromBody] CreateCommentRequest request,
             CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();

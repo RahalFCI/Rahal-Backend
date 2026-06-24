@@ -401,17 +401,38 @@ namespace SocialMedia.Application.Services
             await db.HashIncrementAsync(postCacheKey, "CommentsCount", 1);
             _logger.LogDebug("Incremented CommentsCount for Post:{PostId}", postId);
 
-            // ── 2. Persist Comment to PostgreSQL ──────────────────────────────
+            // ── 2. Persist Comment + RepliesCount update in a single transaction ────
+            // EF Core's SaveChangesAsync wraps all tracked changes in one implicit
+            // transaction. We stage both the new comment and the parent's counter
+            // update as tracked changes, then flush them together atomically.
+
             var comment = new Comment
             {
-                PostId = postId,
-                UserId = userId,
-                Content = request.Content,
+                PostId          = postId,
+                UserId          = userId,
+                Content         = request.Content,
                 ParentCommentId = request.ParentCommentId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt       = DateTime.UtcNow
             };
 
             _commentRepository.Add(comment);
+
+            // If this is a reply, fetch the parent and increment its counter.
+            // Both changes are staged in the same DbContext and committed together.
+            if (request.ParentCommentId.HasValue)
+            {
+                var parent = await _commentRepository.GetByIdAsync(
+                    request.ParentCommentId.Value, cancellationToken);
+
+                if (parent is not null)
+                {
+                    parent.RepliesCount++;
+                    _commentRepository.Update(parent);
+                    _logger.LogDebug("Staged RepliesCount increment for parent comment {ParentCommentId}", parent.Id);
+                }
+            }
+
+            // Single SaveChangesAsync → single BEGIN/COMMIT wrapping both INSERT + UPDATE.
             await _commentRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("User {UserId} commented on post {PostId}", userId, postId);
@@ -419,12 +440,12 @@ namespace SocialMedia.Application.Services
             // ── 3. Map and Return Response ────────────────────────────────────
             var response = new SocialMedia.Application.DTOs.Comments.CommentResponse
             {
-                Id = comment.Id,
-                PostId = comment.PostId,
-                UserId = comment.UserId,
+                Id              = comment.Id,
+                PostId          = comment.PostId,
+                UserId          = comment.UserId,
                 ParentCommentId = comment.ParentCommentId,
-                Content = comment.Content,
-                CreatedAt = comment.CreatedAt
+                Content         = comment.Content,
+                CreatedAt       = comment.CreatedAt
             };
 
             return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Success(response);
