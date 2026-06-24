@@ -474,13 +474,26 @@ namespace SocialMedia.Application.Services
             var postCacheKey = $"Post:{postId}";
 
             // ── 2. Soft Delete in PostgreSQL ──────────────────────────────────
-            // Only update the target comment to IsDeleted = true.
-            // We do NOT cascade to replies to keep thread context intact.
-            await _commentRepository.GetTable()
-                .Where(c => c.Id == commentId)
-                .ExecuteUpdateAsync(
-                    s => s.SetProperty(c => c.IsDeleted, true),
-                    cancellationToken);
+            // We stage both the soft-delete and the parent's RepliesCount decrement
+            // as tracked changes, then flush them together atomically in one transaction.
+
+            comment.IsDeleted = true;
+            _commentRepository.Update(comment);
+
+            if (comment.ParentCommentId.HasValue)
+            {
+                var parent = await _commentRepository.GetByIdAsync(
+                    comment.ParentCommentId.Value, cancellationToken);
+
+                if (parent is not null && parent.RepliesCount > 0)
+                {
+                    parent.RepliesCount--;
+                    _commentRepository.Update(parent);
+                    _logger.LogDebug("Staged RepliesCount decrement for parent comment {ParentCommentId}", parent.Id);
+                }
+            }
+
+            await _commentRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("User {UserId} soft-deleted comment {CommentId}", userId, commentId);
 
