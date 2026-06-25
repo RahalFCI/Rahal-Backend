@@ -21,6 +21,7 @@ using Serilog;
 using Shared.Application.Services;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
+using SocialMedia.Application.EventConsumers;
 using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
@@ -74,6 +75,10 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<DeleteProfileEventConsumer>();
     x.AddConsumer<RestoreProfileEventConsumer>();
     x.AddConsumer<CreateCheckInEventConsumer>();
+    x.AddConsumer<SocialMediaFanoutPostCreatedConsumer>();
+    x.AddConsumer<SocialMediaFanoutPostDeletedConsumer>();
+    x.AddConsumer<SocialMediaFanoutUserFollowedConsumer>();
+    x.AddConsumer<SocialMediaFanoutUserUnfollowedConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

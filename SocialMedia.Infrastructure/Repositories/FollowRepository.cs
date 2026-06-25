@@ -35,6 +35,15 @@ namespace SocialMedia.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Guid>> GetFollowerIdsByFolloweeAsync(Guid followeeId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Follows
+                .AsNoTracking()
+                .Where(f => f.FolloweeId == followeeId)
+                .Select(f => f.FollowerId)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<int> CountFollowersAsync(Guid userId, CancellationToken cancellationToken = default)
         {
             return await _context.Follows
