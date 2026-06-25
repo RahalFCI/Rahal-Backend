@@ -10,6 +10,9 @@ namespace SocialMedia.Application.Interfaces
     {
         Task<Follow?> GetAsync(Guid followerId, Guid followeeId, CancellationToken cancellationToken = default);
         Task<bool> ExistsAsync(Guid followerId, Guid followeeId, CancellationToken cancellationToken = default);
+        Task<List<Guid>> GetFolloweeIdsByFollowerAsync(Guid followerId, CancellationToken cancellationToken = default);
+        Task<int> CountFollowersAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<int> CountFollowingAsync(Guid userId, CancellationToken cancellationToken = default);
         void Add(Follow follow);
         void Remove(Follow follow);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
