@@ -114,6 +114,36 @@ namespace Rahal.Api.Controllers.SocialMedia
         }
 
         /// <summary>
+        /// Edits an existing comment.
+        /// </summary>
+        [HttpPut("~/api/comments/{commentId:guid}")]
+        [Authorize]
+        [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EditCommentAsync(
+            Guid commentId,
+            [FromBody] global::SocialMedia.Application.DTOs.Comments.EditCommentRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _postService.EditCommentAsync(commentId, userId, request, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
+                    return NotFound(result);
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
+                    return Unauthorized(result);
+
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Soft deletes a comment. Child replies remain intact.
         /// </summary>
         [HttpDelete("~/api/comments/{commentId:guid}")]

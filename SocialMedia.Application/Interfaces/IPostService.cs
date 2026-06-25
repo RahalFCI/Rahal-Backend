@@ -26,6 +26,12 @@ namespace SocialMedia.Application.Interfaces
             SocialMedia.Application.DTOs.Comments.CreateCommentRequest request,
             CancellationToken cancellationToken = default);
 
+        Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>> EditCommentAsync(
+            Guid commentId,
+            Guid userId,
+            SocialMedia.Application.DTOs.Comments.EditCommentRequest request,
+            CancellationToken cancellationToken = default);
+
         Task<ApiResponse<string>> DeleteCommentAsync(
             Guid commentId,
             Guid userId,

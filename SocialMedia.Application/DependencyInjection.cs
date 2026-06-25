@@ -20,6 +20,8 @@ namespace SocialMedia.Application
 
             // Validators
             services.AddScoped<IValidator<GenerateUploadSignaturesRequest>, GenerateUploadSignaturesRequestValidator>();
+            services.AddScoped<IValidator<SocialMedia.Application.DTOs.Comments.CreateCommentRequest>, CreateCommentRequestValidator>();
+            services.AddScoped<IValidator<SocialMedia.Application.DTOs.Comments.EditCommentRequest>, EditCommentRequestValidator>();
 
             return services;
         }

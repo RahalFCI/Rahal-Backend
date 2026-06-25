@@ -454,6 +454,44 @@ namespace SocialMedia.Application.Services
             return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Success(response);
         }
 
+        public async Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>> EditCommentAsync(
+            Guid commentId,
+            Guid userId,
+            SocialMedia.Application.DTOs.Comments.EditCommentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var comment = await _commentRepository.GetByIdAsync(commentId, cancellationToken);
+
+            if (comment is null || comment.IsDeleted)
+            {
+                return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Failure(ErrorCode.NotFound);
+            }
+
+            if (comment.UserId != userId)
+            {
+                return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Failure(ErrorCode.Unauthorized);
+            }
+
+            comment.Content = request.Content;
+            comment.UpdatedAt = DateTime.UtcNow;
+
+            _commentRepository.Update(comment);
+            await _commentRepository.SaveChangesAsync(cancellationToken);
+
+            return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Success(
+                new SocialMedia.Application.DTOs.Comments.CommentResponse
+                {
+                    Id = comment.Id,
+                    PostId = comment.PostId,
+                    UserId = comment.UserId,
+                    UserDisplayName = null, // Not fetched during edit to save DB trip
+                    ParentCommentId = comment.ParentCommentId,
+                    Content = comment.Content,
+                    RepliesCount = comment.RepliesCount,
+                    CreatedAt = comment.CreatedAt
+                });
+        }
+
         public async Task<ApiResponse<string>> DeleteCommentAsync(
             Guid commentId,
             Guid userId,
