@@ -104,6 +104,76 @@ namespace SocialMedia.Application.Services
             });
         }
 
+        public async Task<ApiResponse<FollowResponse>> UnfollowAsync(
+            Guid followerId,
+            Guid followingId,
+            CancellationToken cancellationToken = default)
+        {
+            if (followerId == Guid.Empty || followingId == Guid.Empty || followerId == followingId)
+            {
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            var db = _redis.GetDatabase();
+            var followingKey = $"Following:{followerId}";
+            var followerProfileKey = $"UserProfile:{followerId}";
+            var followingProfileKey = $"UserProfile:{followingId}";
+
+            await HydrateFollowingAsync(db, followerId, followingKey, cancellationToken);
+
+            var wasRemoved = await db.SetRemoveAsync(followingKey, followingId.ToString());
+            if (!wasRemoved)
+            {
+                _logger.LogWarning("User {FollowerId} tried to unfollow user {FollowingId} they do not follow", followerId, followingId);
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            await HydrateUserProfileAsync(db, followerId, followerProfileKey, cancellationToken);
+            await DecrementHashFieldWithoutNegativeAsync(db, followerProfileKey, "FollowingCount");
+
+            await HydrateUserProfileAsync(db, followingId, followingProfileKey, cancellationToken);
+            await DecrementHashFieldWithoutNegativeAsync(db, followingProfileKey, "FollowersCount");
+
+            var follow = await _followRepository.GetAsync(followerId, followingId, cancellationToken);
+            if (follow is not null)
+            {
+                _followRepository.Remove(follow);
+
+                try
+                {
+                    await _followRepository.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    await RollbackUnfollowCacheAsync(db, followingKey, followerProfileKey, followingProfileKey, followingId);
+                    _logger.LogError(ex, "Failed to remove follow relationship from {FollowerId} to {FollowingId}", followerId, followingId);
+                    return ApiResponse<FollowResponse>.Failure(ErrorCode.DatabaseError);
+                }
+            }
+
+            var timestamp = DateTime.UtcNow;
+
+            try
+            {
+                await _publisher.Publish(
+                    new UserUnfollowedEvent(followerId, followingId, timestamp),
+                    cancellationToken);
+
+                _logger.LogInformation("UserUnfollowedEvent published for follower {FollowerId} and following {FollowingId}", followerId, followingId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish UserUnfollowedEvent for follower {FollowerId} and following {FollowingId}", followerId, followingId);
+            }
+
+            return ApiResponse<FollowResponse>.Success(new FollowResponse
+            {
+                FollowerId = followerId,
+                FollowingId = followingId,
+                Timestamp = timestamp
+            });
+        }
+
         private async Task HydrateFollowingAsync(
             IDatabase db,
             Guid followerId,
@@ -152,6 +222,18 @@ namespace SocialMedia.Application.Services
             await db.KeyExpireAsync(profileKey, UserProfileTtl);
         }
 
+        private static async Task DecrementHashFieldWithoutNegativeAsync(
+            IDatabase db,
+            RedisKey key,
+            RedisValue field)
+        {
+            var count = await db.HashDecrementAsync(key, field, 1);
+            if (count < 0)
+            {
+                await db.HashSetAsync(key, field, 0);
+            }
+        }
+
         private static async Task RollbackFollowCacheAsync(
             IDatabase db,
             RedisKey followingKey,
@@ -172,6 +254,18 @@ namespace SocialMedia.Application.Services
             {
                 await db.HashSetAsync(followingProfileKey, "FollowersCount", 0);
             }
+        }
+
+        private static async Task RollbackUnfollowCacheAsync(
+            IDatabase db,
+            RedisKey followingKey,
+            RedisKey followerProfileKey,
+            RedisKey followingProfileKey,
+            Guid followingId)
+        {
+            await db.SetAddAsync(followingKey, followingId.ToString());
+            await db.HashIncrementAsync(followerProfileKey, "FollowingCount", 1);
+            await db.HashIncrementAsync(followingProfileKey, "FollowersCount", 1);
         }
     }
 }

@@ -9,5 +9,10 @@ namespace SocialMedia.Application.Interfaces
             Guid followerId,
             Guid followingId,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<FollowResponse>> UnfollowAsync(
+            Guid followerId,
+            Guid followingId,
+            CancellationToken cancellationToken = default);
     }
 }
