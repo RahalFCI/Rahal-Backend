@@ -38,4 +38,5 @@
     <Build />
   </Project>
   <Project Path="Rahal.Api/Rahal.Api.csproj" />
+  <Project Path="Users.Contracts/Users.Contracts.csproj" />
 </Solution>

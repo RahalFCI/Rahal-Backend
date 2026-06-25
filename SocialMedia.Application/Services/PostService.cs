@@ -21,6 +21,7 @@ namespace SocialMedia.Application.Services
         private readonly ISocialMediaRepository<Post> _postRepository;
         private readonly ISocialMediaRepository<Comment> _commentRepository;
         private readonly ILikeRepository _likeRepository;
+        private readonly IUserGateway _userGateway;
         private readonly IConnectionMultiplexer _redis;
         private readonly IPublishEndpoint _publisher;
         private readonly ILogger<PostService> _logger;
@@ -30,6 +31,7 @@ namespace SocialMedia.Application.Services
             ISocialMediaRepository<Post> postRepository,
             ISocialMediaRepository<Comment> commentRepository,
             ILikeRepository likeRepository,
+            IUserGateway userGateway,
             IConnectionMultiplexer redis,
             IPublishEndpoint publisher,
             ILogger<PostService> logger,
@@ -38,6 +40,7 @@ namespace SocialMedia.Application.Services
             _postRepository    = postRepository;
             _commentRepository = commentRepository;
             _likeRepository    = likeRepository;
+            _userGateway       = userGateway;
             _redis             = redis;
             _publisher         = publisher;
             _logger            = logger;
@@ -544,6 +547,109 @@ namespace SocialMedia.Application.Services
             _logger.LogDebug("Decremented CommentsCount for Post:{PostId} to {Count}", postId, Math.Max(0, newCount));
 
             return ApiResponse<string>.Success(string.Empty);
+        }
+
+        public async Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>> GetRootCommentsAsync(
+            Guid postId,
+            DateTime? cursor,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _commentRepository.GetTable()
+                .IgnoreQueryFilters()
+                .Where(c => c.PostId == postId && c.ParentCommentId == null)
+                .Where(c => c.IsDeleted == false || (c.IsDeleted == true && c.RepliesCount > 0));
+
+            if (cursor.HasValue)
+            {
+                query = query.Where(c => c.CreatedAt < cursor.Value);
+            }
+
+            var comments = await query
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+
+            var response = await MapCommentsAsync(comments, cancellationToken);
+            var nextCursor = comments.Count > 0 ? comments.Last().CreatedAt : (DateTime?)null;
+
+            return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>.Success(
+                new SocialMedia.Application.DTOs.Comments.CommentPagedResponse
+                {
+                    Comments = response,
+                    NextCursor = nextCursor
+                });
+        }
+
+        public async Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>> GetCommentRepliesAsync(
+            Guid commentId,
+            DateTime? cursor,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _commentRepository.GetTable()
+                .IgnoreQueryFilters()
+                .Where(c => c.ParentCommentId == commentId)
+                .Where(c => c.IsDeleted == false || (c.IsDeleted == true && c.RepliesCount > 0));
+
+            if (cursor.HasValue)
+            {
+                // Ascending chronological order: greater than cursor
+                query = query.Where(c => c.CreatedAt > cursor.Value);
+            }
+
+            var comments = await query
+                .OrderBy(c => c.CreatedAt)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+
+            var response = await MapCommentsAsync(comments, cancellationToken);
+            var nextCursor = comments.Count > 0 ? comments.Last().CreatedAt : (DateTime?)null;
+
+            return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>.Success(
+                new SocialMedia.Application.DTOs.Comments.CommentPagedResponse
+                {
+                    Comments = response,
+                    NextCursor = nextCursor
+                });
+        }
+
+        private async Task<List<SocialMedia.Application.DTOs.Comments.CommentResponse>> MapCommentsAsync(
+            List<Comment> comments,
+            CancellationToken cancellationToken)
+        {
+            var activeUserIds = comments.Where(c => !c.IsDeleted).Select(c => c.UserId).Distinct().ToList();
+            var userNames = await _userGateway.GetUserDisplayNamesAsync(activeUserIds, cancellationToken);
+
+            return comments.Select(c => 
+            {
+                if (c.IsDeleted)
+                {
+                    return new SocialMedia.Application.DTOs.Comments.CommentResponse
+                    {
+                        Id = c.Id,
+                        PostId = c.PostId,
+                        ParentCommentId = c.ParentCommentId,
+                        RepliesCount = c.RepliesCount,
+                        CreatedAt = c.CreatedAt,
+                        Content = "[Deleted]",
+                        UserId = null,
+                        UserDisplayName = "[Deleted User]"
+                    };
+                }
+
+                return new SocialMedia.Application.DTOs.Comments.CommentResponse
+                {
+                    Id = c.Id,
+                    PostId = c.PostId,
+                    ParentCommentId = c.ParentCommentId,
+                    RepliesCount = c.RepliesCount,
+                    CreatedAt = c.CreatedAt,
+                    Content = c.Content,
+                    UserId = c.UserId,
+                    UserDisplayName = userNames.TryGetValue(c.UserId, out var name) ? name : "Unknown User"
+                };
+            }).ToList();
         }
 
         // ── Helpers ────────────────────────────────────────────────────────────

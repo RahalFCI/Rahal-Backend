@@ -140,5 +140,35 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Gets root comments for a post utilizing keyset pagination.
+        /// </summary>
+        [HttpGet("{postId:guid}/comments")]
+        [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentPagedResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetRootCommentsAsync(
+            Guid postId,
+            [FromQuery] DateTime? cursor,
+            [FromQuery] int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _postService.GetRootCommentsAsync(postId, cursor, limit, cancellationToken);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets nested replies for a specific comment utilizing ascending keyset pagination.
+        /// </summary>
+        [HttpGet("~/api/comments/{commentId:guid}/replies")]
+        [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentPagedResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCommentRepliesAsync(
+            Guid commentId,
+            [FromQuery] DateTime? cursor,
+            [FromQuery] int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _postService.GetCommentRepliesAsync(commentId, cursor, limit, cancellationToken);
+            return Ok(result);
+        }
     }
 }

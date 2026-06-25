@@ -30,5 +30,17 @@ namespace SocialMedia.Application.Interfaces
             Guid commentId,
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>> GetRootCommentsAsync(
+            Guid postId,
+            DateTime? cursor,
+            int limit = 20,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>> GetCommentRepliesAsync(
+            Guid commentId,
+            DateTime? cursor,
+            int limit = 20,
+            CancellationToken cancellationToken = default);
     }
 }
