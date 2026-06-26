@@ -9,18 +9,24 @@ using Shared.Domain.Enums;
 using SocialMedia.Application.DTOs.Posts;
 using SocialMedia.Application.Interfaces;
 using SocialMedia.Domain.Entities;
+using System.Text.Json;
 
 namespace SocialMedia.Application.Services
 {
     public class PostService : IPostService
     {
-        private static readonly TimeSpan PostCacheTtl = TimeSpan.FromDays(14);
+        private const int MaxFeedSize = 500;
+
+        private static readonly TimeSpan PostCacheTtl = TimeSpan.FromDays(7);
+
+        private static readonly TimeSpan FeedCacheTtl = TimeSpan.FromDays(7);
 
         private static readonly TimeSpan UserLikesTtl = TimeSpan.FromDays(7);
 
         private readonly ISocialMediaRepository<Post> _postRepository;
         private readonly ISocialMediaRepository<Comment> _commentRepository;
         private readonly ILikeRepository _likeRepository;
+        private readonly IFollowRepository _followRepository;
         private readonly IUserGateway _userGateway;
         private readonly IConnectionMultiplexer _redis;
         private readonly IPublishEndpoint _publisher;
@@ -31,6 +37,7 @@ namespace SocialMedia.Application.Services
             ISocialMediaRepository<Post> postRepository,
             ISocialMediaRepository<Comment> commentRepository,
             ILikeRepository likeRepository,
+            IFollowRepository followRepository,
             IUserGateway userGateway,
             IConnectionMultiplexer redis,
             IPublishEndpoint publisher,
@@ -40,6 +47,7 @@ namespace SocialMedia.Application.Services
             _postRepository    = postRepository;
             _commentRepository = commentRepository;
             _likeRepository    = likeRepository;
+            _followRepository  = followRepository;
             _userGateway       = userGateway;
             _redis             = redis;
             _publisher         = publisher;
@@ -152,6 +160,111 @@ namespace SocialMedia.Application.Services
             });
         }
 
+        public async Task<ApiResponse<PostResponseDto>> GetPostByIdAsync(
+            Guid postId,
+            CancellationToken cancellationToken = default)
+        {
+            var db = _redis.GetDatabase();
+            var postCacheKey = $"Post:{postId}";
+            var cachedPost = TryMapPostHash(postId, await db.HashGetAllAsync(postCacheKey));
+
+            if (cachedPost is not null)
+            {
+                return ApiResponse<PostResponseDto>.Success(MapPostResponse(cachedPost));
+            }
+
+            var post = await GetPostReadModelQuery()
+                .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+            if (post is null)
+            {
+                return ApiResponse<PostResponseDto>.Failure(ErrorCode.NotFound);
+            }
+
+            await CachePostAsync(db, post);
+
+            return ApiResponse<PostResponseDto>.Success(MapPostResponse(post));
+        }
+
+        public async Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
+            Guid userId,
+            long? cursor = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            if (userId == Guid.Empty)
+            {
+                return ApiResponse<FeedPagedResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            if (limit <= 0)
+            {
+                limit = 20;
+            }
+
+            var db = _redis.GetDatabase();
+            var feedKey = $"Feed:{userId}";
+            var cursorTimestamp = cursor ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            if (await db.SortedSetLengthAsync(feedKey) == 0)
+            {
+                await HydrateFeedAsync(db, userId, feedKey, cancellationToken);
+            }
+
+            var redisPostIds = (await db.SortedSetRangeByScoreAsync(
+                    feedKey,
+                    double.NegativeInfinity,
+                    cursorTimestamp - 1,
+                    Exclude.None,
+                    Order.Descending,
+                    skip: 0,
+                    take: limit))
+                .Select(value => Guid.TryParse(value.ToString(), out var id) ? id : Guid.Empty)
+                .Where(id => id != Guid.Empty)
+                .ToList();
+
+            var combinedPostIds = new List<Guid>(redisPostIds);
+            var seenPostIds = redisPostIds.ToHashSet();
+
+            if (redisPostIds.Count < limit)
+            {
+                var missingCount = limit - redisPostIds.Count;
+                var fallbackPostIds = await GetFeedPostIdsFromDbAsync(
+                    userId,
+                    cursorTimestamp,
+                    missingCount,
+                    seenPostIds,
+                    cancellationToken);
+
+                foreach (var postId in fallbackPostIds)
+                {
+                    if (seenPostIds.Add(postId))
+                    {
+                        combinedPostIds.Add(postId);
+                    }
+                }
+            }
+
+            if (combinedPostIds.Count == 0)
+            {
+                return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse());
+            }
+
+            var posts = await GetPostsByIdsWithCacheAsync(db, combinedPostIds, cancellationToken);
+            var responsePosts = posts
+                .OrderByDescending(post => post.CreatedAt)
+                .Select(MapPostResponse)
+                .ToList();
+
+            return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse
+            {
+                Posts = responsePosts,
+                NextCursor = responsePosts.Count == 0
+                    ? null
+                    : new DateTimeOffset(responsePosts[^1].CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds()
+            });
+        }
+
         public async Task<ApiResponse<string>> LikePostAsync(
             Guid postId,
             Guid userId,
@@ -215,18 +328,17 @@ namespace SocialMedia.Application.Services
                     .Where(c => c.PostId == postId && !c.IsDeleted)
                     .CountAsync(cancellationToken);
 
-                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                await CachePostAsync(db, new CachedPost
                 {
-                    new("UserId",        post.UserId.ToString()),
-                    new("Content",       post.Content),
-                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
-                    new("IsPublic",      post.IsPublic.ToString()),
-                    new("LikesCount",    likesCount),
-                    new("CommentsCount", commentsCount),
-                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                    Id = post.Id,
+                    Content = post.Content,
+                    AuthorId = post.UserId,
+                    LikesCount = likesCount,
+                    CommentsCount = commentsCount,
+                    CreatedAt = post.CreatedAt,
+                    IsPublic = post.IsPublic,
+                    MediaUrls = post.MediaUrls
                 });
-
-                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
             }
 
             // Atomically increment LikesCount in the cache
@@ -322,18 +434,17 @@ namespace SocialMedia.Application.Services
                     .Where(c => c.PostId == postId && !c.IsDeleted)
                     .CountAsync(cancellationToken);
 
-                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                await CachePostAsync(db, new CachedPost
                 {
-                    new("UserId",        post.UserId.ToString()),
-                    new("Content",       post.Content),
-                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
-                    new("IsPublic",      post.IsPublic.ToString()),
-                    new("LikesCount",    likesCount),
-                    new("CommentsCount", commentsCount),
-                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                    Id = post.Id,
+                    Content = post.Content,
+                    AuthorId = post.UserId,
+                    LikesCount = likesCount,
+                    CommentsCount = commentsCount,
+                    CreatedAt = post.CreatedAt,
+                    IsPublic = post.IsPublic,
+                    MediaUrls = post.MediaUrls
                 });
-
-                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
             }
 
             // Atomically decrement LikesCount in the cache
@@ -386,18 +497,17 @@ namespace SocialMedia.Application.Services
                     .Where(c => c.PostId == postId && !c.IsDeleted)
                     .CountAsync(cancellationToken);
 
-                await db.HashSetAsync(postCacheKey, new HashEntry[]
+                await CachePostAsync(db, new CachedPost
                 {
-                    new("UserId",        post.UserId.ToString()),
-                    new("Content",       post.Content),
-                    new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
-                    new("IsPublic",      post.IsPublic.ToString()),
-                    new("LikesCount",    likesCount),
-                    new("CommentsCount", commentsCount),
-                    new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                    Id = post.Id,
+                    Content = post.Content,
+                    AuthorId = post.UserId,
+                    LikesCount = likesCount,
+                    CommentsCount = commentsCount,
+                    CreatedAt = post.CreatedAt,
+                    IsPublic = post.IsPublic,
+                    MediaUrls = post.MediaUrls
                 });
-
-                await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
             }
 
             // Atomically increment CommentsCount in the cache
@@ -560,18 +670,17 @@ namespace SocialMedia.Application.Services
                         .Where(c => c.PostId == postId && !c.IsDeleted)
                         .CountAsync(cancellationToken);
 
-                    await db.HashSetAsync(postCacheKey, new HashEntry[]
+                    await CachePostAsync(db, new CachedPost
                     {
-                        new("UserId",        post.UserId.ToString()),
-                        new("Content",       post.Content),
-                        new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
-                        new("IsPublic",      post.IsPublic.ToString()),
-                        new("LikesCount",    likesCount),
-                        new("CommentsCount", commentsCount),
-                        new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
+                        Id = post.Id,
+                        Content = post.Content,
+                        AuthorId = post.UserId,
+                        LikesCount = likesCount,
+                        CommentsCount = commentsCount,
+                        CreatedAt = post.CreatedAt,
+                        IsPublic = post.IsPublic,
+                        MediaUrls = post.MediaUrls
                     });
-
-                    await db.KeyExpireAsync(postCacheKey, PostCacheTtl);
                 }
             }
 
@@ -692,22 +801,275 @@ namespace SocialMedia.Application.Services
 
         // ── Helpers ────────────────────────────────────────────────────────────
 
-        private static async Task CachePostAsync(IDatabase db, Post post)
+        private IQueryable<CachedPost> GetPostReadModelQuery()
+        {
+            return _postRepository.GetTable()
+                .AsNoTracking()
+                .Select(post => new CachedPost
+                {
+                    Id = post.Id,
+                    Content = post.Content,
+                    AuthorId = post.UserId,
+                    LikesCount = post.Likes.Count(),
+                    CommentsCount = post.Comments.Count(comment => !comment.IsDeleted),
+                    CreatedAt = post.CreatedAt,
+                    IsPublic = post.IsPublic,
+                    MediaUrls = post.MediaUrls
+                });
+        }
+
+        private async Task HydrateFeedAsync(
+            IDatabase db,
+            Guid userId,
+            RedisKey feedKey,
+            CancellationToken cancellationToken)
+        {
+            var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
+            if (followeeIds.Count == 0)
+            {
+                return;
+            }
+
+            var feedEntries = await _postRepository.GetTable()
+                .AsNoTracking()
+                .Where(post => followeeIds.Contains(post.UserId))
+                .OrderByDescending(post => post.CreatedAt)
+                .Take(MaxFeedSize)
+                .Select(post => new
+                {
+                    post.Id,
+                    post.CreatedAt
+                })
+                .ToListAsync(cancellationToken);
+
+            if (feedEntries.Count == 0)
+            {
+                return;
+            }
+
+            var redisEntries = feedEntries
+                .Select(post => new SortedSetEntry(
+                    post.Id.ToString(),
+                    new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds()))
+                .ToArray();
+
+            await db.SortedSetAddAsync(feedKey, redisEntries);
+            await db.SortedSetRemoveRangeByRankAsync(feedKey, 0, -501);
+            await db.KeyExpireAsync(feedKey, FeedCacheTtl);
+        }
+
+        private async Task<List<Guid>> GetFeedPostIdsFromDbAsync(
+            Guid userId,
+            long cursorTimestamp,
+            int limit,
+            HashSet<Guid> excludedPostIds,
+            CancellationToken cancellationToken)
+        {
+            var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
+            if (followeeIds.Count == 0)
+            {
+                return new List<Guid>();
+            }
+
+            var cursorDate = DateTimeOffset.FromUnixTimeSeconds(cursorTimestamp).UtcDateTime;
+
+            return await _postRepository.GetTable()
+                .AsNoTracking()
+                .Where(post => followeeIds.Contains(post.UserId))
+                .Where(post => post.CreatedAt < cursorDate)
+                .Where(post => !excludedPostIds.Contains(post.Id))
+                .OrderByDescending(post => post.CreatedAt)
+                .Take(limit)
+                .Select(post => post.Id)
+                .ToListAsync(cancellationToken);
+        }
+
+        private async Task<List<CachedPost>> GetPostsByIdsWithCacheAsync(
+            IDatabase db,
+            IReadOnlyCollection<Guid> postIds,
+            CancellationToken cancellationToken)
+        {
+            var distinctPostIds = postIds.Distinct().ToList();
+            var batch = db.CreateBatch();
+            var cacheTasks = distinctPostIds.ToDictionary(
+                postId => postId,
+                postId => batch.HashGetAllAsync($"Post:{postId}"));
+
+            batch.Execute();
+            await Task.WhenAll(cacheTasks.Values);
+
+            var posts = new List<CachedPost>();
+            var missingPostIds = new List<Guid>();
+
+            foreach (var (postId, task) in cacheTasks)
+            {
+                var cachedPost = TryMapPostHash(postId, await task);
+                if (cachedPost is null)
+                {
+                    missingPostIds.Add(postId);
+                    continue;
+                }
+
+                posts.Add(cachedPost);
+            }
+
+            if (missingPostIds.Count == 0)
+            {
+                return posts;
+            }
+
+            var hydratedPosts = await GetPostReadModelQuery()
+                .Where(post => missingPostIds.Contains(post.Id))
+                .ToListAsync(cancellationToken);
+
+            if (hydratedPosts.Count > 0)
+            {
+                await CachePostsAsync(db, hydratedPosts);
+                posts.AddRange(hydratedPosts);
+            }
+
+            return posts;
+        }
+
+        private static PostResponseDto MapPostResponse(CachedPost post)
+        {
+            return new PostResponseDto
+            {
+                Id = post.Id,
+                Content = post.Content,
+                AuthorId = post.AuthorId,
+                LikesCount = post.LikesCount,
+                CommentsCount = post.CommentsCount,
+                CreatedAt = post.CreatedAt,
+                IsPublic = post.IsPublic,
+                MediaUrls = post.MediaUrls
+            };
+        }
+
+        private static CachedPost? TryMapPostHash(Guid postId, HashEntry[] hashEntries)
+        {
+            if (hashEntries.Length == 0)
+            {
+                return null;
+            }
+
+            var fields = hashEntries.ToDictionary(
+                entry => entry.Name.ToString(),
+                entry => entry.Value);
+
+            var authorValue = fields.TryGetValue("AuthorId", out var authorId)
+                ? authorId
+                : fields.GetValueOrDefault("UserId");
+
+            if (!Guid.TryParse(authorValue.ToString(), out var parsedAuthorId))
+            {
+                return null;
+            }
+
+            var idValue = fields.GetValueOrDefault("Id");
+            var parsedId = Guid.TryParse(idValue.ToString(), out var hashPostId)
+                ? hashPostId
+                : postId;
+
+            if (!long.TryParse(fields.GetValueOrDefault("CreatedAt").ToString(), out var createdAtTimestamp))
+            {
+                return null;
+            }
+
+            _ = int.TryParse(fields.GetValueOrDefault("LikesCount").ToString(), out var likesCount);
+            _ = int.TryParse(fields.GetValueOrDefault("CommentsCount").ToString(), out var commentsCount);
+            _ = bool.TryParse(fields.GetValueOrDefault("IsPublic").ToString(), out var isPublic);
+
+            var mediaUrls = new List<string>();
+            var mediaUrlsValue = fields.GetValueOrDefault("MediaUrls").ToString();
+            if (!string.IsNullOrWhiteSpace(mediaUrlsValue))
+            {
+                mediaUrls = JsonSerializer.Deserialize<List<string>>(mediaUrlsValue) ?? new List<string>();
+            }
+
+            return new CachedPost
+            {
+                Id = parsedId,
+                Content = fields.GetValueOrDefault("Content").ToString(),
+                AuthorId = parsedAuthorId,
+                LikesCount = likesCount,
+                CommentsCount = commentsCount,
+                CreatedAt = DateTimeOffset.FromUnixTimeSeconds(createdAtTimestamp).UtcDateTime,
+                IsPublic = isPublic,
+                MediaUrls = mediaUrls
+            };
+        }
+
+        private static async Task CachePostsAsync(IDatabase db, IReadOnlyCollection<CachedPost> posts)
+        {
+            var batch = db.CreateBatch();
+            var tasks = new List<Task>(posts.Count * 2);
+
+            foreach (var post in posts)
+            {
+                var key = (RedisKey)$"Post:{post.Id}";
+                tasks.Add(batch.HashSetAsync(key, ToRedisHashEntries(post)));
+                tasks.Add(batch.KeyExpireAsync(key, PostCacheTtl));
+            }
+
+            batch.Execute();
+            await Task.WhenAll(tasks);
+        }
+
+        private static Task CachePostAsync(IDatabase db, CachedPost post)
         {
             var key = $"Post:{post.Id}";
 
-            await db.HashSetAsync(key, new HashEntry[]
-            {
-                new("UserId",        post.UserId.ToString()),
-                new("Content",       post.Content),
-                new("MediaUrls",     System.Text.Json.JsonSerializer.Serialize(post.MediaUrls)),
-                new("IsPublic",      post.IsPublic.ToString()),
-                new("LikesCount",    0),
-                new("CommentsCount", 0),
-                new("CreatedAt",     new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds())
-            });
+            return Task.WhenAll(
+                db.HashSetAsync(key, ToRedisHashEntries(post)),
+                db.KeyExpireAsync(key, PostCacheTtl));
+        }
 
+        private static async Task CachePostAsync(IDatabase db, Post post)
+        {
+            var key = $"Post:{post.Id}";
+            var cachedPost = new CachedPost
+            {
+                Id = post.Id,
+                Content = post.Content,
+                AuthorId = post.UserId,
+                LikesCount = 0,
+                CommentsCount = 0,
+                CreatedAt = post.CreatedAt,
+                IsPublic = post.IsPublic,
+                MediaUrls = post.MediaUrls
+            };
+
+            await db.HashSetAsync(key, ToRedisHashEntries(cachedPost));
             await db.KeyExpireAsync(key, PostCacheTtl);
+        }
+
+        private static HashEntry[] ToRedisHashEntries(CachedPost post)
+        {
+            return new HashEntry[]
+            {
+                new("Id", post.Id.ToString()),
+                new("Content", post.Content),
+                new("AuthorId", post.AuthorId.ToString()),
+                new("UserId", post.AuthorId.ToString()),
+                new("LikesCount", post.LikesCount),
+                new("CommentsCount", post.CommentsCount),
+                new("CreatedAt", new DateTimeOffset(post.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds()),
+                new("IsPublic", post.IsPublic.ToString()),
+                new("MediaUrls", JsonSerializer.Serialize(post.MediaUrls))
+            };
+        }
+
+        private sealed class CachedPost
+        {
+            public Guid Id { get; set; }
+            public string Content { get; set; } = string.Empty;
+            public Guid AuthorId { get; set; }
+            public int LikesCount { get; set; }
+            public int CommentsCount { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public bool IsPublic { get; set; } = true;
+            public List<string> MediaUrls { get; set; } = new();
         }
     }
 }

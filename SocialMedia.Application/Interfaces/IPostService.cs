@@ -10,6 +10,16 @@ namespace SocialMedia.Application.Interfaces
             Guid userId,
             CancellationToken cancellationToken = default);
 
+        Task<ApiResponse<PostResponseDto>> GetPostByIdAsync(
+            Guid postId,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
+            Guid userId,
+            long? cursor = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default);
+
         Task<ApiResponse<string>> LikePostAsync(
             Guid postId,
             Guid userId,

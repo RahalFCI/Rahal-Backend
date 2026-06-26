@@ -18,6 +18,24 @@ namespace Rahal.Api.Controllers.SocialMedia
         }
 
         /// <summary>
+        /// Gets a post by id using Redis hash cache-aside with database fallback.
+        /// </summary>
+        [HttpGet("~/api/posts/{id:guid}")]
+        [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Posts.PostResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPostByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var result = await _postService.GetPostByIdAsync(id, cancellationToken);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Creates a new post. Media public_ids must have been pre-signed via
         /// POST /api/media/signatures. Any unrecognised ID is rejected.
         /// </summary>
