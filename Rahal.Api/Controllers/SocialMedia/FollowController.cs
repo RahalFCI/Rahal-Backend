@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Shared.Application.DTOs;
+using Shared.Application.Pagination;
 using Shared.Domain.Enums;
+using SocialMedia.Application.DTOs.Users;
 using SocialMedia.Application.Interfaces;
 using System.Security.Claims;
 
@@ -17,6 +20,56 @@ namespace Rahal.Api.Controllers.SocialMedia
         public FollowController(IFollowService followService)
         {
             _followService = followService;
+        }
+
+        /// <summary>
+        /// Gets users who follow the requested user.
+        /// </summary>
+        [HttpGet("{userId:guid}/followers")]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<SocialUserResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetFollowersAsync(
+            Guid userId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _followService.GetFollowersAsync(
+                userId,
+                new OffsetPaginationRequest { Page = page, PageSize = pageSize },
+                cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets users followed by the requested user.
+        /// </summary>
+        [HttpGet("{userId:guid}/followees")]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<SocialUserResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetFolloweesAsync(
+            Guid userId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _followService.GetFolloweesAsync(
+                userId,
+                new OffsetPaginationRequest { Page = page, PageSize = pageSize },
+                cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         /// <summary>

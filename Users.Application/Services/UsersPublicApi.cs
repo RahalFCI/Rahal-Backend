@@ -31,5 +31,38 @@ namespace Users.Application.Services
 
             return users;
         }
+
+        public async Task<UserPublicPagedResult> GetUsersPaginatedAsync(
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+
+            var query = _userManager.Users
+                .AsNoTracking()
+                .OrderBy(u => u.DisplayName)
+                .ThenBy(u => u.Id);
+
+            var totalCount = await query.CountAsync(cancellationToken);
+            var users = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new UserPublicDto
+                {
+                    Id = u.Id,
+                    DisplayName = u.DisplayName
+                })
+                .ToListAsync(cancellationToken);
+
+            return new UserPublicPagedResult
+            {
+                Items = users,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
     }
 }
