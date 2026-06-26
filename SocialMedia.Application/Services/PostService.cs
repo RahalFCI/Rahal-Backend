@@ -136,6 +136,15 @@ namespace SocialMedia.Application.Services
                 _logger.LogError(ex, "Redis cache write failed for post {PostId} — non-fatal, DB is source of truth", post.Id);
             }
 
+            try
+            {
+                await AddPostToAuthorFeedAsync(db, userId, post.Id, post.CreatedAt, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Redis feed write failed for author {UserId} and post {PostId} — non-fatal, DB is source of truth", userId, post.Id);
+            }
+
             // ── 7. Publish PostCreatedEvent to RabbitMQ ────────────────────────
             try
             {
@@ -881,14 +890,14 @@ namespace SocialMedia.Application.Services
             CancellationToken cancellationToken)
         {
             var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
-            if (followeeIds.Count == 0)
-            {
-                return;
-            }
+            var feedAuthorIds = followeeIds
+                .Append(userId)
+                .Distinct()
+                .ToList();
 
             var feedEntries = await _postRepository.GetTable()
                 .AsNoTracking()
-                .Where(post => followeeIds.Contains(post.UserId))
+                .Where(post => feedAuthorIds.Contains(post.UserId))
                 .OrderByDescending(post => post.CreatedAt)
                 .Take(MaxFeedSize)
                 .Select(post => new
@@ -914,6 +923,25 @@ namespace SocialMedia.Application.Services
             await db.KeyExpireAsync(feedKey, FeedCacheTtl);
         }
 
+        private async Task AddPostToAuthorFeedAsync(
+            IDatabase db,
+            Guid authorId,
+            Guid postId,
+            DateTime createdAt,
+            CancellationToken cancellationToken)
+        {
+            var feedKey = (RedisKey)$"Feed:{authorId}";
+            if (await db.SortedSetLengthAsync(feedKey) == 0)
+            {
+                await HydrateFeedAsync(db, authorId, feedKey, cancellationToken);
+            }
+
+            var score = new DateTimeOffset(createdAt, TimeSpan.Zero).ToUnixTimeSeconds();
+            await db.SortedSetAddAsync(feedKey, postId.ToString(), score);
+            await db.SortedSetRemoveRangeByRankAsync(feedKey, 0, -501);
+            await db.KeyExpireAsync(feedKey, FeedCacheTtl);
+        }
+
         private async Task<List<Guid>> GetFeedPostIdsFromDbAsync(
             Guid userId,
             long cursorTimestamp,
@@ -922,16 +950,16 @@ namespace SocialMedia.Application.Services
             CancellationToken cancellationToken)
         {
             var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
-            if (followeeIds.Count == 0)
-            {
-                return new List<Guid>();
-            }
+            var feedAuthorIds = followeeIds
+                .Append(userId)
+                .Distinct()
+                .ToList();
 
             var cursorDate = DateTimeOffset.FromUnixTimeSeconds(cursorTimestamp).UtcDateTime;
 
             return await _postRepository.GetTable()
                 .AsNoTracking()
-                .Where(post => followeeIds.Contains(post.UserId))
+                .Where(post => feedAuthorIds.Contains(post.UserId))
                 .Where(post => post.CreatedAt < cursorDate)
                 .Where(post => !excludedPostIds.Contains(post.Id))
                 .OrderByDescending(post => post.CreatedAt)

@@ -33,22 +33,21 @@ namespace SocialMedia.Application.EventConsumers
             var followerIds = await _followRepository.GetFollowerIdsByFolloweeAsync(
                 message.UserId,
                 context.CancellationToken);
-
-            if (followerIds.Count == 0)
-            {
-                return;
-            }
+            var targetUserIds = followerIds
+                .Append(message.UserId)
+                .Distinct()
+                .ToList();
 
             var db = _redis.GetDatabase();
             var batch = db.CreateBatch();
             var score = new DateTimeOffset(message.CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds();
-            var tasks = new List<Task<RedisResult>>(followerIds.Count);
+            var tasks = new List<Task<RedisResult>>(targetUserIds.Count);
 
-            foreach (var followerId in followerIds)
+            foreach (var userId in targetUserIds)
             {
                 tasks.Add(batch.ScriptEvaluateAsync(
                     AppendIfFeedExistsScript,
-                    new RedisKey[] { $"Feed:{followerId}" },
+                    new RedisKey[] { $"Feed:{userId}" },
                     new RedisValue[] { score, message.PostId.ToString() }));
             }
 

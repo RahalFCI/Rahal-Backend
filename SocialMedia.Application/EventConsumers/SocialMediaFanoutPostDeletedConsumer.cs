@@ -24,20 +24,19 @@ namespace SocialMedia.Application.EventConsumers
             var followerIds = await _followRepository.GetFollowerIdsByFolloweeAsync(
                 message.AuthorId,
                 context.CancellationToken);
-
-            if (followerIds.Count == 0)
-            {
-                return;
-            }
+            var targetUserIds = followerIds
+                .Append(message.AuthorId)
+                .Distinct()
+                .ToList();
 
             var db = _redis.GetDatabase();
             var batch = db.CreateBatch();
-            var tasks = new List<Task<bool>>(followerIds.Count);
+            var tasks = new List<Task<bool>>(targetUserIds.Count);
             var postId = message.PostId.ToString();
 
-            foreach (var followerId in followerIds)
+            foreach (var userId in targetUserIds)
             {
-                tasks.Add(batch.SortedSetRemoveAsync($"Feed:{followerId}", postId));
+                tasks.Add(batch.SortedSetRemoveAsync($"Feed:{userId}", postId));
             }
 
             batch.Execute();
