@@ -265,6 +265,25 @@ namespace SocialMedia.Application.Services
             });
         }
 
+        public async Task<ApiResponse<SocialUserResponseDto>> GetSocialUserByIdAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            if (userId == Guid.Empty)
+            {
+                return ApiResponse<SocialUserResponseDto>.Failure(ErrorCode.ValidationError);
+            }
+
+            var users = await BuildSocialUsersPageAsync(new[] { userId }, cancellationToken);
+            var user = users.FirstOrDefault();
+            if (user is null)
+            {
+                return ApiResponse<SocialUserResponseDto>.Failure(ErrorCode.NotFound);
+            }
+
+            return ApiResponse<SocialUserResponseDto>.Success(user);
+        }
+
         private async Task<List<SocialUserResponseDto>> BuildSocialUsersPageAsync(
             IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken)

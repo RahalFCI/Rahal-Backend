@@ -30,5 +30,9 @@ namespace SocialMedia.Application.Interfaces
         Task<ApiResponse<PagedResult<SocialUserResponseDto>>> GetSocialUsersAsync(
             OffsetPaginationRequest request,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<SocialUserResponseDto>> GetSocialUserByIdAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default);
     }
 }
