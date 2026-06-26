@@ -42,9 +42,29 @@ namespace SocialMedia.Application.Services
             Guid followingId,
             CancellationToken cancellationToken = default)
         {
-            if (followerId == Guid.Empty || followingId == Guid.Empty || followerId == followingId)
+            if (followerId == Guid.Empty || followingId == Guid.Empty)
             {
                 return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            if (followerId == followingId)
+            {
+                _logger.LogWarning("User {FollowerId} tried to follow themselves", followerId);
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            var usersById = await _userGateway.GetUsersByIdsAsync(
+                new[] { followerId, followingId },
+                cancellationToken);
+
+            if (!usersById.ContainsKey(followerId) || !usersById.ContainsKey(followingId))
+            {
+                _logger.LogWarning(
+                    "Follow failed because follower {FollowerId} or target user {FollowingId} does not exist",
+                    followerId,
+                    followingId);
+
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.NotFound);
             }
 
             var db = _redis.GetDatabase();

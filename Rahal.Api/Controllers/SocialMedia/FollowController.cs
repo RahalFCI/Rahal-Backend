@@ -73,13 +73,14 @@ namespace Rahal.Api.Controllers.SocialMedia
         }
 
         /// <summary>
-        /// Follows a user. Returns 400 if the current user already follows the target user.
+        /// Follows a user. Returns 400 if the current user follows themselves or already follows the target user.
         /// </summary>
         [HttpPost("{targetUserId:guid}/follow")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> FollowAsync(
             Guid targetUserId,
             CancellationToken cancellationToken)
@@ -89,8 +90,13 @@ namespace Rahal.Api.Controllers.SocialMedia
 
             if (!result.IsSuccess)
             {
-                return result.errorCode == ErrorCode.DatabaseError
-                    ? StatusCode(StatusCodes.Status500InternalServerError, result)
+                if (result.errorCode == ErrorCode.DatabaseError)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, result);
+                }
+
+                return result.errorCode == ErrorCode.NotFound
+                    ? NotFound(result)
                     : BadRequest(result);
             }
 
