@@ -1,4 +1,5 @@
 ﻿using Gamification.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rahal.Api.Attributes;
@@ -23,8 +24,10 @@ namespace Rahal.Api.Filters
 
             var skipProfileCheck =
                 endpoint?.Metadata.GetMetadata<SkipProfileCheckAttribute>() != null;
+            var allowAnonymous =
+                endpoint?.Metadata.GetMetadata<IAllowAnonymous>() != null;
 
-            if (skipProfileCheck)
+            if (skipProfileCheck || allowAnonymous)
             {
                 await next();
                 return;

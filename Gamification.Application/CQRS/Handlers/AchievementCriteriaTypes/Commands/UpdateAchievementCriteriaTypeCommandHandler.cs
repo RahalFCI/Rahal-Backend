@@ -5,6 +5,7 @@ using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MassTransit;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -37,6 +38,13 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
         public async Task<ApiResponse<string>> Handle(UpdateAchievementCriteriaTypeCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating achievement criteria type {AchievementCriteriaTypeTitle}", request.Dto.Name);
+
+            var existingCriteria = await _repository.GetTable().Where(c => c.Name == request.Dto.Name && c.Id != request.Id).AnyAsync(cancellationToken);
+            if (existingCriteria)
+            {
+                _logger.LogWarning("Criteria Type {Criteria} already exists", request.Dto.Name);
+                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+            }
 
             var achievementCriteriaType = await _repository.GetByIdAsync(request.Id, cancellationToken);
             if (achievementCriteriaType is null)

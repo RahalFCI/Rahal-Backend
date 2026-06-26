@@ -95,9 +95,10 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid placeId, [FromBody] UpdateCheckInDto updateCheckInDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid explorerId, [FromRoute] Guid placeId, [FromBody] UpdateCheckInDto updateCheckInDto, CancellationToken cancellationToken)
         {
-            var explorerId = GetCurrentUserId();
+            if (GetCurrentUserRoles().Contains("Explorer") && explorerId != GetCurrentUserId())
+                return Forbid();
 
             var result = await _checkInService.UpdateCheckInStatusAsync(explorerId, placeId, updateCheckInDto, cancellationToken);
 
@@ -113,6 +114,9 @@ namespace Rahal.Api.Controllers.Places
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid explorerId, [FromRoute] Guid placeId, CancellationToken cancellationToken)
         {
+            if (GetCurrentUserRoles().Contains("Explorer") && explorerId != GetCurrentUserId())
+                return Forbid();
+
             var result = await _checkInService.DeleteCheckInAsync(explorerId, placeId, cancellationToken);
 
             if (!result.IsSuccess)

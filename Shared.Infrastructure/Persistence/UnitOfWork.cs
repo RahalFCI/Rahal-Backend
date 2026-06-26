@@ -105,7 +105,7 @@ namespace Shared.Infrastructure.Persistence
             {
                 await DisposeTransactionAsync();
             }
-        }}
+        }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

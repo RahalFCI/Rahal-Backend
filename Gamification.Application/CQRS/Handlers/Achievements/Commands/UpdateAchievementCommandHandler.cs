@@ -35,6 +35,13 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
         {
             _logger.LogInformation("Updating achievement {AchievementId}", request.Id);
 
+            var existingAchievement = await _repository.GetTable().Where(c => c.Title == request.Dto.Title && c.Id != request.Id).AnyAsync(cancellationToken);
+            if (existingAchievement)
+            {
+                _logger.LogWarning("Achievement {achievement} already exists", request.Dto.Title);
+                return ApiResponse<string>.Failure(ErrorCode.Conflict);
+            }
+
             var achievement = await _repository.GetByIdAsync(request.Id, cancellationToken);
             if (achievement is null)
             {
@@ -57,13 +64,6 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
             {
                 _logger.LogWarning("Criteria type {CriteriaTypeId} not found", request.Dto.CriteriaTypeId);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
-            }
-
-            var existingAchievement = await _repository.GetTable().Where(a => a.Title == request.Dto.Title).AnyAsync(cancellationToken);
-            if (existingAchievement)
-            {
-                _logger.LogWarning("Achievement with title {AchievementTitle} already exists", request.Dto.Title);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
             }
 
             AchievementMapper.UpdateEntity(achievement, request.Dto);
