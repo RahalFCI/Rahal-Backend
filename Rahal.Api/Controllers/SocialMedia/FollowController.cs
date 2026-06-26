@@ -13,6 +13,7 @@ namespace Rahal.Api.Controllers.SocialMedia
     [ApiController]
     [Route("api/users")]
     [EnableRateLimiting("per-user")]
+    [Authorize(Roles = "Explorer")]
     public class FollowController : ControllerBase
     {
         private readonly IFollowService _followService;
@@ -28,6 +29,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         [HttpGet("{userId:guid}/followers")]
         [ProducesResponseType(typeof(ApiResponse<PagedResult<SocialUserResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetFollowersAsync(
             Guid userId,
             [FromQuery] int page = 1,
@@ -53,6 +56,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         [HttpGet("{userId:guid}/followees")]
         [ProducesResponseType(typeof(ApiResponse<PagedResult<SocialUserResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetFolloweesAsync(
             Guid userId,
             [FromQuery] int page = 1,
@@ -76,10 +81,10 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Follows a user. Returns 400 if the current user follows themselves or already follows the target user.
         /// </summary>
         [HttpPost("{targetUserId:guid}/follow")]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> FollowAsync(
             Guid targetUserId,
@@ -107,10 +112,10 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Unfollows a user. Returns 400 if the current user does not follow the target user.
         /// </summary>
         [HttpDelete("{targetUserId:guid}/follow")]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UnfollowAsync(
             Guid targetUserId,
             CancellationToken cancellationToken)

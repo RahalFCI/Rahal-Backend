@@ -7,6 +7,7 @@ using SocialMedia.Application.Interfaces;
 
 namespace Rahal.Api.Controllers.SocialMedia
 {
+    [Authorize(Roles = "Explorer")]
     public class MediaController : CustomControllerBase
     {
         private readonly IMediaService _mediaService;

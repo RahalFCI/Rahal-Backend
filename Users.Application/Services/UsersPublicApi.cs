@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Users.Contracts.DTOs;
 using Users.Contracts.Interfaces;
 using Users.Domain.Entities._Common;
+using Users.Domain.Enums;
 
 namespace Users.Application.Services
 {
@@ -21,6 +22,7 @@ namespace Users.Application.Services
             if (ids.Count == 0) return Enumerable.Empty<UserPublicDto>();
 
             var users = await _userManager.Users
+                .Where(u => u.UserType == UserRoleEnum.Explorer)
                 .Where(u => ids.Contains(u.Id))
                 .Select(u => new UserPublicDto
                 {
@@ -42,6 +44,7 @@ namespace Users.Application.Services
 
             var query = _userManager.Users
                 .AsNoTracking()
+                .Where(u => u.UserType == UserRoleEnum.Explorer)
                 .OrderBy(u => u.DisplayName)
                 .ThenBy(u => u.Id);
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Shared.Application.DTOs;
@@ -11,6 +12,7 @@ namespace Rahal.Api.Controllers.SocialMedia
     [ApiController]
     [Route("api/social-media/users")]
     [EnableRateLimiting("per-user")]
+    [Authorize(Roles = "Explorer")]
     public class SocialUsersController : ControllerBase
     {
         private readonly IFollowService _followService;
@@ -25,6 +27,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<PagedResult<SocialUserResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetSocialUsersAsync(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -44,6 +48,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         [ProducesResponseType(typeof(ApiResponse<SocialUserResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<SocialUserResponseDto>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<SocialUserResponseDto>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetSocialUserByIdAsync(
             Guid userId,
             CancellationToken cancellationToken = default)
