@@ -12,10 +12,18 @@ namespace SocialMedia.Application.Interfaces
 
         Task<ApiResponse<PostResponseDto>> GetPostByIdAsync(
             Guid postId,
+            Guid viewerUserId,
             CancellationToken cancellationToken = default);
 
         Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
             Guid userId,
+            long? cursor = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<FeedPagedResponse>> GetUserPostsPaginatedAsync(
+            Guid userId,
+            Guid viewerUserId,
             long? cursor = null,
             int limit = 20,
             CancellationToken cancellationToken = default);

@@ -27,7 +27,8 @@ namespace Rahal.Api.Controllers.SocialMedia
             Guid id,
             CancellationToken cancellationToken)
         {
-            var result = await _postService.GetPostByIdAsync(id, cancellationToken);
+            var viewerUserId = GetCurrentUserId();
+            var result = await _postService.GetPostByIdAsync(id, viewerUserId, cancellationToken);
 
             if (!result.IsSuccess)
                 return NotFound(result);

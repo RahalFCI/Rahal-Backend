@@ -23,6 +23,8 @@ namespace SocialMedia.Application.Services
 
         private static readonly TimeSpan UserLikesTtl = TimeSpan.FromDays(7);
 
+        private const string EmptyUserLikesSentinel = "__EmptyUserLikes__";
+
         private readonly ISocialMediaRepository<Post> _postRepository;
         private readonly ISocialMediaRepository<Comment> _commentRepository;
         private readonly ILikeRepository _likeRepository;
@@ -162,6 +164,7 @@ namespace SocialMedia.Application.Services
 
         public async Task<ApiResponse<PostResponseDto>> GetPostByIdAsync(
             Guid postId,
+            Guid viewerUserId,
             CancellationToken cancellationToken = default)
         {
             var db = _redis.GetDatabase();
@@ -170,7 +173,8 @@ namespace SocialMedia.Application.Services
 
             if (cachedPost is not null)
             {
-                return ApiResponse<PostResponseDto>.Success(MapPostResponse(cachedPost));
+                var isLiked = await IsPostLikedByUserAsync(db, viewerUserId, postId, cancellationToken);
+                return ApiResponse<PostResponseDto>.Success(MapPostResponse(cachedPost, isLiked));
             }
 
             var post = await GetPostReadModelQuery()
@@ -183,7 +187,9 @@ namespace SocialMedia.Application.Services
 
             await CachePostAsync(db, post);
 
-            return ApiResponse<PostResponseDto>.Success(MapPostResponse(post));
+            var isPostLiked = await IsPostLikedByUserAsync(db, viewerUserId, postId, cancellationToken);
+
+            return ApiResponse<PostResponseDto>.Success(MapPostResponse(post, isPostLiked));
         }
 
         public async Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
@@ -251,9 +257,70 @@ namespace SocialMedia.Application.Services
             }
 
             var posts = await GetPostsByIdsWithCacheAsync(db, combinedPostIds, cancellationToken);
+            var likedPostIds = await GetLikedPostIdsFromCacheAsync(
+                db,
+                userId,
+                posts.Select(post => post.Id).ToList(),
+                cancellationToken);
+
             var responsePosts = posts
                 .OrderByDescending(post => post.CreatedAt)
-                .Select(MapPostResponse)
+                .Select(post => MapPostResponse(post, likedPostIds.Contains(post.Id)))
+                .ToList();
+
+            return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse
+            {
+                Posts = responsePosts,
+                NextCursor = responsePosts.Count == 0
+                    ? null
+                    : new DateTimeOffset(responsePosts[^1].CreatedAt, TimeSpan.Zero).ToUnixTimeSeconds()
+            });
+        }
+
+        // this Endpoint/Service doesn't rely on caching, just db indexes
+        public async Task<ApiResponse<FeedPagedResponse>> GetUserPostsPaginatedAsync(
+            Guid userId,
+            Guid viewerUserId,
+            long? cursor = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            if (userId == Guid.Empty)
+            {
+                return ApiResponse<FeedPagedResponse>.Failure(ErrorCode.ValidationError);
+            }
+
+            if (limit <= 0)
+            {
+                limit = 20;
+            }
+
+            var cursorTimestamp = cursor ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var cursorDate = DateTimeOffset.FromUnixTimeSeconds(cursorTimestamp).UtcDateTime;
+
+            var posts = await _postRepository.GetTable()
+                .AsNoTracking()
+                .Where(post => post.UserId == userId)
+                .Where(post => post.CreatedAt < cursorDate)
+                .OrderByDescending(post => post.CreatedAt)
+                .Take(limit)
+                .Select(post => new CachedPost
+                {
+                    Id = post.Id,
+                    Content = post.Content,
+                    AuthorId = post.UserId,
+                    LikesCount = post.Likes.Count(),
+                    CommentsCount = post.Comments.Count(comment => !comment.IsDeleted),
+                    IsLikedByThisUser = viewerUserId != Guid.Empty
+                        && post.Likes.Any(like => like.UserId == viewerUserId),
+                    CreatedAt = post.CreatedAt,
+                    IsPublic = post.IsPublic,
+                    MediaUrls = post.MediaUrls
+                })
+                .ToListAsync(cancellationToken);
+
+            var responsePosts = posts
+                .Select(post => MapPostResponse(post, post.IsLikedByThisUser))
                 .ToList();
 
             return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse
@@ -277,20 +344,7 @@ namespace SocialMedia.Application.Services
             // ── 1. User Like Validation (Redis Set) ───────────────────────────
             // Check for cache miss: if the UserLikes set doesn't exist in Redis,
             // hydrate it from the DB first.
-            if (!await db.KeyExistsAsync(userLikesKey))
-            {
-                _logger.LogDebug("Cache miss for UserLikes:{UserId} — hydrating from DB", userId);
-                var likedPostIds = await _likeRepository.GetPostIdsLikedByUserAsync(userId, cancellationToken);
-
-                if (likedPostIds.Count > 0)
-                {
-                    var redisValues = likedPostIds.Select(id => (RedisValue)id.ToString()).ToArray();
-                    await db.SetAddAsync(userLikesKey, redisValues);
-                }
-
-                // Set TTL whether the set is empty or not — so we don't query DB on every request
-                await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
-            }
+            await EnsureUserLikesCacheHydratedAsync(db, userId, userLikesKey, cancellationToken);
 
             // SADD returns 1 if the element was added (new like), 0 if it already existed.
             var wasAdded = await db.SetAddAsync(userLikesKey, postId.ToString());
@@ -299,6 +353,8 @@ namespace SocialMedia.Application.Services
                 _logger.LogWarning("User {UserId} already liked post {PostId}", userId, postId);
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
+
+            await db.SetRemoveAsync(userLikesKey, EmptyUserLikesSentinel);
 
             // ── 2. Post Cache Hydration + Increment ───────────────────────────
             if (!await db.KeyExistsAsync(postCacheKey))
@@ -313,6 +369,12 @@ namespace SocialMedia.Application.Services
                 {
                     // Rollback the SADD since the post doesn't exist
                     await db.SetRemoveAsync(userLikesKey, postId.ToString());
+                    if (await db.SetLengthAsync(userLikesKey) == 0)
+                    {
+                        await db.SetAddAsync(userLikesKey, EmptyUserLikesSentinel);
+                        await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
+                    }
+
                     _logger.LogWarning("Like rejected: post {PostId} not found", postId);
                     return ApiResponse<string>.Failure(ErrorCode.NotFound);
                 }
@@ -384,19 +446,7 @@ namespace SocialMedia.Application.Services
             var postCacheKey = $"Post:{postId}";
 
             // ── 1. User Like Validation (Redis Set) ───────────────────────────
-            if (!await db.KeyExistsAsync(userLikesKey))
-            {
-                _logger.LogDebug("Cache miss for UserLikes:{UserId} — hydrating from DB", userId);
-                var likedPostIds = await _likeRepository.GetPostIdsLikedByUserAsync(userId, cancellationToken);
-
-                if (likedPostIds.Count > 0)
-                {
-                    var redisValues = likedPostIds.Select(id => (RedisValue)id.ToString()).ToArray();
-                    await db.SetAddAsync(userLikesKey, redisValues);
-                }
-
-                await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
-            }
+            await EnsureUserLikesCacheHydratedAsync(db, userId, userLikesKey, cancellationToken);
 
             // SREM returns 1 if element was removed, 0 if it didn't exist
             var wasRemoved = await db.SetRemoveAsync(userLikesKey, postId.ToString());
@@ -404,6 +454,12 @@ namespace SocialMedia.Application.Services
             {
                 _logger.LogWarning("User {UserId} tried to unlike post {PostId} they haven't liked", userId, postId);
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            if (await db.SetLengthAsync(userLikesKey) == 0)
+            {
+                await db.SetAddAsync(userLikesKey, EmptyUserLikesSentinel);
+                await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
             }
 
             // ── 2. Post Cache Hydration + Decrement ───────────────────────────
@@ -931,7 +987,75 @@ namespace SocialMedia.Application.Services
             return posts;
         }
 
-        private static PostResponseDto MapPostResponse(CachedPost post)
+        private async Task<bool> IsPostLikedByUserAsync(
+            IDatabase db,
+            Guid userId,
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            if (userId == Guid.Empty)
+            {
+                return false;
+            }
+
+            var userLikesKey = (RedisKey)$"UserLikes:{userId}";
+            await EnsureUserLikesCacheHydratedAsync(db, userId, userLikesKey, cancellationToken);
+
+            return await db.SetContainsAsync(userLikesKey, postId.ToString());
+        }
+
+        private async Task<HashSet<Guid>> GetLikedPostIdsFromCacheAsync(
+            IDatabase db,
+            Guid userId,
+            IReadOnlyCollection<Guid> postIds,
+            CancellationToken cancellationToken)
+        {
+            if (userId == Guid.Empty || postIds.Count == 0)
+            {
+                return new HashSet<Guid>();
+            }
+
+            var distinctPostIds = postIds.Distinct().ToList();
+            var userLikesKey = (RedisKey)$"UserLikes:{userId}";
+            await EnsureUserLikesCacheHydratedAsync(db, userId, userLikesKey, cancellationToken);
+
+            var batch = db.CreateBatch();
+            var containsTasks = distinctPostIds.ToDictionary(
+                postId => postId,
+                postId => batch.SetContainsAsync(userLikesKey, postId.ToString()));
+
+            batch.Execute();
+            await Task.WhenAll(containsTasks.Values);
+
+            return containsTasks
+                .Where(entry => entry.Value.Result)
+                .Select(entry => entry.Key)
+                .ToHashSet();
+        }
+
+        private async Task EnsureUserLikesCacheHydratedAsync(
+            IDatabase db,
+            Guid userId,
+            RedisKey userLikesKey,
+            CancellationToken cancellationToken)
+        {
+            if (userId == Guid.Empty || await db.KeyExistsAsync(userLikesKey))
+            {
+                return;
+            }
+
+            _logger.LogDebug("Cache miss for UserLikes:{UserId} — hydrating from DB", userId);
+            var likedPostIds = await _likeRepository.GetPostIdsLikedByUserAsync(userId, cancellationToken);
+
+            var redisValues = likedPostIds.Count == 0
+                ? new[] { (RedisValue)EmptyUserLikesSentinel }
+                : likedPostIds.Select(id => (RedisValue)id.ToString()).ToArray();
+
+            await db.SetAddAsync(userLikesKey, redisValues);
+            await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
+        }
+
+        private static PostResponseDto MapPostResponse(CachedPost post, bool isLikedByThisUser = false)
         {
             return new PostResponseDto
             {
@@ -940,6 +1064,7 @@ namespace SocialMedia.Application.Services
                 AuthorId = post.AuthorId,
                 LikesCount = post.LikesCount,
                 CommentsCount = post.CommentsCount,
+                IsLikedByThisUser = isLikedByThisUser,
                 CreatedAt = post.CreatedAt,
                 IsPublic = post.IsPublic,
                 MediaUrls = post.MediaUrls
@@ -1067,6 +1192,7 @@ namespace SocialMedia.Application.Services
             public Guid AuthorId { get; set; }
             public int LikesCount { get; set; }
             public int CommentsCount { get; set; }
+            public bool IsLikedByThisUser { get; set; }
             public DateTime CreatedAt { get; set; }
             public bool IsPublic { get; set; } = true;
             public List<string> MediaUrls { get; set; } = new();

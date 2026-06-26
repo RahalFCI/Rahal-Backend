@@ -7,6 +7,7 @@ namespace SocialMedia.Application.DTOs.Posts
         public Guid AuthorId { get; set; }
         public int LikesCount { get; set; }
         public int CommentsCount { get; set; }
+        public bool IsLikedByThisUser { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsPublic { get; set; }
         public List<string> MediaUrls { get; set; } = new();
