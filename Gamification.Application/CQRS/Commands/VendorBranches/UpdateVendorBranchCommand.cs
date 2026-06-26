@@ -4,6 +4,6 @@ using Shared.Application.DTOs;
 
 namespace Gamification.Application.CQRS.Commands.VendorBranches
 {
-    public record UpdateVendorBranchCommand(Guid VendorId, Guid BranchId, UpdateVendorBranchDto Dto)
-        : IRequest<ApiResponse<VendorBranchDto>>;
+    public record UpdateVendorBranchCommand(Guid BranchId, UpdateVendorBranchDto Dto)
+        : IRequest<ApiResponse<GetVendorBranchDto>>;
 }

@@ -4,6 +4,7 @@ using Gamification.Infrastructure.Persistence;
 using Gamification.Infrastructure.Repositories;
 using Gamification.Infrastructure.Search.Explorer;
 using Gamification.Infrastructure.Search.Vendor;
+using Gamification.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,7 @@ namespace Gamification.Infrastructure
             );
 
             services.AddScoped(typeof(IGamificationRepository<>), typeof(GamificationRepository<>));
+            services.AddScoped<IVendorBranchPlaceClient, VendorBranchPlaceClient>();
 
 
             // Register Search Index Configuration

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class VendorPlaceConfiguration : IEntityTypeConfiguration<VendorPlace>
+    public class VendorBranchConfiguration : IEntityTypeConfiguration<VendorBranch>
     {
-        public void Configure(EntityTypeBuilder<VendorPlace> builder)
+        public void Configure(EntityTypeBuilder<VendorBranch> builder)
         {
-            builder.ToTable("VendorPlaces", "gamification");
+            builder.ToTable("VendorBranches", "gamification");
 
             builder.HasKey(e => e.Id);
 
@@ -30,9 +30,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.Notes)
                 .HasMaxLength(500);
 
-            builder.Property(e => e.IsPrimary)
-                .HasDefaultValue(false);
-
             builder.Property(e => e.IsActive)
                 .HasDefaultValue(true);
 
@@ -49,16 +46,11 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasDefaultValue(false);
 
             builder.HasIndex(e => e.VendorId)
-                .HasDatabaseName("IX_VendorPlaces_VendorId");
+                .HasDatabaseName("IX_VendorBranches_VendorId");
 
             builder.HasIndex(e => e.PlaceId)
                 .IsUnique()
-                .HasDatabaseName("IX_VendorPlaces_PlaceId");
-
-            builder.HasIndex(e => new { e.VendorId, e.IsPrimary })
-                .IsUnique()
-                .HasFilter("\"IsPrimary\" = true AND \"IsDeleted\" = false")
-                .HasDatabaseName("IX_VendorPlaces_OnePrimaryPerVendor");
+                .HasDatabaseName("IX_VendorBranches_PlaceId");
         }
     }
 }

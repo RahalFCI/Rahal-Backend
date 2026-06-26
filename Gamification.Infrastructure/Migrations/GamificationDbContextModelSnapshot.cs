@@ -617,7 +617,7 @@ namespace Gamification.Infrastructure.Migrations
                     b.ToTable("VendorProfiles", "gamification");
                 });
 
-            modelBuilder.Entity("Gamification.Domain.Entities.VendorPlace", b =>
+            modelBuilder.Entity("Gamification.Domain.Entities.VendorBranch", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -646,11 +646,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsPrimary")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -675,17 +670,12 @@ namespace Gamification.Infrastructure.Migrations
 
                     b.HasIndex("PlaceId")
                         .IsUnique()
-                        .HasDatabaseName("IX_VendorPlaces_PlaceId");
+                        .HasDatabaseName("IX_VendorBranches_PlaceId");
 
                     b.HasIndex("VendorId")
-                        .HasDatabaseName("IX_VendorPlaces_VendorId");
+                        .HasDatabaseName("IX_VendorBranches_VendorId");
 
-                    b.HasIndex("VendorId", "IsPrimary")
-                        .IsUnique()
-                        .HasDatabaseName("IX_VendorPlaces_OnePrimaryPerVendor")
-                        .HasFilter("\"IsPrimary\" = true AND \"IsDeleted\" = false");
-
-                    b.ToTable("VendorPlaces", "gamification");
+                    b.ToTable("VendorBranches", "gamification");
                 });
 
             modelBuilder.Entity("Gamification.Domain.Entities.XpTransaction", b =>

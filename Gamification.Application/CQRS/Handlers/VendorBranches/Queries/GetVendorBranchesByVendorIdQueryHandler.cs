@@ -12,27 +12,47 @@ using Shared.Infrastructure.Pagination;
 namespace Gamification.Application.CQRS.Handlers.VendorBranches.Queries
 {
     public class GetVendorBranchesByVendorIdQueryHandler
-        : IRequestHandler<GetVendorBranchesByVendorIdQuery, ApiResponse<PagedResult<VendorBranchDto>>>
+        : IRequestHandler<GetVendorBranchesByVendorIdQuery, ApiResponse<PagedResult<GetVendorBranchDto>>>
     {
-        private readonly IGamificationRepository<VendorPlace> _repository;
+        private readonly IGamificationRepository<VendorBranch> _repository;
+        private readonly IVendorBranchPlaceClient _placeClient;
 
-        public GetVendorBranchesByVendorIdQueryHandler(IGamificationRepository<VendorPlace> repository)
+        public GetVendorBranchesByVendorIdQueryHandler(
+            IGamificationRepository<VendorBranch> repository,
+            IVendorBranchPlaceClient placeClient)
         {
             _repository = repository;
+            _placeClient = placeClient;
         }
 
-        public async Task<ApiResponse<PagedResult<VendorBranchDto>>> Handle(GetVendorBranchesByVendorIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<PagedResult<GetVendorBranchDto>>> Handle(GetVendorBranchesByVendorIdQuery request, CancellationToken cancellationToken)
         {
-            var branches = _repository.GetTable()
+            var pagedBranches = await _repository.GetTable()
                 .AsNoTracking()
-                .Where(vp => vp.VendorId == request.VendorId)
-                .OrderByDescending(vp => vp.IsPrimary)
-                .ThenBy(vp => vp.BranchName)
-                .Select(vp => VendorPlaceMapper.ToDto(vp));
+                .Where(vb => vb.VendorId == request.VendorId)
+                .OrderBy(vb => vb.BranchName)
+                .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
-            var response = await PaginationExtensions.ToPagedResultAsync(branches, request.PaginationRequest, cancellationToken);
+            var branchList = pagedBranches.Items.ToList();
+            var placesResult = await _placeClient.GetPlacesAsync(branchList.Select(vb => vb.PlaceId), cancellationToken);
+            if (!placesResult.IsSuccess)
+            {
+                return ApiResponse<PagedResult<GetVendorBranchDto>>.Failure(placesResult.errorCode);
+            }
 
-            return ApiResponse<PagedResult<VendorBranchDto>>.Success(response);
+            var placeById = placesResult.Data.ToDictionary(p => p.PlaceId);
+            var items = branchList
+                .Where(vb => placeById.ContainsKey(vb.PlaceId))
+                .Select(vb => VendorBranchMapper.ToGetDto(vb, placeById[vb.PlaceId]))
+                .ToList();
+
+            return ApiResponse<PagedResult<GetVendorBranchDto>>.Success(new PagedResult<GetVendorBranchDto>
+            {
+                Items = items,
+                TotalCount = pagedBranches.TotalCount,
+                Page = pagedBranches.Page,
+                PageSize = pagedBranches.PageSize
+            });
         }
     }
 }

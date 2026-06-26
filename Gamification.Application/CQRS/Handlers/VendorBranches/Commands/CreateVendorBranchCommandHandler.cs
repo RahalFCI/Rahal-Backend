@@ -13,64 +13,61 @@ using Shared.Domain.Enums;
 namespace Gamification.Application.CQRS.Handlers.VendorBranches.Commands
 {
     public class CreateVendorBranchCommandHandler
-        : IRequestHandler<CreateVendorBranchCommand, ApiResponse<VendorBranchDto>>
+        : IRequestHandler<CreateVendorBranchCommand, ApiResponse<GetVendorBranchDto>>
     {
-        private readonly IGamificationRepository<VendorPlace> _vendorPlaceRepository;
+        private readonly IGamificationRepository<VendorBranch> _repository;
+        private readonly IVendorBranchPlaceClient _placeClient;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateVendorBranchCommandHandler> _logger;
 
         public CreateVendorBranchCommandHandler(
-            IGamificationRepository<VendorPlace> vendorPlaceRepository,
+            IGamificationRepository<VendorBranch> repository,
+            IVendorBranchPlaceClient placeClient,
             IMediator mediator,
             ILogger<CreateVendorBranchCommandHandler> logger)
         {
-            _vendorPlaceRepository = vendorPlaceRepository;
+            _repository = repository;
+            _placeClient = placeClient;
             _mediator = mediator;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<VendorBranchDto>> Handle(CreateVendorBranchCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorBranchDto>> Handle(CreateVendorBranchCommand request, CancellationToken cancellationToken)
         {
-            var vendorExists = await _mediator.Send(new GetVendorProfileByIdQuery(request.VendorId), cancellationToken);
-
-            if (!vendorExists.IsSuccess)
+            var vendor = await _mediator.Send(new GetVendorProfileByIdQuery(request.Dto.VendorId), cancellationToken);
+            if (!vendor.IsSuccess)
             {
-                return ApiResponse<VendorBranchDto>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetVendorBranchDto>.Failure(ErrorCode.NotFound);
             }
 
-            var placeAlreadyLinked = await _vendorPlaceRepository.GetTable()
-                .AnyAsync(vp => vp.PlaceId == request.PlaceId, cancellationToken);
-
-            if (placeAlreadyLinked)
+            var placeResult = await _placeClient.CreatePlaceAsync(request.Dto, cancellationToken);
+            if (!placeResult.IsSuccess)
             {
-                return ApiResponse<VendorBranchDto>.Failure(ErrorCode.AlreadyExists);
+                return ApiResponse<GetVendorBranchDto>.Failure(placeResult.errorCode);
             }
 
-            if (request.Dto.IsPrimary)
-            {
-                await ClearPrimaryBranchesAsync(request.VendorId, cancellationToken);
-            }
+            var branch = VendorBranchMapper.ToEntity(placeResult.Data.PlaceId, request.Dto);
 
-            var vendorPlace = VendorPlaceMapper.ToEntity(request.VendorId, request.PlaceId, request.Dto);
-            _vendorPlaceRepository.Add(vendorPlace);
-            await _vendorPlaceRepository.SaveChangesAsync(cancellationToken);
+            try
+            {
+                _repository.Add(branch);
+                await _repository.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save vendor branch for vendor {VendorId}; compensating place {PlaceId}",
+                    request.Dto.VendorId,
+                    placeResult.Data.PlaceId);
+                await _placeClient.DeletePlaceAsync(placeResult.Data.PlaceId, cancellationToken);
+                return ApiResponse<GetVendorBranchDto>.Failure(ErrorCode.DatabaseError);
+            }
 
             _logger.LogInformation("Created vendor branch {BranchId} for vendor {VendorId} and place {PlaceId}",
-                vendorPlace.Id, request.VendorId, request.PlaceId);
+                branch.Id,
+                branch.VendorId,
+                branch.PlaceId);
 
-            return ApiResponse<VendorBranchDto>.Success(VendorPlaceMapper.ToDto(vendorPlace));
-        }
-
-        private async Task ClearPrimaryBranchesAsync(Guid vendorId, CancellationToken cancellationToken)
-        {
-            var primaryBranches = await _vendorPlaceRepository.GetTable()
-                .Where(vp => vp.VendorId == vendorId && vp.IsPrimary)
-                .ToListAsync(cancellationToken);
-
-            foreach (var branch in primaryBranches)
-            {
-                branch.IsPrimary = false;
-            }
+            return ApiResponse<GetVendorBranchDto>.Success(VendorBranchMapper.ToGetDto(branch, placeResult.Data));
         }
     }
 }

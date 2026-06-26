@@ -1,7 +1,5 @@
 using Gamification.Application.CQRS.Commands.VendorBranches;
-using Gamification.Application.DTOs.VendorBranches;
 using Gamification.Application.Interfaces;
-using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,38 +10,51 @@ using Shared.Domain.Enums;
 namespace Gamification.Application.CQRS.Handlers.VendorBranches.Commands
 {
     public class DeleteVendorBranchCommandHandler
-        : IRequestHandler<DeleteVendorBranchCommand, ApiResponse<VendorBranchDto>>
+        : IRequestHandler<DeleteVendorBranchCommand, ApiResponse<string>>
     {
-        private readonly IGamificationRepository<VendorPlace> _repository;
+        private readonly IGamificationRepository<VendorBranch> _repository;
+        private readonly IVendorBranchPlaceClient _placeClient;
         private readonly ILogger<DeleteVendorBranchCommandHandler> _logger;
 
         public DeleteVendorBranchCommandHandler(
-            IGamificationRepository<VendorPlace> repository,
+            IGamificationRepository<VendorBranch> repository,
+            IVendorBranchPlaceClient placeClient,
             ILogger<DeleteVendorBranchCommandHandler> logger)
         {
             _repository = repository;
+            _placeClient = placeClient;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<VendorBranchDto>> Handle(DeleteVendorBranchCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(DeleteVendorBranchCommand request, CancellationToken cancellationToken)
         {
-            var vendorPlace = await _repository.GetTable()
-                .FirstOrDefaultAsync(vp => vp.Id == request.BranchId && vp.VendorId == request.VendorId, cancellationToken);
+            var branch = await _repository.GetTable()
+                .FirstOrDefaultAsync(vb => vb.Id == request.BranchId, cancellationToken);
 
-            if (vendorPlace is null)
+            if (branch is null)
             {
-                return ApiResponse<VendorBranchDto>.Failure(ErrorCode.NotFound);
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            vendorPlace.IsActive = false;
-            vendorPlace.IsDeleted = true;
-            vendorPlace.DeletedAt = DateTime.UtcNow;
+            branch.IsActive = false;
+            branch.IsDeleted = true;
+            branch.DeletedAt = DateTime.UtcNow;
 
             await _repository.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Deleted vendor branch {BranchId} for vendor {VendorId}", request.BranchId, request.VendorId);
+            var placeResult = await _placeClient.DeletePlaceAsync(branch.PlaceId, cancellationToken);
+            if (!placeResult.IsSuccess)
+            {
+                _logger.LogWarning("Vendor branch {BranchId} was deleted, but linked place {PlaceId} delete failed with {ErrorCode}",
+                    branch.Id,
+                    branch.PlaceId,
+                    placeResult.errorCode);
+                return ApiResponse<string>.Failure(placeResult.errorCode);
+            }
 
-            return ApiResponse<VendorBranchDto>.Success(VendorPlaceMapper.ToDto(vendorPlace));
+            _logger.LogInformation("Deleted vendor branch {BranchId}", branch.Id);
+
+            return ApiResponse<string>.Success("Vendor branch deleted successfully");
         }
     }
 }

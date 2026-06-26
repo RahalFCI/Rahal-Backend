@@ -7,9 +7,16 @@ namespace Gamification.Application.Validators.VendorBranches
     {
         public CreateVendorBranchDtoValidator()
         {
+            RuleFor(x => x.VendorId)
+                .NotEmpty().WithMessage("Vendor ID is required");
+
             RuleFor(x => x.BranchName)
                 .NotEmpty().WithMessage("Branch name is required")
                 .MaximumLength(100).WithMessage("Branch name must not exceed 100 characters");
+
+            RuleFor(x => x.PlaceName)
+                .NotEmpty().WithMessage("Place name is required")
+                .MaximumLength(200).WithMessage("Place name must not exceed 200 characters");
 
             RuleFor(x => x.Description)
                 .MaximumLength(1000).WithMessage("Description must not exceed 1000 characters");

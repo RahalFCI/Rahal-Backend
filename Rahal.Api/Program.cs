@@ -14,12 +14,14 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Places.Infrastructure.Search.EventHandlers;
+using Places.Application.EventConsumers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Filters;
 using Rahal.Api.Middlewares;
 using Serilog;
 using Shared.Application.Services;
 using Shared.Application.Events.Payments;
+using Shared.Application.Events.VendorBranches;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
 using StackExchange.Redis;
@@ -75,11 +77,17 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<DeleteProfileEventConsumer>();
     x.AddConsumer<RestoreProfileEventConsumer>();
     x.AddConsumer<CreateCheckInEventConsumer>();
+    x.AddConsumer<VendorBranchPlaceRequestConsumer>();
     x.AddConsumer<SpendXpRequestConsumer>();
     x.AddConsumer<SetExplorerPremiumRequestConsumer>();
     x.AddRequestClient<SpendXpRequest>(RequestTimeout.After(s: 30));
     x.AddRequestClient<SetExplorerPremiumRequest>(RequestTimeout.After(s: 30));
     x.AddRequestClient<ProcessPaymentRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<CreateVendorBranchPlaceRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<UpdateVendorBranchPlaceRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<GetVendorBranchPlaceRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<GetVendorBranchPlacesRequest>(RequestTimeout.After(s: 30));
+    x.AddRequestClient<DeleteVendorBranchPlaceRequest>(RequestTimeout.After(s: 30));
 
     x.UsingRabbitMq((context, cfg) =>
     {

@@ -12,52 +12,48 @@ using Shared.Domain.Enums;
 namespace Gamification.Application.CQRS.Handlers.VendorBranches.Commands
 {
     public class UpdateVendorBranchCommandHandler
-        : IRequestHandler<UpdateVendorBranchCommand, ApiResponse<VendorBranchDto>>
+        : IRequestHandler<UpdateVendorBranchCommand, ApiResponse<GetVendorBranchDto>>
     {
-        private readonly IGamificationRepository<VendorPlace> _repository;
+        private readonly IGamificationRepository<VendorBranch> _repository;
+        private readonly IVendorBranchPlaceClient _placeClient;
         private readonly ILogger<UpdateVendorBranchCommandHandler> _logger;
 
         public UpdateVendorBranchCommandHandler(
-            IGamificationRepository<VendorPlace> repository,
+            IGamificationRepository<VendorBranch> repository,
+            IVendorBranchPlaceClient placeClient,
             ILogger<UpdateVendorBranchCommandHandler> logger)
         {
             _repository = repository;
+            _placeClient = placeClient;
             _logger = logger;
         }
 
-        public async Task<ApiResponse<VendorBranchDto>> Handle(UpdateVendorBranchCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorBranchDto>> Handle(UpdateVendorBranchCommand request, CancellationToken cancellationToken)
         {
-            var vendorPlace = await _repository.GetTable()
-                .FirstOrDefaultAsync(vp => vp.Id == request.BranchId && vp.VendorId == request.VendorId, cancellationToken);
+            var branch = await _repository.GetTable()
+                .FirstOrDefaultAsync(vb => vb.Id == request.BranchId, cancellationToken);
 
-            if (vendorPlace is null)
+            if (branch is null)
             {
-                return ApiResponse<VendorBranchDto>.Failure(ErrorCode.NotFound);
+                return ApiResponse<GetVendorBranchDto>.Failure(ErrorCode.NotFound);
             }
 
-            if (request.Dto.IsPrimary)
+            var placeResult = await _placeClient.UpdatePlaceAsync(branch.PlaceId, request.Dto, cancellationToken);
+            if (!placeResult.IsSuccess)
             {
-                var primaryBranches = await _repository.GetTable()
-                    .Where(vp => vp.VendorId == request.VendorId && vp.Id != request.BranchId && vp.IsPrimary)
-                    .ToListAsync(cancellationToken);
-
-                foreach (var branch in primaryBranches)
-                {
-                    branch.IsPrimary = false;
-                }
+                return ApiResponse<GetVendorBranchDto>.Failure(placeResult.errorCode);
             }
 
-            vendorPlace.BranchName = request.Dto.BranchName;
-            vendorPlace.PhoneNumber = request.Dto.PhoneNumber;
-            vendorPlace.Notes = request.Dto.Notes;
-            vendorPlace.IsPrimary = request.Dto.IsPrimary;
-            vendorPlace.IsActive = request.Dto.IsActive;
+            branch.BranchName = request.Dto.BranchName;
+            branch.PhoneNumber = request.Dto.PhoneNumber;
+            branch.Notes = request.Dto.Notes;
+            branch.IsActive = request.Dto.IsActive;
 
             await _repository.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Updated vendor branch {BranchId} for vendor {VendorId}", request.BranchId, request.VendorId);
+            _logger.LogInformation("Updated vendor branch {BranchId}", branch.Id);
 
-            return ApiResponse<VendorBranchDto>.Success(VendorPlaceMapper.ToDto(vendorPlace));
+            return ApiResponse<GetVendorBranchDto>.Success(VendorBranchMapper.ToGetDto(branch, placeResult.Data));
         }
     }
 }

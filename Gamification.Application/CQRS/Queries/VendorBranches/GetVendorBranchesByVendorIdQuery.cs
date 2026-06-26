@@ -6,5 +6,5 @@ using Shared.Application.Pagination;
 namespace Gamification.Application.CQRS.Queries.VendorBranches
 {
     public record GetVendorBranchesByVendorIdQuery(Guid VendorId, OffsetPaginationRequest PaginationRequest)
-        : IRequest<ApiResponse<PagedResult<VendorBranchDto>>>;
+        : IRequest<ApiResponse<PagedResult<GetVendorBranchDto>>>;
 }

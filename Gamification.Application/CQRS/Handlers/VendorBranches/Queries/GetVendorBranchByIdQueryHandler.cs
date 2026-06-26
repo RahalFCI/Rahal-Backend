@@ -11,24 +11,34 @@ using Shared.Domain.Enums;
 namespace Gamification.Application.CQRS.Handlers.VendorBranches.Queries
 {
     public class GetVendorBranchByIdQueryHandler
-        : IRequestHandler<GetVendorBranchByIdQuery, ApiResponse<VendorBranchDto>>
+        : IRequestHandler<GetVendorBranchByIdQuery, ApiResponse<GetVendorBranchDto>>
     {
-        private readonly IGamificationRepository<VendorPlace> _repository;
+        private readonly IGamificationRepository<VendorBranch> _repository;
+        private readonly IVendorBranchPlaceClient _placeClient;
 
-        public GetVendorBranchByIdQueryHandler(IGamificationRepository<VendorPlace> repository)
+        public GetVendorBranchByIdQueryHandler(
+            IGamificationRepository<VendorBranch> repository,
+            IVendorBranchPlaceClient placeClient)
         {
             _repository = repository;
+            _placeClient = placeClient;
         }
 
-        public async Task<ApiResponse<VendorBranchDto>> Handle(GetVendorBranchByIdQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<GetVendorBranchDto>> Handle(GetVendorBranchByIdQuery request, CancellationToken cancellationToken)
         {
             var branch = await _repository.GetTable()
                 .AsNoTracking()
-                .FirstOrDefaultAsync(vp => vp.Id == request.BranchId && vp.VendorId == request.VendorId, cancellationToken);
+                .FirstOrDefaultAsync(vb => vb.Id == request.BranchId, cancellationToken);
 
-            return branch is null
-                ? ApiResponse<VendorBranchDto>.Failure(ErrorCode.NotFound)
-                : ApiResponse<VendorBranchDto>.Success(VendorPlaceMapper.ToDto(branch));
+            if (branch is null)
+            {
+                return ApiResponse<GetVendorBranchDto>.Failure(ErrorCode.NotFound);
+            }
+
+            var placeResult = await _placeClient.GetPlaceAsync(branch.PlaceId, cancellationToken);
+            return placeResult.IsSuccess
+                ? ApiResponse<GetVendorBranchDto>.Success(VendorBranchMapper.ToGetDto(branch, placeResult.Data))
+                : ApiResponse<GetVendorBranchDto>.Failure(placeResult.errorCode);
         }
     }
 }

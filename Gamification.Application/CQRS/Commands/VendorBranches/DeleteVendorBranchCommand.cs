@@ -4,6 +4,6 @@ using Shared.Application.DTOs;
 
 namespace Gamification.Application.CQRS.Commands.VendorBranches
 {
-    public record DeleteVendorBranchCommand(Guid VendorId, Guid BranchId)
-        : IRequest<ApiResponse<VendorBranchDto>>;
+    public record DeleteVendorBranchCommand(Guid BranchId)
+        : IRequest<ApiResponse<string>>;
 }
