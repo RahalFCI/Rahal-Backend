@@ -66,13 +66,6 @@ namespace Gamification.Application.CQRS.Handlers.Achievements.Commands
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            var existingAchievement = await _repository.GetTable().Where(a => a.Title == request.Dto.Title).AnyAsync(cancellationToken);
-            if (existingAchievement)
-            {
-                _logger.LogWarning("Achievement with title {AchievementTitle} already exists", request.Dto.Title);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
-            }
-
             AchievementMapper.UpdateEntity(achievement, request.Dto);
             _repository.Update(achievement);
             await _repository.SaveChangesAsync(cancellationToken);

@@ -617,6 +617,77 @@ namespace Gamification.Infrastructure.Migrations
                     b.ToTable("VendorProfiles", "gamification");
                 });
 
+            modelBuilder.Entity("Gamification.Domain.Entities.VendorPlace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("PlaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .ValueGeneratedOnUpdate()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VendorId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaceId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_VendorPlaces_PlaceId");
+
+                    b.HasIndex("VendorId")
+                        .HasDatabaseName("IX_VendorPlaces_VendorId");
+
+                    b.HasIndex("VendorId", "IsPrimary")
+                        .IsUnique()
+                        .HasDatabaseName("IX_VendorPlaces_OnePrimaryPerVendor")
+                        .HasFilter("\"IsPrimary\" = true AND \"IsDeleted\" = false");
+
+                    b.ToTable("VendorPlaces", "gamification");
+                });
+
             modelBuilder.Entity("Gamification.Domain.Entities.XpTransaction", b =>
                 {
                     b.Property<Guid>("Id")

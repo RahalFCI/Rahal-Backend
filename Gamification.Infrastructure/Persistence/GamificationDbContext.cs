@@ -23,6 +23,7 @@ namespace Gamification.Infrastructure.Persistence
         public DbSet<ExplorerProfile> ExplorerProfiles { get; set; }
         public DbSet<VendorProfile> VendorProfiles { get; set; }
         public DbSet<VendorCategory> VendorCategories { get; set; }
+        public DbSet<VendorPlace> VendorPlaces { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

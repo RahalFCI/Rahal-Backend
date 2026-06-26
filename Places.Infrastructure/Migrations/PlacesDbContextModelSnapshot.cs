@@ -149,6 +149,9 @@ namespace Places.Infrastructure.Migrations
                     b.HasIndex("PlaceCategoryId")
                         .HasDatabaseName("IX_Places_PlaceCategoryId");
 
+                    b.HasIndex("PlaceCategoryId", "Latitude", "Longitude")
+                        .HasDatabaseName("IX_Places_Category_Location");
+
                     b.HasIndex("Name", "Latitude", "Longitude")
                         .IsUnique();
 

@@ -17,6 +17,7 @@ namespace Rewards.Infrastructure.Persistence
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<TravelPlan> TravelPlans { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

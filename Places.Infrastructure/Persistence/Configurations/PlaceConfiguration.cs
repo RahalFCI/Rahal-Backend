@@ -98,6 +98,9 @@ namespace Places.Infrastructure.Persistence.Configuration
             builder.HasIndex(e => e.PlaceCategoryId)
                 .HasDatabaseName("IX_Places_PlaceCategoryId");
 
+            builder.HasIndex(e => new { e.PlaceCategoryId, e.Latitude, e.Longitude })
+                .HasDatabaseName("IX_Places_Category_Location");
+
             builder.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("IX_Places_CreatedAt");
 
