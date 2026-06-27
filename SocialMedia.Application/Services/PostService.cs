@@ -201,6 +201,69 @@ namespace SocialMedia.Application.Services
             return ApiResponse<PostResponseDto>.Success(MapPostResponse(post, isPostLiked));
         }
 
+        public async Task<ApiResponse<string>> DeletePostAsync(
+            Guid postId,
+            Guid userId,
+            bool isAdmin = false,
+            CancellationToken cancellationToken = default)
+        {
+            if (postId == Guid.Empty || userId == Guid.Empty)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            var post = await _postRepository.GetTable()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+            if (post is null || post.IsDeleted)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            if (!isAdmin && post.UserId != userId)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
+            }
+
+            post.IsDeleted = true;
+            post.DeletedAt = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            _postRepository.Update(post);
+            await _postRepository.SaveChangesAsync(cancellationToken);
+
+            var db = _redis.GetDatabase();
+            try
+            {
+                var batch = db.CreateBatch();
+                var postCacheDeleteTask = batch.KeyDeleteAsync($"Post:{post.Id}");
+                var authorFeedRemoveTask = batch.SortedSetRemoveAsync($"Feed:{post.UserId}", post.Id.ToString());
+
+                batch.Execute();
+                await Task.WhenAll(postCacheDeleteTask, authorFeedRemoveTask);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete Post:{PostId} cache or author feed entry after post deletion - non-fatal, DB is source of truth", post.Id);
+            }
+
+            try
+            {
+                await _publisher.Publish(
+                    new PostDeletedEvent(post.Id, post.UserId, DateTime.UtcNow),
+                    cancellationToken);
+
+                _logger.LogInformation("PostDeletedEvent published for post {PostId}", post.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PostDeletedEvent for post {PostId} - non-fatal", post.Id);
+            }
+
+            return ApiResponse<string>.Success("Post deleted successfully");
+        }
+
         public async Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
             Guid userId,
             long? cursor = null,
@@ -465,6 +528,13 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
 
+            var like = await _likeRepository.GetAsync(userId, postId, cancellationToken);
+            if (like is null)
+            {
+                _logger.LogWarning("Unlike rejected: like relationship from user {UserId} to post {PostId} was not found in DB", userId, postId);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
             if (await db.SetLengthAsync(userLikesKey) == 0)
             {
                 await db.SetAddAsync(userLikesKey, EmptyUserLikesSentinel);
@@ -482,8 +552,6 @@ namespace SocialMedia.Application.Services
 
                 if (post is null)
                 {
-                    // Rollback the SREM
-                    await db.SetAddAsync(userLikesKey, postId.ToString());
                     _logger.LogWarning("Unlike rejected: post {PostId} not found", postId);
                     return ApiResponse<string>.Failure(ErrorCode.NotFound);
                 }
@@ -517,13 +585,9 @@ namespace SocialMedia.Application.Services
             _logger.LogDebug("Decremented LikesCount for Post:{PostId}", postId);
 
             // ── 3. Delete Like from PostgreSQL ────────────────────────────────
-            var like = await _likeRepository.GetAsync(userId, postId, cancellationToken);
-            if (like is not null)
-            {
-                _likeRepository.Remove(like);
-                await _likeRepository.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("User {UserId} unliked post {PostId}", userId, postId);
-            }
+            _likeRepository.Remove(like);
+            await _likeRepository.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("User {UserId} unliked post {PostId}", userId, postId);
 
             return ApiResponse<string>.Success("Post unliked successfully");
         }
@@ -670,6 +734,7 @@ namespace SocialMedia.Application.Services
         public async Task<ApiResponse<string>> DeleteCommentAsync(
             Guid commentId,
             Guid userId,
+            bool isAdmin = false,
             CancellationToken cancellationToken = default)
         {
             var comment = await _commentRepository.GetByIdAsync(commentId, cancellationToken);
@@ -680,7 +745,7 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            if (comment.UserId != userId)
+            if (!isAdmin && comment.UserId != userId)
             {
                 return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
             }

@@ -15,6 +15,12 @@ namespace SocialMedia.Application.Interfaces
             Guid viewerUserId,
             CancellationToken cancellationToken = default);
 
+        Task<ApiResponse<string>> DeletePostAsync(
+            Guid postId,
+            Guid userId,
+            bool isAdmin = false,
+            CancellationToken cancellationToken = default);
+
         Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
             Guid userId,
             long? cursor = null,
@@ -53,6 +59,7 @@ namespace SocialMedia.Application.Interfaces
         Task<ApiResponse<string>> DeleteCommentAsync(
             Guid commentId,
             Guid userId,
+            bool isAdmin = false,
             CancellationToken cancellationToken = default);
 
         Task<ApiResponse<SocialMedia.Application.DTOs.Comments.CommentPagedResponse>> GetRootCommentsAsync(

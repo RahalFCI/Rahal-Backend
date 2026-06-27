@@ -62,6 +62,41 @@ namespace Rahal.Api.Controllers.SocialMedia
         }
 
         /// <summary>
+        /// Soft deletes a post owned by the current explorer. Admins can delete any post.
+        /// </summary>
+        [HttpDelete("{postId:guid}")]
+        [Authorize(Roles = "Explorer,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeletePostAsync(
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var isAdmin = GetCurrentUserRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
+            var result = await _postService.DeletePostAsync(postId, userId, isAdmin, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
+                {
+                    return NotFound(result);
+                }
+
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
+                {
+                    return Forbid();
+                }
+
+                return BadRequest(result);
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Likes a post. Returns 400 if the user has already liked it.
         /// The cache is hydrated on miss; only the Redis LikesCount is updated here —
         /// the DB write is handled by the same request for consistency.
@@ -177,14 +212,15 @@ namespace Rahal.Api.Controllers.SocialMedia
             CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();
-            var result = await _postService.DeleteCommentAsync(commentId, userId, cancellationToken);
+            var isAdmin = GetCurrentUserRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
+            var result = await _postService.DeleteCommentAsync(commentId, userId, isAdmin, cancellationToken);
 
             if (!result.IsSuccess)
             {
                 if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
                     return NotFound(result);
                 if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
-                    return Unauthorized(result);
+                    return Forbid();
 
                 return BadRequest(result);
             }

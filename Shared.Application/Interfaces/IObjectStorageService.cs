@@ -27,5 +27,10 @@ namespace Shared.Application.Interfaces
         /// Reconstructs the full HTTPS delivery URL for a given publicId.
         /// </summary>
         string BuildMediaUrl(string publicId);
+
+        /// <summary>
+        /// Deletes a media object by its delivery URL.
+        /// </summary>
+        Task DeleteMediaAsync(string mediaUrl, CancellationToken cancellationToken = default);
     }
 }

@@ -154,27 +154,34 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
             }
 
+            var follow = await _followRepository.GetAsync(followerId, followingId, cancellationToken);
+            if (follow is null)
+            {
+                _logger.LogWarning(
+                    "Unfollow rejected: follow relationship from {FollowerId} to {FollowingId} was not found in DB",
+                    followerId,
+                    followingId);
+
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.ValidationError);
+            }
+
             await HydrateUserProfileAsync(db, followerId, followerProfileKey, cancellationToken);
             await DecrementHashFieldWithoutNegativeAsync(db, followerProfileKey, "FollowingCount");
 
             await HydrateUserProfileAsync(db, followingId, followingProfileKey, cancellationToken);
             await DecrementHashFieldWithoutNegativeAsync(db, followingProfileKey, "FollowersCount");
 
-            var follow = await _followRepository.GetAsync(followerId, followingId, cancellationToken);
-            if (follow is not null)
-            {
-                _followRepository.Remove(follow);
+            _followRepository.Remove(follow);
 
-                try
-                {
-                    await _followRepository.SaveChangesAsync(cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    await RollbackUnfollowCacheAsync(db, followingKey, followerProfileKey, followingProfileKey, followingId);
-                    _logger.LogError(ex, "Failed to remove follow relationship from {FollowerId} to {FollowingId}", followerId, followingId);
-                    return ApiResponse<FollowResponse>.Failure(ErrorCode.DatabaseError);
-                }
+            try
+            {
+                await _followRepository.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await RollbackUnfollowCacheAsync(db, followingKey, followerProfileKey, followingProfileKey, followingId);
+                _logger.LogError(ex, "Failed to remove follow relationship from {FollowerId} to {FollowingId}", followerId, followingId);
+                return ApiResponse<FollowResponse>.Failure(ErrorCode.DatabaseError);
             }
 
             var timestamp = DateTime.UtcNow;
