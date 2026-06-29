@@ -122,7 +122,6 @@ namespace Rahal.Api.Controllers.Notifications
         /// Stores or replaces the authenticated user's Firebase Cloud Messaging token.
         /// </summary>
         [HttpPost("fcm-token")]
-        [HttpPost("setFCMToken")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
