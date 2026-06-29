@@ -45,6 +45,40 @@ namespace Notifications.Infrastructure.Repositories
                 .FirstOrDefaultAsync(notification => notification.Id == notificationId, cancellationToken);
         }
 
+        public void Add(Notification notification)
+        {
+            _context.Notifications.Add(notification);
+        }
+
+        public void AddRange(IEnumerable<Notification> notifications)
+        {
+            _context.Notifications.AddRange(notifications);
+        }
+
+        public async Task<string?> GetFcmTokenAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            return await _context.UserNotificationTokens
+                .AsNoTracking()
+                .Where(token => token.UserId == userId)
+                .Select(token => token.FcmToken)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<Dictionary<Guid, string>> GetFcmTokensByUserIdsAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken = default)
+        {
+            if (userIds.Count == 0)
+            {
+                return new Dictionary<Guid, string>();
+            }
+
+            return await _context.UserNotificationTokens
+                .AsNoTracking()
+                .Where(token => userIds.Contains(token.UserId))
+                .ToDictionaryAsync(token => token.UserId, token => token.FcmToken, cancellationToken);
+        }
+
         public async Task MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
         {
             await _context.Notifications

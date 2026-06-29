@@ -33,7 +33,7 @@ namespace Notifications.Infrastructure.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    Metadata = table.Column<Dictionary<string, JsonElement>>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb")
+                    Metadata = table.Column<Dictionary<string, JsonElement>>(type: "jsonb", nullable: true)
                 },
                 constraints: table =>
                 {

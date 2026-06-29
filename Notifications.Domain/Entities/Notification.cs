@@ -15,6 +15,6 @@ namespace Notifications.Domain.Entities
 
         public bool IsRead { get; set; }
 
-        public Dictionary<string, JsonElement> Metadata { get; set; } = new();
+        public Dictionary<string, JsonElement>? Metadata { get; set; }
     }
 }

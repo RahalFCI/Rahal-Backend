@@ -46,9 +46,7 @@ namespace Notifications.Infrastructure.Persistence.Configurations
             builder.HasQueryFilter(notification => !notification.IsDeleted);
 
             builder.Property(notification => notification.Metadata)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb")
-                .IsRequired();
+                .HasColumnType("jsonb");
 
             builder.HasIndex(notification => new { notification.UserId, notification.CreatedAt })
                 .HasDatabaseName("IX_Notifications_UserId_CreatedAt")

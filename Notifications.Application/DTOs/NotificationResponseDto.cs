@@ -18,6 +18,6 @@ namespace Notifications.Application.DTOs
 
         public DateTime CreatedAt { get; set; }
 
-        public Dictionary<string, JsonElement> Metadata { get; set; } = new();
+        public Dictionary<string, JsonElement>? Metadata { get; set; }
     }
 }

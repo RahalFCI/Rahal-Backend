@@ -14,6 +14,16 @@ namespace Notifications.Application.Interfaces
 
         Task<Notification?> GetByIdAsync(Guid notificationId, CancellationToken cancellationToken = default);
 
+        void Add(Notification notification);
+
+        void AddRange(IEnumerable<Notification> notifications);
+
+        Task<string?> GetFcmTokenAsync(Guid userId, CancellationToken cancellationToken = default);
+
+        Task<Dictionary<Guid, string>> GetFcmTokensByUserIdsAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken = default);
+
         Task MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
 
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
