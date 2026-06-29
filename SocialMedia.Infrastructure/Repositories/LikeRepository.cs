@@ -31,10 +31,11 @@ namespace SocialMedia.Infrastructure.Repositories
         /// </summary>
         public async Task<List<Guid>> GetPostIdsLikedByUserAsync(Guid userId, CancellationToken cancellationToken = default)
         {
+            // The FK guarantees the post exists, so no semi-join to Posts is needed.
+            // This is fully covered by the composite PK (UserId, PostId) — UserId leads.
             return await _context.Likes
                 .AsNoTracking()
                 .Where(l => l.UserId == userId)
-                .Where(l => _context.Posts.Any(p => p.Id == l.PostId))
                 .Select(l => l.PostId)
                 .ToListAsync(cancellationToken);
         }

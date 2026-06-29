@@ -183,7 +183,9 @@ namespace SocialMedia.Application.Services
             if (cachedPost is not null)
             {
                 var isLiked = await IsPostLikedByUserAsync(db, viewerUserId, postId, cancellationToken);
-                return ApiResponse<PostResponseDto>.Success(MapPostResponse(cachedPost, isLiked));
+                var cachedNames = await ResolveAuthorNamesAsync(new[] { cachedPost.AuthorId }, cancellationToken);
+                return ApiResponse<PostResponseDto>.Success(
+                    MapPostResponse(cachedPost, isLiked, cachedNames.GetValueOrDefault(cachedPost.AuthorId, "Unknown User")));
             }
 
             var post = await GetPostReadModelQuery()
@@ -197,8 +199,10 @@ namespace SocialMedia.Application.Services
             await CachePostAsync(db, post);
 
             var isPostLiked = await IsPostLikedByUserAsync(db, viewerUserId, postId, cancellationToken);
+            var names = await ResolveAuthorNamesAsync(new[] { post.AuthorId }, cancellationToken);
 
-            return ApiResponse<PostResponseDto>.Success(MapPostResponse(post, isPostLiked));
+            return ApiResponse<PostResponseDto>.Success(
+                MapPostResponse(post, isPostLiked, names.GetValueOrDefault(post.AuthorId, "Unknown User")));
         }
 
         public async Task<ApiResponse<string>> DeletePostAsync(
@@ -226,13 +230,9 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
             }
 
-            post.IsDeleted = true;
-            post.DeletedAt = DateTime.UtcNow;
-            post.UpdatedAt = DateTime.UtcNow;
-
-            _postRepository.Update(post);
-            await _postRepository.SaveChangesAsync(cancellationToken);
-
+            // Invalidate the cache BEFORE the DB write. If the DB write then fails the
+            // post is still live and the cache simply re-hydrates on next read; this
+            // avoids leaving a stale (deleted) post hash that could still be liked.
             var db = _redis.GetDatabase();
             try
             {
@@ -245,8 +245,15 @@ namespace SocialMedia.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete Post:{PostId} cache or author feed entry after post deletion - non-fatal, DB is source of truth", post.Id);
+                _logger.LogError(ex, "Failed to delete Post:{PostId} cache or author feed entry before post deletion - non-fatal, DB is source of truth", post.Id);
             }
+
+            post.IsDeleted = true;
+            post.DeletedAt = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            _postRepository.Update(post);
+            await _postRepository.SaveChangesAsync(cancellationToken);
 
             try
             {
@@ -335,9 +342,16 @@ namespace SocialMedia.Application.Services
                 posts.Select(post => post.Id).ToList(),
                 cancellationToken);
 
+            var authorNames = await ResolveAuthorNamesAsync(
+                posts.Select(post => post.AuthorId),
+                cancellationToken);
+
             var responsePosts = posts
                 .OrderByDescending(post => post.CreatedAt)
-                .Select(post => MapPostResponse(post, likedPostIds.Contains(post.Id)))
+                .Select(post => MapPostResponse(
+                    post,
+                    likedPostIds.Contains(post.Id),
+                    authorNames.GetValueOrDefault(post.AuthorId, "Unknown User")))
                 .ToList();
 
             return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse
@@ -370,29 +384,64 @@ namespace SocialMedia.Application.Services
             var cursorTimestamp = cursor ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var cursorDate = DateTimeOffset.FromUnixTimeSeconds(cursorTimestamp).UtcDateTime;
 
-            var posts = await _postRepository.GetTable()
+            // 1. Page the base rows (no per-row correlated subqueries).
+            var rawPosts = await _postRepository.GetTable()
                 .AsNoTracking()
                 .Where(post => post.UserId == userId)
                 .Where(post => post.CreatedAt < cursorDate)
                 .OrderByDescending(post => post.CreatedAt)
                 .Take(limit)
-                .Select(post => new CachedPost
+                .Select(post => new
                 {
-                    Id = post.Id,
-                    Content = post.Content,
-                    AuthorId = post.UserId,
-                    LikesCount = post.Likes.Count(),
-                    CommentsCount = post.Comments.Count(comment => !comment.IsDeleted),
-                    IsLikedByThisUser = viewerUserId != Guid.Empty
-                        && post.Likes.Any(like => like.UserId == viewerUserId),
-                    CreatedAt = post.CreatedAt,
-                    IsPublic = post.IsPublic,
-                    MediaUrls = post.MediaUrls
+                    post.Id,
+                    post.Content,
+                    post.CreatedAt,
+                    post.IsPublic,
+                    post.MediaUrls
                 })
                 .ToListAsync(cancellationToken);
 
-            var responsePosts = posts
-                .Select(post => MapPostResponse(post, post.IsLikedByThisUser))
+            var pagePostIds = rawPosts.Select(p => p.Id).ToList();
+
+            // 2. Aggregate like/comment counts in two grouped queries (not N correlated subqueries).
+            var likeCounts = pagePostIds.Count == 0
+                ? new Dictionary<Guid, int>()
+                : await _postRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(post => pagePostIds.Contains(post.Id))
+                    .Select(post => new { post.Id, Count = post.Likes.Count() })
+                    .ToDictionaryAsync(x => x.Id, x => x.Count, cancellationToken);
+
+            var commentCounts = pagePostIds.Count == 0
+                ? new Dictionary<Guid, int>()
+                : await _commentRepository.GetTable()
+                    .AsNoTracking()
+                    .Where(comment => pagePostIds.Contains(comment.PostId) && !comment.IsDeleted)
+                    .GroupBy(comment => comment.PostId)
+                    .Select(group => new { PostId = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(x => x.PostId, x => x.Count, cancellationToken);
+
+            // 3. Resolve the viewer's likes for just this page, and the (single) author name.
+            var likedPostIds = await GetLikedPostIdsFromCacheAsync(
+                _redis.GetDatabase(), viewerUserId, pagePostIds, cancellationToken);
+            var authorNames = await ResolveAuthorNamesAsync(new[] { userId }, cancellationToken);
+            var authorName = authorNames.GetValueOrDefault(userId, "Unknown User");
+
+            var responsePosts = rawPosts
+                .Select(post => MapPostResponse(
+                    new CachedPost
+                    {
+                        Id = post.Id,
+                        Content = post.Content,
+                        AuthorId = userId,
+                        LikesCount = likeCounts.GetValueOrDefault(post.Id),
+                        CommentsCount = commentCounts.GetValueOrDefault(post.Id),
+                        CreatedAt = post.CreatedAt,
+                        IsPublic = post.IsPublic,
+                        MediaUrls = post.MediaUrls
+                    },
+                    likedPostIds.Contains(post.Id),
+                    authorName))
                 .ToList();
 
             return ApiResponse<FeedPagedResponse>.Success(new FeedPagedResponse
@@ -488,7 +537,19 @@ namespace SocialMedia.Application.Services
             };
 
             _likeRepository.Add(like);
-            await _likeRepository.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _likeRepository.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // DB write failed (e.g. the like already existed in DB but Redis was stale).
+                // Roll back the optimistic Redis mutations to keep cache consistent.
+                await db.SetRemoveAsync(userLikesKey, postId.ToString());
+                await db.HashDecrementAsync(postCacheKey, "LikesCount", 1);
+                _logger.LogError(ex, "Failed to persist like from user {UserId} on post {PostId}; rolled back cache", userId, postId);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
 
             _logger.LogInformation("User {UserId} liked post {PostId}", userId, postId);
 
@@ -643,10 +704,6 @@ namespace SocialMedia.Application.Services
                 });
             }
 
-            // Atomically increment CommentsCount in the cache
-            await db.HashIncrementAsync(postCacheKey, "CommentsCount", 1);
-            _logger.LogDebug("Incremented CommentsCount for Post:{PostId}", postId);
-
             // ── 2. Persist Comment + RepliesCount update in a single transaction ────
             // EF Core's SaveChangesAsync wraps all tracked changes in one implicit
             // transaction. We stage both the new comment and the parent's counter
@@ -661,25 +718,36 @@ namespace SocialMedia.Application.Services
                 CreatedAt       = DateTime.UtcNow
             };
 
-            _commentRepository.Add(comment);
-
-            // If this is a reply, fetch the parent and increment its counter.
-            // Both changes are staged in the same DbContext and committed together.
+            // If this is a reply, the parent MUST exist and belong to this post.
+            // Validating up front avoids a self-FK violation (500) on SaveChanges
+            // when ParentCommentId points to a non-existent comment.
             if (request.ParentCommentId.HasValue)
             {
                 var parent = await _commentRepository.GetByIdAsync(
                     request.ParentCommentId.Value, cancellationToken);
 
-                if (parent is not null)
+                if (parent is null || parent.PostId != postId)
                 {
-                    parent.RepliesCount++;
-                    _commentRepository.Update(parent);
-                    _logger.LogDebug("Staged RepliesCount increment for parent comment {ParentCommentId}", parent.Id);
+                    _logger.LogWarning(
+                        "Comment rejected: parent comment {ParentCommentId} not found or not on post {PostId}",
+                        request.ParentCommentId, postId);
+                    return ApiResponse<SocialMedia.Application.DTOs.Comments.CommentResponse>.Failure(ErrorCode.NotFound);
                 }
+
+                parent.RepliesCount++;
+                _commentRepository.Update(parent);
+                _logger.LogDebug("Staged RepliesCount increment for parent comment {ParentCommentId}", parent.Id);
             }
+
+            _commentRepository.Add(comment);
 
             // Single SaveChangesAsync → single BEGIN/COMMIT wrapping both INSERT + UPDATE.
             await _commentRepository.SaveChangesAsync(cancellationToken);
+
+            // Only after the DB write succeeds do we bump the cached CommentsCount,
+            // so a rejected/failed insert can never inflate the counter.
+            await db.HashIncrementAsync(postCacheKey, "CommentsCount", 1);
+            _logger.LogDebug("Incremented CommentsCount for Post:{PostId}", postId);
 
             _logger.LogInformation("User {UserId} commented on post {PostId}", userId, postId);
 
@@ -958,6 +1026,21 @@ namespace SocialMedia.Application.Services
 
         // ── Helpers ────────────────────────────────────────────────────────────
 
+        // Batch-resolves author display names via the Users module gateway
+        // (same pattern as MapCommentsAsync). Avatars are not available cross-context.
+        private async Task<Dictionary<Guid, string>> ResolveAuthorNamesAsync(
+            IEnumerable<Guid> authorIds,
+            CancellationToken cancellationToken)
+        {
+            var distinctIds = authorIds.Distinct().ToList();
+            if (distinctIds.Count == 0)
+            {
+                return new Dictionary<Guid, string>();
+            }
+
+            return await _userGateway.GetUserDisplayNamesAsync(distinctIds, cancellationToken);
+        }
+
         private IQueryable<CachedPost> GetPostReadModelQuery()
         {
             return _postRepository.GetTable()
@@ -1175,13 +1258,14 @@ namespace SocialMedia.Application.Services
             await db.KeyExpireAsync(userLikesKey, UserLikesTtl);
         }
 
-        private static PostResponseDto MapPostResponse(CachedPost post, bool isLikedByThisUser = false)
+        private static PostResponseDto MapPostResponse(CachedPost post, bool isLikedByThisUser = false, string authorName = "")
         {
             return new PostResponseDto
             {
                 Id = post.Id,
                 Content = post.Content,
                 AuthorId = post.AuthorId,
+                AuthorName = authorName,
                 LikesCount = post.LikesCount,
                 CommentsCount = post.CommentsCount,
                 IsLikedByThisUser = isLikedByThisUser,
