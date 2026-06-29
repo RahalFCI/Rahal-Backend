@@ -1,8 +1,10 @@
 using Notifications.Application.DTOs;
 using Notifications.Application.Interfaces;
+using Notifications.Application.Mappers;
 using Notifications.Domain.Entities;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
+using Users.Contracts.Interfaces;
 
 namespace Notifications.Application.Services
 {
@@ -12,10 +14,14 @@ namespace Notifications.Application.Services
         private const int MaxLimit = 100;
 
         private readonly INotificationRepository _notificationRepository;
+        private readonly IUsersPublicApi _usersPublicApi;
 
-        public NotificationService(INotificationRepository notificationRepository)
+        public NotificationService(
+            INotificationRepository notificationRepository,
+            IUsersPublicApi usersPublicApi)
         {
             _notificationRepository = notificationRepository;
+            _usersPublicApi = usersPublicApi;
         }
 
         public async Task<ApiResponse<UnreadCountResponse>> GetUnreadCountAsync(
@@ -55,8 +61,14 @@ namespace Notifications.Application.Services
                 limit,
                 cancellationToken);
 
+            var actorNamesById = await GetActorNamesByIdAsync(notifications, cancellationToken);
+
             var responseNotifications = notifications
-                .Select(Map)
+                .Select(notification => NotificationDtoMapper.Map(
+                    notification,
+                    notification.ActorId is Guid actorId && actorNamesById.TryGetValue(actorId, out var actorName)
+                        ? actorName
+                        : null))
                 .ToList();
 
             return ApiResponse<NotificationsPagedResponse>.Success(new NotificationsPagedResponse
@@ -132,19 +144,23 @@ namespace Notifications.Application.Services
             return Math.Min(limit, MaxLimit);
         }
 
-        private static NotificationResponseDto Map(Notification notification)
+        private async Task<Dictionary<Guid, string>> GetActorNamesByIdAsync(
+            IReadOnlyCollection<Notification> notifications,
+            CancellationToken cancellationToken)
         {
-            return new NotificationResponseDto
+            var actorIds = notifications
+                .Where(notification => notification.ActorId.HasValue)
+                .Select(notification => notification.ActorId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (actorIds.Count == 0)
             {
-                Id = notification.Id,
-                UserId = notification.UserId,
-                ActorId = notification.ActorId,
-                Type = notification.Type,
-                TargetId = notification.TargetId,
-                IsRead = notification.IsRead,
-                CreatedAt = notification.CreatedAt,
-                Metadata = notification.Metadata
-            };
+                return new Dictionary<Guid, string>();
+            }
+
+            var users = await _usersPublicApi.GetUsersDisplayNamesAsync(actorIds, cancellationToken);
+            return users.ToDictionary(user => user.Id, user => user.DisplayName);
         }
     }
 }

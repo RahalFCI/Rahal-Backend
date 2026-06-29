@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Notifications.Application.DTOs;
 using Notifications.Domain.Entities;
+using Notifications.Application.Mappers;
 
 namespace Notifications.Application.EventConsumers
 {
@@ -21,43 +21,19 @@ namespace Notifications.Application.EventConsumers
             };
         }
 
-        protected static Dictionary<string, string> CreatePushPayload(Notification notification)
+        protected static Dictionary<string, string> CreatePushPayload(
+            Notification notification,
+            string? actorName)
         {
-            var dto = Map(notification);
-            var payload = new Dictionary<string, string>
+            return new Dictionary<string, string>
             {
-                ["Notification"] = JsonSerializer.Serialize(dto),
-                ["NotificationId"] = notification.Id.ToString(),
-                ["Type"] = notification.Type,
-                ["UserId"] = notification.UserId.ToString()
+                ["Notification"] = JsonSerializer.Serialize(NotificationDtoMapper.Map(notification, actorName))
             };
-
-            if (notification.ActorId is not null)
-            {
-                payload["ActorId"] = notification.ActorId.Value.ToString();
-            }
-
-            if (!string.IsNullOrWhiteSpace(notification.TargetId))
-            {
-                payload["TargetId"] = notification.TargetId;
-            }
-
-            return payload;
         }
 
-        protected static NotificationResponseDto Map(Notification notification)
+        protected static string BuildPushMessage(Notification notification, string? actorName)
         {
-            return new NotificationResponseDto
-            {
-                Id = notification.Id,
-                UserId = notification.UserId,
-                ActorId = notification.ActorId,
-                Type = notification.Type,
-                TargetId = notification.TargetId,
-                IsRead = notification.IsRead,
-                CreatedAt = notification.CreatedAt,
-                Metadata = notification.Metadata
-            };
+            return NotificationDtoMapper.BuildMessage(notification, actorName);
         }
     }
 }

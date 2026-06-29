@@ -1,6 +1,8 @@
 using MassTransit;
+using Notifications.Application.Extensions;
 using Notifications.Application.Interfaces;
 using Notifications.Domain.Entities;
+using Notifications.Domain.Enums;
 using Shared.Application.Events.Posts;
 using Shared.Application.Events.SocialMedia;
 using Shared.Application.Interfaces;
@@ -49,7 +51,7 @@ namespace Notifications.Application.EventConsumers
                     Id = Guid.NewGuid(),
                     UserId = userId,
                     ActorId = message.UserId,
-                    Type = "Social.NewPost",
+                    Type = NotificationType.SocialNewPost.ToStoredValue(),
                     TargetId = message.PostId.ToString(),
                     Metadata = CreatePreviewMetadata(message.ContentPreview),
                     IsRead = false,
@@ -82,8 +84,8 @@ namespace Notifications.Application.EventConsumers
                 await _fcmNotificationService.SendMulticastAsync(
                     new[] { token },
                     PushTitle,
-                    $"{actorName} added a new post.",
-                    CreatePushPayload(notification));
+                    BuildPushMessage(notification, actorName),
+                    CreatePushPayload(notification, actorName));
             }
         }
 

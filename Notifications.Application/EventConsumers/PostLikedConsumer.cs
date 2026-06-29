@@ -1,6 +1,8 @@
 using MassTransit;
+using Notifications.Application.Extensions;
 using Notifications.Application.Interfaces;
 using Notifications.Domain.Entities;
+using Notifications.Domain.Enums;
 using Shared.Application.Events.Posts;
 using Shared.Application.Interfaces;
 using Users.Contracts.Interfaces;
@@ -36,7 +38,7 @@ namespace Notifications.Application.EventConsumers
                 Id = Guid.NewGuid(),
                 UserId = message.PostAuthorId,
                 ActorId = message.LikerId,
-                Type = "Social.PostLike",
+                Type = NotificationType.SocialPostLike.ToStoredValue(),
                 TargetId = message.PostId.ToString(),
                 Metadata = null,
                 IsRead = false,
@@ -56,12 +58,13 @@ namespace Notifications.Application.EventConsumers
             }
 
             var actorName = await GetActorNameAsync(message.LikerId, context.CancellationToken);
+            var body = BuildPushMessage(notification, actorName);
 
             await _fcmNotificationService.SendMulticastAsync(
                 new[] { token },
                 PushTitle,
-                $"{actorName} liked your post.",
-                CreatePushPayload(notification));
+                body,
+                CreatePushPayload(notification, actorName));
         }
 
         private async Task<string> GetActorNameAsync(Guid actorId, CancellationToken cancellationToken)

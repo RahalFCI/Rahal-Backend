@@ -1,6 +1,8 @@
 using MassTransit;
+using Notifications.Application.Extensions;
 using Notifications.Application.Interfaces;
 using Notifications.Domain.Entities;
+using Notifications.Domain.Enums;
 using Shared.Application.Events.Posts;
 using Shared.Application.Interfaces;
 using Users.Contracts.Interfaces;
@@ -36,7 +38,7 @@ namespace Notifications.Application.EventConsumers
                 Id = Guid.NewGuid(),
                 UserId = message.PostAuthorId,
                 ActorId = message.CommenterId,
-                Type = "Social.PostComment",
+                Type = NotificationType.SocialPostComment.ToStoredValue(),
                 TargetId = message.PostId.ToString(),
                 Metadata = CreatePreviewMetadata(message.Preview),
                 IsRead = false,
@@ -56,15 +58,13 @@ namespace Notifications.Application.EventConsumers
             }
 
             var actorName = await GetActorNameAsync(message.CommenterId, context.CancellationToken);
-            var body = string.IsNullOrWhiteSpace(message.Preview)
-                ? $"{actorName} commented on your post."
-                : $"{actorName} commented: {message.Preview}...";
+            var body = BuildPushMessage(notification, actorName);
 
             await _fcmNotificationService.SendMulticastAsync(
                 new[] { token },
                 PushTitle,
                 body,
-                CreatePushPayload(notification));
+                CreatePushPayload(notification, actorName));
         }
 
         private async Task<string> GetActorNameAsync(Guid actorId, CancellationToken cancellationToken)
