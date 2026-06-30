@@ -1,22 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rewards.Domain.Entities;
+using Shared.Infrastructure.Persistence.Configurations;
 
 namespace Rewards.Infrastructure.Persistence.Configurations
 {
-    public class TravelPlanConfiguration : IEntityTypeConfiguration<TravelPlan>
+    public class TravelPlanConfiguration : BaseAuditableEntityConfiguration<TravelPlan>
     {
-        public void Configure(EntityTypeBuilder<TravelPlan> builder)
+        public override void Configure(EntityTypeBuilder<TravelPlan> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("TravelPlans", "rewards");
-            builder.HasKey(t => t.Id);
             builder.HasQueryFilter(t => !t.IsDeleted);
 
             builder.Property(t => t.BudgetLimit).HasPrecision(18, 2).IsRequired();
             builder.Property(t => t.StayDurationDays).IsRequired();
             builder.Property(t => t.Prompt).IsRequired().HasMaxLength(2000);
             builder.Property(t => t.GeneratedPlanJson).HasColumnType("jsonb").IsRequired();
-            builder.Property(t => t.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
             builder.Property(t => t.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(t => t.IsDeleted).HasDefaultValue(false);
 

@@ -1,15 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rewards.Domain.Entities;
+using Shared.Infrastructure.Persistence.Configurations;
 
 namespace Rewards.Infrastructure.Persistence.Configurations
 {
-    public class PlanTierConfiguration : IEntityTypeConfiguration<PlanTier>
+    public class PlanTierConfiguration : BaseAuditableEntityConfiguration<PlanTier>
     {
-        public void Configure(EntityTypeBuilder<PlanTier> builder)
+        public override void Configure(EntityTypeBuilder<PlanTier> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("PlanTiers", "rewards");
-            builder.HasKey(p => p.Id);
             builder.HasQueryFilter(p => !p.IsDeleted);
 
             builder.Property(p => p.Name).IsRequired().HasMaxLength(80);
@@ -19,7 +21,6 @@ namespace Rewards.Infrastructure.Persistence.Configurations
             builder.Property(p => p.XpMultiplier).HasPrecision(8, 2).IsRequired();
             builder.Property(p => p.MaxTravelPlans).IsRequired();
             builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
-            builder.Property(p => p.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
             builder.Property(p => p.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(p => p.IsDeleted).HasDefaultValue(false);
 
