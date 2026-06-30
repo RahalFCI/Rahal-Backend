@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shared.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,9 @@ namespace Shared.Infrastructure.Persistence.Configurations
         {
             base.Configure(builder);
 
-            builder.Property(e => e.CreatedAt).IsRequired();
+            builder.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
         }
     }
 }

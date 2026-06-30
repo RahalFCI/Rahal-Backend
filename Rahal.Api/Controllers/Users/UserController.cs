@@ -46,6 +46,22 @@ namespace Rahal.Api.Controllers.Users
             return Ok(result);
         }
 
+        [HttpPost("register-admin")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RegisterAdminAsync([FromBody] BaseRegisterDto registerRequestDto, CancellationToken cancellationToken = default)
+        {
+            var result = await _authService.CreateAdminAsync(registerRequestDto, registerRequestDto.Password, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+
         [HttpPost("login")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]

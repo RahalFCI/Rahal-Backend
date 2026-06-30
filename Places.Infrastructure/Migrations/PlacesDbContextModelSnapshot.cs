@@ -134,12 +134,6 @@ namespace Places.Infrastructure.Migrations
                     b.Property<Guid>("PlaceCategoryId")
                         .HasColumnType("uuid");
 
-                    b.Property<double>("TicketPrice")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(10, 2)
-                        .HasColumnType("double precision")
-                        .HasDefaultValue(0.0);
-
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnUpdate()
                         .HasColumnType("timestamp with time zone");

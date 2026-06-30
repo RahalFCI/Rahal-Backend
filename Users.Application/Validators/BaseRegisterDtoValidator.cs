@@ -6,7 +6,7 @@ using Users.Application.DTOs.Register;
 
 namespace Users.Application.Validators
 {
-    internal class BaseRegisterDtoValidator : AbstractValidator<BaseRegisterDto>
+    public class BaseRegisterDtoValidator : AbstractValidator<BaseRegisterDto>
     {
         public BaseRegisterDtoValidator()
         {

@@ -24,8 +24,6 @@ namespace Gamification.Domain.Entities
 
         public bool IsPremium { get; set; } = false;
 
-        public Guid? PlanTierId { get; set; } = Guid.Empty;
-
         public UserStats? Stats { get; set; }
 
         public IEnumerable<ExplorerAchievement> ExplorerAchievements { get; set; } = new List<ExplorerAchievement>();

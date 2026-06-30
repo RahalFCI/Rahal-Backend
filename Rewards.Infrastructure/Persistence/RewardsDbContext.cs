@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rewards.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,7 +11,12 @@ namespace Rewards.Infrastructure.Persistence
         public RewardsDbContext(DbContextOptions<RewardsDbContext> options) : base(options)
         {
         }
-        //TODO: DbSets to be added and make its configuration file
+        public DbSet<Coupon> Coupons { get; set; }
+        public DbSet<UserCoupon> UserCoupons { get; set; }
+        public DbSet<PlanTier> PlanTiers { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<TravelPlan> TravelPlans { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

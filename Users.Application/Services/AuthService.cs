@@ -140,40 +140,17 @@ namespace Users.Application.Services
 
         public async Task<ApiResponse<string>> RegisterAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default)
         {
-            var user = MappingExtension.CreateUser(userDto);
-
-            _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
-
-            var existingUser = await _userManager.FindByEmailAsync(user.Email!);
-            if (existingUser != null)
+            if (userDto.UserRole == UserRoleEnum.Admin)
             {
-                _logger.LogWarning("Registration failed: Email {Email} is already registered", user.Email);
-                return ApiResponse<string>.Failure(ErrorCode.AlreadyExists);
+                _logger.LogWarning("Registration failed: You are not authorized to register an admin");
+                return ApiResponse<string>.Failure(ErrorCode.Forbidden);
             }
 
-            try
+            var userCreationResult = await CreateUserAsync(userDto, Password, cancellationToken);
+
+            if (userCreationResult.IsSuccess)
             {
-                
-                var result = await _userManager.CreateAsync(user, Password);
-
-                if (!result.Succeeded)
-                {
-                    _logger.LogError("Registration failed: Could not create user {Email}. Errors: {Errors}",
-                        user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
-                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
-                }
-
-                var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
-
-                if (!roleResult.Succeeded)
-                {
-                    _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
-                        user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
-
-
-                    await _userManager.DeleteAsync(user);
-                    return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
-                }
+                var user = userCreationResult.Data;
 
                 // Send verification OTP
                 var otpResult = await _emailVerificationService.SendVerificationOtpAsync(user, cancellationToken);
@@ -186,44 +163,97 @@ namespace Users.Application.Services
                 }
                 else
                 {
-                        _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
-                            user.Id, user.Email);
-                        }
+                    _logger.LogInformation("Verification OTP sent to user {UserId} with email {Email}", 
+                    user.Id, user.Email);
+                }
 
-                        _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
-                            user.Id, user.Email, user.UserType);
+                return ApiResponse<string>.Success("User Created Successfully");
+            }
+            else
+            {
+                return ApiResponse<string>.Failure(userCreationResult.errorCode);
+            }
 
-                        return ApiResponse<string>.Success("User registered successfully");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
-                        throw;
-                    }
         }
 
-        //public async Task<ApiResponse<string>> DeleteUserWithoutProfileAsync(Guid userId, CancellationToken cancellationToken = default)
-        //{
-        //    _logger.LogInformation("Deleting user {UserId} without profile", userId);
+        public async Task<ApiResponse<string>> CreateAdminAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken = default)
+        {
+            if(userDto.UserRole != UserRoleEnum.Admin)
+            {
+                _logger.LogInformation("Registration failed while creating admin with non-admin role");
+                return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
+            }
 
-        //    var user = await _userManager.FindByIdAsync(userId.ToString());
-        //    if (user is null)
-        //    {
-        //        _logger.LogWarning("User {UserId} not found for deletion", userId);
-        //        return ApiResponse<string>.Failure(ErrorCode.NotFound);
-        //    }
+            var userCreationResult = await CreateUserAsync(userDto, Password, cancellationToken);
 
-        //    var result = await _userManager.DeleteAsync(user);
-        //    if (!result.Succeeded)
-        //    {
-        //        _logger.LogError("Failed to delete user {UserId}. Errors: {Errors}",
-        //            userId, string.Join(", ", result.Errors.Select(e => e.Description)));
-        //        return ApiResponse<string>.Failure(ErrorCode.UnknownError);
-        //    }
+            if (userCreationResult.IsSuccess)
+            {
+                var user = userCreationResult.Data;
 
-        //    _logger.LogInformation("User {UserId} deleted successfully", userId);
-        //    return ApiResponse<string>.Success("User deleted successfully");
-        //}
-    }
-}
+                user.EmailConfirmed = true;
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogInformation("Registration failed while confirming email address for user");
+                    return ApiResponse<string>.Failure(ErrorCode.UnknownError);
+                }
+
+                return ApiResponse<string>.Success("User Created Successfully");
+            }
+            else
+            {
+                return ApiResponse<string>.Failure(userCreationResult.errorCode);
+            }
+        }
+
+        public async Task<ApiResponse<User>> CreateUserAsync(BaseRegisterDto userDto, string Password, CancellationToken cancellationToken)
+        {
+            var user = MappingExtension.CreateUser(userDto);
+
+            _logger.LogInformation("User registration initiated for email: {Email}", user.Email);
+
+            var existingUser = await _userManager.FindByEmailAsync(user.Email!);
+            if (existingUser != null)
+            {
+                _logger.LogWarning("Registration failed: Email {Email} is already registered", user.Email);
+                return ApiResponse<User>.Failure(ErrorCode.AlreadyExists);
+            }
+
+            try
+            {
+
+                var result = await _userManager.CreateAsync(user, Password);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Registration failed: Could not create user {Email}. Errors: {Errors}",
+                        user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return ApiResponse<User>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, user.UserType.ToString());
+
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("Registration failed: Could not assign role {Role} to user {UserId}. Errors: {Errors}",
+                        user.UserType.ToString(), user.Id, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+
+
+                    await _userManager.DeleteAsync(user);
+                    return ApiResponse<User>.Failure(ErrorCode.InvalidRequest);
+                }
+
+                _logger.LogInformation("User {UserId} with email {Email} successfully registered with role {Role}",
+                           user.Id, user.Email, user.UserType);
+
+                return ApiResponse<User>.Success(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during user registration for email {Email}", user.Email);
+                throw;
+            }
+        }
+}}
 

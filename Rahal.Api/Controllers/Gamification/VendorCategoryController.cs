@@ -39,12 +39,12 @@ namespace Rahal.Api.Controllers.Gamification
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateVendorCategoryAsync(
-            [FromRoute] Guid CategoryId,
+            [FromRoute] Guid id,
             [FromBody] string CategoryName,
             CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(
-                new UpdateVendorCategoryCommand(CategoryId, CategoryName),
+                new UpdateVendorCategoryCommand(id, CategoryName),
                 cancellationToken);
             return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
         }

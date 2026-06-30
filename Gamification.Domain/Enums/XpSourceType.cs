@@ -10,6 +10,10 @@ namespace Gamification.Domain.Enums
         CheckInInvalidated,
         AchievementRevoked,
         ChallengeRevoked,
-        BadgeRevoked
+        BadgeRevoked,
+        CouponPurchase,
+        SubscriptionPurchase,
+        Payment,
+
     }
 }

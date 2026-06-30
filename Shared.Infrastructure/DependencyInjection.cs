@@ -49,12 +49,14 @@ namespace Shared.Infrastructure
             {
                 options.ServiceAccountJson = ResolveEnvPlaceholder(configuration["Firebase:ServiceAccountJson"]);
             });
+            services.Configure<RabbitMqResilienceSettings>(configuration.GetSection(RabbitMqResilienceSettings.SectionName));
 
             // Register ResiliencePipeline as singleton
             services.AddSingleton<SearchResiliencePipelineFactory>();
             services.AddSingleton<EmailResiliencePipelineFactory>();
             services.AddSingleton<FileStorageResiliencePipelineFactory>();
             services.AddSingleton<RedisResiliencePipelineFactory>();
+            services.AddSingleton<RabbitMqResiliencePipelineFactory>();
 
             services.AddResiliencePipeline("search", (builder, context) =>
             {
@@ -86,6 +88,13 @@ namespace Shared.Infrastructure
             services.AddResiliencePipeline("redis", (builder, context) =>
             {
                 var factory = context.ServiceProvider.GetRequiredService<RedisResiliencePipelineFactory>();
+                var pipeline = factory.CreatePipeline();
+                builder.AddPipeline(pipeline);
+            });
+
+            services.AddResiliencePipeline("rabbitmq", (builder, context) =>
+            {
+                var factory = context.ServiceProvider.GetRequiredService<RabbitMqResiliencePipelineFactory>();
                 var pipeline = factory.CreatePipeline();
                 builder.AddPipeline(pipeline);
             });

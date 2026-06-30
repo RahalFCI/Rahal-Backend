@@ -17,7 +17,6 @@ namespace Gamification.Application.DTOs.Explorer
         int Level,
         bool IsPublic,
         bool IsPremium
-        //TODO: Add Plan Tier
         )
     {
         public UpdateExplorerDto() : this(default, string.Empty, default, default, string.Empty, string.Empty, default, default, default, default, default)

@@ -33,7 +33,7 @@ namespace Gamification.Application.CQRS.Handlers.AchievementCriteriaTypes.Comman
 
             var achievementCriteriaType = await _repository.GetTable()
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(a => a.Id == request.Id && a.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
             if (achievementCriteriaType is null)
             {

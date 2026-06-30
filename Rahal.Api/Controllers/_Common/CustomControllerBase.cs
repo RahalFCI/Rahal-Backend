@@ -13,7 +13,10 @@ namespace Rahal.Api.Controllers._Common
         protected Guid GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                throw new UnauthorizedAccessException("Invalid or missing user id claim.");
+
+            return userId;
         }
 
         // Helper to get current user email

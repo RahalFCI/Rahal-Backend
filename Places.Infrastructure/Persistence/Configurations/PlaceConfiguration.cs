@@ -57,10 +57,6 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasColumnType("text")
                 .HasComment("Detailed description of the place");
 
-            builder.Property(e => e.TicketPrice)
-                .HasDefaultValue(0.0)
-                .HasPrecision(10, 2);
-
             builder.Property(e => e.Latitude)
                 .IsRequired()
                 .HasPrecision(10, 8)
