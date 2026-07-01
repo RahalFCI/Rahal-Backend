@@ -16,7 +16,7 @@ namespace Rewards.Infrastructure.Persistence.Configurations
 
             builder.Property(t => t.StayDurationDays).IsRequired();
             builder.Property(t => t.Prompt).IsRequired().HasMaxLength(2000);
-            builder.Property(t => t.GeneratedPlanJson).HasColumnType("jsonb").IsRequired();
+            builder.Property(t => t.GeneratedPlan).IsRequired(false);
             builder.Property(t => t.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(t => t.IsDeleted).HasDefaultValue(false);
 

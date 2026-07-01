@@ -10,6 +10,6 @@ namespace Rewards.Domain.Entities
         public decimal BudgetLimit { get; set; }
         public int StayDurationDays { get; set; }
         public string Prompt { get; set; } = string.Empty;
-        public string GeneratedPlanJson { get; set; } = "{}";
+        public string GeneratedPlan { get; set; } = "{}";
     }
 }

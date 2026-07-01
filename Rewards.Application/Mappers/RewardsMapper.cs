@@ -146,7 +146,7 @@ namespace Rewards.Application.Mappers
                 SubscriptionId = travelPlan.SubscriptionId,
                 StayDurationDays = travelPlan.StayDurationDays,
                 Prompt = travelPlan.Prompt,
-                GeneratedPlanJson = travelPlan.GeneratedPlanJson,
+                GeneratedPlanJson = travelPlan.GeneratedPlan,
                 CreatedAt = travelPlan.CreatedAt
             };
         }

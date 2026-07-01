@@ -83,7 +83,7 @@ namespace Rewards.Application.Services
                 SubscriptionId = activeSubscription.Id,
                 StayDurationDays = dto.StayDurationDays,
                 Prompt = dto.Prompt,
-                GeneratedPlanJson = generatedPlanResult.Data
+                GeneratedPlan = generatedPlanResult.Data
             };
 
             _travelPlanRepository.Add(travelPlan);
