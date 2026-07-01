@@ -35,7 +35,11 @@ namespace Users.Application.Validators
                 .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Phone number must be a valid international format (E.164)");
 
             RuleFor(x => x.UserRole)
-                 .NotEmpty().WithMessage("Role is required")
+                    // NOTE: no NotEmpty() here — UserRoleEnum.Explorer == 0, and
+                    // FluentValidation's NotEmpty() treats the enum default (0) as
+                    // "empty", which made every Explorer registration fail. IsInEnum
+                    // is the correct guard: it accepts any defined member, Explorer
+                    // included, and rejects out-of-range values.
                     .IsInEnum().WithMessage("Role must be a valid enum value");
         }
     }

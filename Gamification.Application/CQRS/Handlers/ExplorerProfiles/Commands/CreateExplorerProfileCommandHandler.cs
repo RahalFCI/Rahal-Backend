@@ -40,7 +40,10 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerProfiles.Commands
                     return ApiResponse<GetExplorerDto>.Failure(ErrorCode.AlreadyExists);
                 }
 
-                explorerProfile.ProfilePictureURL = request.ProfilePictureUrl;
+                // profilePicture is optional at signup. When none is uploaded the
+                // upload step yields a null URL; ProfilePictureURL is a NOT NULL
+                // column, so coalesce to empty rather than letting the insert fail.
+                explorerProfile.ProfilePictureURL = request.ProfilePictureUrl ?? string.Empty;
 
                 _repository.Add(explorerProfile);
                 var affectedRows = await _repository.SaveChangesAsync();

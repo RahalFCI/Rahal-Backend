@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,11 @@ namespace Gamification.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // The original 20260625120000_AddVendorBranches migration shipped without
+            // its Designer file, so EF never recognised it and the table was never
+            // created — yet the model snapshot already listed VendorBranch, so the
+            // regenerated diff omitted the CreateTable. Re-add it here so the table
+            // is actually created.
             migrationBuilder.CreateTable(
                 name: "VendorBranches",
                 schema: "gamification",
@@ -45,11 +50,23 @@ namespace Gamification.Infrastructure.Migrations
                 schema: "gamification",
                 table: "VendorBranches",
                 column: "VendorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_XpTransactions_ExplorerProfileId_Source_ReferenceId",
+                schema: "gamification",
+                table: "XpTransactions",
+                columns: new[] { "ExplorerProfileId", "Source", "ReferenceId" },
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_XpTransactions_ExplorerProfileId_Source_ReferenceId",
+                schema: "gamification",
+                table: "XpTransactions");
+
             migrationBuilder.DropTable(
                 name: "VendorBranches",
                 schema: "gamification");
