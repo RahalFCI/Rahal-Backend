@@ -36,7 +36,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Commands
 
             var achievement = await _mediator.Send(new GetAchievementByIdQuery(request.Dto.AchievementId), cancellationToken);
 
-            if (achievement is null)
+            if (!achievement.IsSuccess)
             {
                 _logger.LogWarning("Achievement {AchievementId} not found", request.Dto.AchievementId);
                 return ApiResponse<GetExplorerAchievementDto>.Failure(ErrorCode.NotFound);

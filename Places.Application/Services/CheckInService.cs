@@ -109,7 +109,7 @@ namespace Places.Application.Services
             _logger.LogInformation("Processing check-in request for explorer {ExplorerId} at place {PlaceId}", 
                 explorerId, request.PlaceId);
 
-            var place = await _placeRepository.GetByIdAsync(request.PlaceId, ct);
+            var place = await _placeRepository.GetTable().Include(p => p.PlaceCategory).FirstOrDefaultAsync(p => p.Id == request.PlaceId, ct);
             if (place is null)
             {
                 _logger.LogWarning("Place {PlaceId} not found for check-in", request.PlaceId);
