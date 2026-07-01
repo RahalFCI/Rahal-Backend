@@ -1,13 +1,16 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class ExplorerProfileConfiguration : IEntityTypeConfiguration<ExplorerProfile>
+    public class ExplorerProfileConfiguration : BaseAuditableEntityConfiguration<ExplorerProfile>
     {
-        public void Configure(EntityTypeBuilder<ExplorerProfile> builder)
+        public override void Configure(EntityTypeBuilder<ExplorerProfile> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("ExplorerProfiles", "gamification");
 
             builder.HasKey(e => e.UserId);
@@ -50,10 +53,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
             builder.Property(e => e.CountryCode)
                 .IsRequired()
                 .HasMaxLength(2);
-
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

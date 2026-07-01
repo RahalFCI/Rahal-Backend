@@ -144,10 +144,9 @@ namespace Rewards.Application.Mappers
                 Id = travelPlan.Id,
                 ExplorerId = travelPlan.ExplorerId,
                 SubscriptionId = travelPlan.SubscriptionId,
-                BudgetLimit = travelPlan.BudgetLimit,
                 StayDurationDays = travelPlan.StayDurationDays,
                 Prompt = travelPlan.Prompt,
-                GeneratedPlanJson = travelPlan.GeneratedPlanJson,
+                GeneratedPlanJson = travelPlan.GeneratedPlan,
                 CreatedAt = travelPlan.CreatedAt
             };
         }

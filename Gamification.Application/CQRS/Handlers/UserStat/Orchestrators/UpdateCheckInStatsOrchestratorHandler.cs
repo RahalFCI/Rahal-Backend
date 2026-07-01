@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
 using Shared.Domain.Enums;
-using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.UserStat.Orchestrators
 {

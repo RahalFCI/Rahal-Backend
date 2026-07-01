@@ -1,17 +1,17 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Places.Domain.Entities;
 
 namespace Places.Infrastructure.Persistence.Configuration
 {
-    public class PlacePhotoConfiguration : IEntityTypeConfiguration<PlacePhoto>
+    public class PlacePhotoConfiguration : BaseAuditableEntityConfiguration<PlacePhoto>
     {
-        public void Configure(EntityTypeBuilder<PlacePhoto> builder)
+        public override void Configure(EntityTypeBuilder<PlacePhoto> builder)
         {
-            builder.ToTable("PlacePhotos", "places");
+            base.Configure(builder);
 
-            // Primary Key (composite)
-            builder.HasKey(e => e.Id);
+            builder.ToTable("PlacePhotos", "places");
 
             // Domain Properties
             builder.Property(e => e.PlaceId)
@@ -23,9 +23,6 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .HasComment("URL of the place photo");
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

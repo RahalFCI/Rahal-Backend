@@ -1,4 +1,5 @@
-﻿using Gamification.Domain.Entities;
+﻿using Shared.Infrastructure.Persistence.Configurations;
+using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -7,22 +8,18 @@ using System.Text;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class VendorCategoryConfiguration : IEntityTypeConfiguration<VendorCategory>
+    public class VendorCategoryConfiguration : BaseAuditableEntityConfiguration<VendorCategory>
     {
-        public void Configure(EntityTypeBuilder<VendorCategory> builder)
+        public override void Configure(EntityTypeBuilder<VendorCategory> builder)
         {
-            builder.ToTable("VendorCategories", "gamification");
+            base.Configure(builder);
 
-            builder.HasKey(e => e.Id);
+            builder.ToTable("VendorCategories", "gamification");
 
             builder.HasQueryFilter(e => !e.IsDeleted);
 
             builder.Property(e => e.CategoryName)
                 .IsRequired();
-
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

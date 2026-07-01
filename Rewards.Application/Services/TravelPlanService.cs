@@ -16,24 +16,24 @@ namespace Rewards.Application.Services
     {
         private readonly IRewardsRepository<TravelPlan> _travelPlanRepository;
         private readonly IRewardsRepository<Subscription> _subscriptionRepository;
+        private readonly IRagTravelPlanService _ragTravelPlanService;
         private readonly ILogger<TravelPlanService> _logger;
 
         public TravelPlanService(
             IRewardsRepository<TravelPlan> travelPlanRepository,
             IRewardsRepository<Subscription> subscriptionRepository,
+            IRagTravelPlanService ragTravelPlanService,
             ILogger<TravelPlanService> logger)
         {
             _travelPlanRepository = travelPlanRepository;
             _subscriptionRepository = subscriptionRepository;
+            _ragTravelPlanService = ragTravelPlanService;
             _logger = logger;
         }
 
         public async Task<ApiResponse<GetTravelPlanDto>> CreateAsync(Guid explorerId, CreateTravelPlanDto dto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Creating travel plan for explorer {ExplorerId}", explorerId);
-
-            // TODO: integrate RAG system. For now the generated JSON is provided by the caller.
-            string testPlan = "{}";
 
             var activeSubscription = await _subscriptionRepository.GetTable()
                 .Include(s => s.PlanTier)
@@ -70,14 +70,20 @@ namespace Rewards.Application.Services
                 return ApiResponse<GetTravelPlanDto>.Failure(ErrorCode.BusinessRuleViolation);
             }
 
+            var generatedPlanResult = await _ragTravelPlanService.GenerateTravelPlanAsync(dto.Prompt, cancellationToken);
+            if (!generatedPlanResult.IsSuccess)
+            {
+                _logger.LogWarning("RAG travel plan generation failed for explorer {ExplorerId}. ErrorCode {ErrorCode}", explorerId, generatedPlanResult.errorCode);
+                return ApiResponse<GetTravelPlanDto>.Failure(generatedPlanResult.errorCode);
+            }
+
             var travelPlan = new TravelPlan
             {
                 ExplorerId = explorerId,
                 SubscriptionId = activeSubscription.Id,
-                BudgetLimit = dto.BudgetLimit,
                 StayDurationDays = dto.StayDurationDays,
                 Prompt = dto.Prompt,
-                GeneratedPlanJson = testPlan
+                GeneratedPlan = generatedPlanResult.Data
             };
 
             _travelPlanRepository.Add(travelPlan);
