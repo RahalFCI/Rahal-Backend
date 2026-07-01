@@ -14,7 +14,6 @@ namespace Rewards.Infrastructure.Persistence.Configurations
             builder.ToTable("TravelPlans", "rewards");
             builder.HasQueryFilter(t => !t.IsDeleted);
 
-            builder.Property(t => t.BudgetLimit).HasPrecision(18, 2).IsRequired();
             builder.Property(t => t.StayDurationDays).IsRequired();
             builder.Property(t => t.Prompt).IsRequired().HasMaxLength(2000);
             builder.Property(t => t.GeneratedPlanJson).HasColumnType("jsonb").IsRequired();
