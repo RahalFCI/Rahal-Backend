@@ -130,6 +130,8 @@ namespace Rewards.Application.Mappers
                 PlanTierId = subscription.PlanTierId,
                 PlanTierName = subscription.PlanTier?.Name ?? string.Empty,
                 PaymentMethod = subscription.PaymentMethod.ToString(),
+                Duration = subscription.Duration,
+                TotalCost = subscription.TotalCost,
                 Status = subscription.Status.ToString(),
                 StartedAt = subscription.StartedAt,
                 ExpiresAt = subscription.ExpiresAt,

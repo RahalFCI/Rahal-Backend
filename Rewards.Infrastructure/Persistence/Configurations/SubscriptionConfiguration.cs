@@ -15,6 +15,8 @@ namespace Rewards.Infrastructure.Persistence.Configurations
             builder.HasQueryFilter(s => !s.IsDeleted);
 
             builder.Property(s => s.PaymentMethod).HasConversion<string>().IsRequired();
+            builder.Property(s => s.Duration).IsRequired();
+            builder.Property(s => s.TotalCost).HasPrecision(18, 2).IsRequired();
             builder.Property(s => s.Status).HasConversion<string>().IsRequired();
             builder.Property(s => s.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(s => s.IsDeleted).HasDefaultValue(false);

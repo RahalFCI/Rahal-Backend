@@ -1,10 +1,8 @@
-﻿using MediatR;
+using MediatR;
+using Microsoft.AspNetCore.Http;
 using Shared.Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Gamification.Application.CQRS.Orchestrators.CheckInChallenge
 {
-    public record ValidateCheckInChallengeOrchestrator(Guid Id) : IRequest<ApiResponse<bool>>;
+    public record ValidateCheckInChallengeOrchestrator(Guid Id, IFormFile Image) : IRequest<ApiResponse<bool>>;
 }
