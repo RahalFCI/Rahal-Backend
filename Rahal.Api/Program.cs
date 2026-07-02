@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Notifications.Application.EventConsumers;
+using Payment.Application.EventConsumers;
 using Places.Infrastructure.Search.EventHandlers;
 using Places.Application.EventConsumers;
 using Rahal.Api.Extensions;
@@ -90,6 +91,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<VendorBranchPlaceRequestConsumer>();
     x.AddConsumer<SpendXpRequestConsumer>();
     x.AddConsumer<SetExplorerPremiumRequestConsumer>();
+    x.AddConsumer<ProcessPaymentRequestConsumer>();
     x.AddRequestClient<SpendXpRequest>(RequestTimeout.After(s: 30));
     x.AddRequestClient<SetExplorerPremiumRequest>(RequestTimeout.After(s: 30));
     x.AddRequestClient<ProcessPaymentRequest>(RequestTimeout.After(s: 30));

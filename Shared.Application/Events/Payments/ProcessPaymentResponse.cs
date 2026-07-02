@@ -7,5 +7,9 @@ namespace Shared.Application.Events.Payments
         bool IsSuccess,
         ErrorCode ErrorCode,
         string? TransactionId,
-        string? Message);
+        string? Message,
+        string? PaymentIntentClientSecret = null,
+        string? CustomerId = null,
+        string? EphemeralKeySecret = null,
+        string? PublishableKey = null);
 }
