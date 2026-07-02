@@ -3,6 +3,7 @@ using Gamification.Application.DTOs.UserStats;
 using Gamification.Application.Mappers;
 using Gamification.Domain.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Application.DTOs;
 using Shared.Application.Interfaces;
@@ -33,6 +34,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
             _logger.LogInformation("Fetching all user stats - page {Page}, pageSize {PageSize}", request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
             var result = await _repository.GetTable()
+                .Include(s => s.ExplorerProfile)
                 .Select(s => UserStatsMapper.ToGetDto(s))
                 .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 

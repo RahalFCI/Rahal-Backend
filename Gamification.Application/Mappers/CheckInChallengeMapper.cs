@@ -7,6 +7,15 @@ namespace Gamification.Application.Mappers
     {
         public static GetCheckInChallengeDto ToGetDto(CheckInChallenge checkInChallenge)
         {
+            return ToGetDto(checkInChallenge, string.Empty);
+        }
+
+        // CheckInChallenge.ExplorerId has no EF navigation property to ExplorerProfile
+        // (adding one would require a migration to add the FK constraint), so callers
+        // that need the explorer's name resolve it themselves (e.g. via a join against
+        // IGamificationRepository<ExplorerProfile>) and pass it in here.
+        public static GetCheckInChallengeDto ToGetDto(CheckInChallenge checkInChallenge, string explorerName)
+        {
             return new GetCheckInChallengeDto
             {
                 Id = checkInChallenge.Id,
@@ -14,6 +23,7 @@ namespace Gamification.Application.Mappers
                 ChallengeName = checkInChallenge.Challenge?.Name ?? string.Empty,
                 CheckInId = checkInChallenge.CheckInId,
                 ExplorerId = checkInChallenge.ExplorerId,
+                ExplorerName = explorerName,
                 ProofMediaUrl = checkInChallenge.ProofUrl,
                 ValidationStatus = checkInChallenge.ValidationStatus.ToString()
             };

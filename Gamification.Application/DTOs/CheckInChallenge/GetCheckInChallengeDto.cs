@@ -7,6 +7,7 @@ namespace Gamification.Application.DTOs.CheckInChallenge
         public string ChallengeName { get; set; } = string.Empty;
         public Guid CheckInId { get; set; }
         public Guid ExplorerId { get; set; }
+        public string ExplorerName { get; set; } = string.Empty;
         public string? ProofMediaUrl { get; set; }
         public string ValidationStatus { get; set; } = string.Empty;
     }

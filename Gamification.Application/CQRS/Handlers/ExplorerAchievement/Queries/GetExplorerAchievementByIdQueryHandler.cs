@@ -31,6 +31,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Queries
 
             var explorerAchievement = await _repository.GetTable()
                 .Include(ea => ea.Achievement)
+                .Include(ea => ea.ExplorerProfile)
                 .FirstOrDefaultAsync(ea => ea.Id == request.Id, cancellationToken);
 
             if (explorerAchievement is null)

@@ -4,6 +4,7 @@ namespace Gamification.Application.DTOs.UserStats
     {
         public Guid Id { get; set; }
         public Guid ExplorerId { get; set; }
+        public string ExplorerName { get; set; } = string.Empty;
         public int AvailableXp { get; set; }
         public int CumulativeXp { get; set; }
         public int CurrentStreak { get; set; }

@@ -365,7 +365,7 @@ namespace Users.Application.Services
 
             var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
-            if (user is null || user.UserType != UserRoleEnum.Explorer)
+            if (user is null || user.UserType == UserRoleEnum.Admin)
             {
                 _logger.LogWarning("User restoration failed: User {UserId} not found or not an User", id);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);

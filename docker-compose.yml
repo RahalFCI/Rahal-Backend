@@ -5,76 +5,76 @@ services:
       context: .
       dockerfile: Rahal.Api/Dockerfile
     volumes:
-     - ./uploads:/app/wwwroot/uploads
+      - ./uploads:/app/wwwroot/uploads
     environment:
-     - DATABASE_HOST=postgres-container
-     - DATABASE_PORT=5432
-     - DATABASE_NAME=Rahal
-     - DATABASE_USERNAME=postgres
-     - DATABASE_PASSWORD=admin
-     - REDIS_HOST=redis
-     - REDIS_PORT=6379 
-     - MEILI_HOST=meilisearch
-     - MEILI_PORT=7700 
-     - MEILI_API_KEY=masterKey123 
-     - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
-     - AdminUser__Email=admin@example.com
-     - AdminUser__Password=ChangeMe!123
-     - AdminUser__DisplayName=Admin
-     - ASPNETCORE_ENVIRONMENT=Development
-     - RabbitMQ__Host=rabbitmq
-     - RabbitMQ__VirtualHost=/
-     - RabbitMQ__Username=guest
-     - RabbitMQ__Password=guest
-     - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-your_cloud_name}
-     - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-your_api_key}
-     - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-your_api_secret}
-     - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
-     - Mail__Username=${MAIL_USERNAME:-}
-     - Mail__Password=${MAIL_PASSWORD:-}
-     - Mail__FromEmail=${MAIL_FROM_EMAIL:-}
+      - DATABASE_HOST=postgres-container
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=Rahal
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MEILI_HOST=meilisearch
+      - MEILI_PORT=7700
+      - MEILI_API_KEY=masterKey123
+      - JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLongForHmacSha256
+      - AdminUser__Email=${ADMIN_USER_EMAIL}
+      - AdminUser__Password=${ADMIN_USER_PASSWORD}
+      - AdminUser__DisplayName=${ADMIN_USER_DISPLAY_NAME}
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-your_cloud_name}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-your_api_key}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-your_api_secret}
+      - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+      - Mail__Username=${MAIL_USERNAME:-}
+      - Mail__Password=${MAIL_PASSWORD:-}
+      - Mail__FromEmail=${MAIL_FROM_EMAIL:-}
 
     ports:
-     - "7145:8080"
+      - "7145:8080"
     networks:
-     - rahal-network
+      - rahal-network
     depends_on:
-     - postgres-container
-     - rabbitmq
-     - redis
+      - postgres-container
+      - rabbitmq
+      - redis
 
   postgres-container:
-   image: postgres:13
-   environment:
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=admin
-    - POSTGRES_DB=Rahal
-   ports:
-    - "5432:5432"
-   networks:
-    - rahal-network
-   volumes:
-    - postgres_data:/var/lib/postgresql/data
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=Rahal
+    ports:
+      - "5432:5432"
+    networks:
+      - rahal-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
-   image: redis:8
-   ports:
-    - "6379:6379"
-   networks:
-    - rahal-network
-   volumes:
-    - redis_data:/data
+    image: redis:8
+    ports:
+      - "6379:6379"
+    networks:
+      - rahal-network
+    volumes:
+      - redis_data:/data
 
   meilisearch:
-   image: getmeili/meilisearch:v1.41.0
-   ports:
-    - "7700:7700"
-   networks:
-    - rahal-network
-   environment:
-    - MEILI_MASTER_KEY=masterKey123
-   volumes:
-    - meilisearch_data:/meili_data
+    image: getmeili/meilisearch:v1.41.0
+    ports:
+      - "7700:7700"
+    networks:
+      - rahal-network
+    environment:
+      - MEILI_MASTER_KEY=masterKey123
+    volumes:
+      - meilisearch_data:/meili_data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -85,8 +85,8 @@ services:
       - rahal-network
 
 networks:
- rahal-network:
-  driver: bridge
+  rahal-network:
+    driver: bridge
 
 volumes:
   meilisearch_data:

@@ -19,13 +19,16 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
     public class GetCheckInChallengesByCheckInIdQueryHandler : IRequestHandler<GetCheckInChallengesByCheckInIdQuery, ApiResponse<PagedResult<GetCheckInChallengeDto>>>
     {
         private readonly IGamificationRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _explorerProfileRepository;
         private readonly ILogger<GetCheckInChallengesByCheckInIdQueryHandler> _logger;
 
         public GetCheckInChallengesByCheckInIdQueryHandler(
             IGamificationRepository<CheckInChallenge> repository,
+            IGamificationRepository<ExplorerProfile> explorerProfileRepository,
             ILogger<GetCheckInChallengesByCheckInIdQueryHandler> logger)
         {
             _repository = repository;
+            _explorerProfileRepository = explorerProfileRepository;
             _logger = logger;
         }
 
@@ -33,10 +36,21 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
         {
             _logger.LogInformation("Fetching check-in challenges for check-in {CheckInId} - page {Page}, pageSize {PageSize}", request.CheckInId, request.PaginationRequest.Page, request.PaginationRequest.PageSize);
 
+            // CheckInChallenge.ExplorerId has no EF navigation to ExplorerProfile (see
+            // CheckInChallengeMapper), so the explorer's name is resolved with an
+            // explicit left join instead of an Include. Joins on UserId, not Id -
+            // ExplorerProfile's actual primary key (see GetExplorerNamesByIdsQueryHandler).
             var result = await _repository.GetTable()
                 .Where(c => c.CheckInId == request.CheckInId)
                 .Include(c => c.Challenge)
-                .Select(c => CheckInChallengeMapper.ToGetDto(c))
+                .GroupJoin(
+                    _explorerProfileRepository.GetTable(),
+                    c => c.ExplorerId,
+                    ep => ep.UserId,
+                    (c, eps) => new { CheckInChallenge = c, ExplorerProfiles = eps })
+                .SelectMany(
+                    x => x.ExplorerProfiles.DefaultIfEmpty(),
+                    (x, ep) => CheckInChallengeMapper.ToGetDto(x.CheckInChallenge, ep != null ? ep.DisplayName : string.Empty))
                 .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 
             _logger.LogInformation("Retrieved {Count} check-in challenges for check-in {CheckInId} out of {TotalCount}",

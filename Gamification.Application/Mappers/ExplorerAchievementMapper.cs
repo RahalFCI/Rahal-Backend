@@ -13,6 +13,7 @@ namespace Gamification.Application.Mappers
                 AchievementId = explorerAchievement.AchievementId,
                 AchievementTitle = explorerAchievement.Achievement?.Title ?? string.Empty,
                 ExplorerId = explorerAchievement.ExplorerId,
+                ExplorerName = explorerAchievement.ExplorerProfile?.DisplayName ?? string.Empty,
                 EarnedAt = explorerAchievement.EarnedAt,
                 IsNotified = explorerAchievement.IsNotified
             };

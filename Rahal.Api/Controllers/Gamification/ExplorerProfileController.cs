@@ -100,6 +100,19 @@ namespace Rahal.Api.Controllers.Gamification
             return Ok(result);
         }
 
+        [HttpGet("names")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetExplorerNamesByIdsAsync(
+            [FromQuery] List<Guid> ids,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _mediator.Send(
+                new GetExplorerNamesByIdsQuery(ids),
+                cancellationToken);
+            return Ok(result);
+        }
+
         [HttpGet("deleted")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]

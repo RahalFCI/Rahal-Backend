@@ -33,6 +33,7 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Queries
             _logger.LogInformation("Fetching user stats for explorer {ExplorerId}", request.ExplorerId);
 
             var userStats = await _repository.GetTable()
+                .Include(s => s.ExplorerProfile)
                 .Where(s => s.ExplorerProfileId == request.ExplorerId)
                 .FirstOrDefaultAsync(cancellationToken);
 

@@ -51,12 +51,11 @@ namespace Gamification.Infrastructure.Migrations
                 table: "VendorBranches",
                 column: "VendorId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_XpTransactions_ExplorerProfileId_Source_ReferenceId",
-                schema: "gamification",
-                table: "XpTransactions",
-                columns: new[] { "ExplorerProfileId", "Source", "ReferenceId" },
-                unique: true);
+            // Use IF NOT EXISTS to be safe if the index was partially created before
+            migrationBuilder.Sql(@"
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_XpTransactions_ExplorerProfileId_Source_ReferenceId""
+                ON gamification.""XpTransactions"" (""ExplorerProfileId"", ""Source"", ""ReferenceId"");
+            ");
         }
 
         /// <inheritdoc />

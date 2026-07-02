@@ -11,6 +11,7 @@ namespace Gamification.Application.Mappers
                 {
                     Id = userStats.Id,
                     ExplorerId = userStats.ExplorerProfileId,
+                    ExplorerName = userStats.ExplorerProfile?.DisplayName ?? string.Empty,
                     AvailableXp = userStats.AvailableXp,
                     CumulativeXp = userStats.CumulativeXp,
                     CurrentStreak = userStats.CurrentStreak,

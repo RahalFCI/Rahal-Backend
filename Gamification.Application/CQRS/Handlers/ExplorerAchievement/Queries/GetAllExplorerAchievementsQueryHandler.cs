@@ -32,6 +32,7 @@ namespace Gamification.Application.CQRS.Handlers.ExplorerAchievement.Queries
 
             var result = await _repository.GetTable()
                 .Include(ea => ea.Achievement)
+                .Include(ea => ea.ExplorerProfile)
                 .Select(ea => ExplorerAchievementMapper.ToGetDto(ea))
                 .ToPagedResultAsync(request.PaginationRequest, cancellationToken);
 

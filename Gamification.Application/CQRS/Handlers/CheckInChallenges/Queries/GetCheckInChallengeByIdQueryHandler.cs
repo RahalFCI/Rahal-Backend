@@ -18,13 +18,16 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
     public class GetCheckInChallengeByIdQueryHandler : IRequestHandler<GetCheckInChallengeByIdQuery, ApiResponse<GetCheckInChallengeDto>>
     {
         private readonly IGamificationRepository<CheckInChallenge> _repository;
+        private readonly IGamificationRepository<ExplorerProfile> _explorerProfileRepository;
         private readonly ILogger<GetCheckInChallengeByIdQueryHandler> _logger;
 
         public GetCheckInChallengeByIdQueryHandler(
             IGamificationRepository<CheckInChallenge> repository,
+            IGamificationRepository<ExplorerProfile> explorerProfileRepository,
             ILogger<GetCheckInChallengeByIdQueryHandler> logger)
         {
             _repository = repository;
+            _explorerProfileRepository = explorerProfileRepository;
             _logger = logger;
         }
 
@@ -43,7 +46,12 @@ namespace Gamification.Application.CQRS.Handlers.CheckInChallenges.Queries
                 return ApiResponse<GetCheckInChallengeDto>.Failure(ErrorCode.NotFound);
             }
 
-            return ApiResponse<GetCheckInChallengeDto>.Success(CheckInChallengeMapper.ToGetDto(checkInChallenge));
+            // ExplorerProfile's key is UserId, not Id (see GetExplorerNamesByIdsQueryHandler).
+            var explorerProfile = await _explorerProfileRepository.GetTable()
+                .FirstOrDefaultAsync(ep => ep.UserId == checkInChallenge.ExplorerId, cancellationToken);
+
+            return ApiResponse<GetCheckInChallengeDto>.Success(
+                CheckInChallengeMapper.ToGetDto(checkInChallenge, explorerProfile?.DisplayName ?? string.Empty));
         }
     }
 }
