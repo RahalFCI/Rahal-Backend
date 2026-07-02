@@ -9,6 +9,8 @@ namespace Rewards.Domain.Entities
         public Guid PlanTierId { get; set; }
         public PlanTier? PlanTier { get; set; }
         public SubscriptionPaymentMethod PaymentMethod { get; set; }
+        public int Duration { get; set; }
+        public decimal TotalCost { get; set; }
         public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
         public DateTime? StartedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }

@@ -9,6 +9,7 @@ namespace Rewards.Application.Validators
         {
             RuleFor(x => x.PlanTierId).NotEmpty();
             RuleFor(x => x.PaymentMethod).IsInEnum();
+            RuleFor(x => x.Duration).InclusiveBetween(1, 52);
         }
     }
 }

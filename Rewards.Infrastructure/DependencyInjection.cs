@@ -31,6 +31,7 @@ namespace Rewards.Infrastructure
             services.AddScoped(typeof(IRewardsRepository<>), typeof(RewardsRepository<>));
             services.AddScoped<ISearchIndexInitializer, CouponIndexConfig>();
             services.AddScoped<IRewardsGamificationService, RewardsGamificationService>();
+            services.AddScoped<IRewardsPaymentService, RewardsPaymentService>();
             services.AddScoped<ICouponSearchService, CouponSearchService>();
             services.AddScoped<IRewardsUnitOfWork, RewardsUnitOfWork>();
             services.AddHttpClient<IRagTravelPlanService, RagTravelPlanService>(client =>

@@ -17,17 +17,20 @@ namespace Rewards.Application.Services
         private readonly IRewardsRepository<Subscription> _subscriptionRepository;
         private readonly IRewardsRepository<PlanTier> _planTierRepository;
         private readonly IRewardsGamificationService _gamificationService;
+        private readonly IRewardsPaymentService _paymentService;
         private readonly ILogger<SubscriptionService> _logger;
 
         public SubscriptionService(
             IRewardsRepository<Subscription> subscriptionRepository,
             IRewardsRepository<PlanTier> planTierRepository,
             IRewardsGamificationService gamificationService,
+            IRewardsPaymentService paymentService,
             ILogger<SubscriptionService> logger)
         {
             _subscriptionRepository = subscriptionRepository;
             _planTierRepository = planTierRepository;
             _gamificationService = gamificationService;
+            _paymentService = paymentService;
             _logger = logger;
         }
 
@@ -58,12 +61,18 @@ namespace Rewards.Application.Services
                 return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.Conflict);
             }
 
+            var totalCost = dto.PaymentMethod == SubscriptionPaymentMethod.Xp
+                ? planTier.WeeklyXpCost * dto.Duration
+                : planTier.WeeklyPrice * dto.Duration;
+
             // Create subscription with pending status
             var subscription = new Subscription
             {
                 ExplorerId = explorerId,
                 PlanTierId = planTier.Id,
                 PaymentMethod = dto.PaymentMethod,
+                Duration = dto.Duration,
+                TotalCost = totalCost,
                 Status = SubscriptionStatus.Pending
             };
 
@@ -77,7 +86,7 @@ namespace Rewards.Application.Services
                 var spendResult = await _gamificationService.SpendXpAsync(
                     subscription.Id,
                     explorerId,
-                    planTier.WeeklyXpCost,
+                    (int)subscription.TotalCost,
                     "SubscriptionPurchase",
                     subscription.Id,
                     cancellationToken);
@@ -99,30 +108,79 @@ namespace Rewards.Application.Services
                     return ApiResponse<GetSubscriptionDto>.Failure(spendResult.errorCode);
                 }
 
-                var premiumResult = await _gamificationService.SetPremiumAsync(
+                var activationResult = await ActivateSubscriptionAsync(subscription, explorerId, planTier.Id, now, cancellationToken);
+                if (!activationResult.IsSuccess)
+                    return ApiResponse<GetSubscriptionDto>.Failure(activationResult.errorCode);
+            }
+            else if (dto.PaymentMethod == SubscriptionPaymentMethod.Visa)
+            {
+                var paymentResult = await _paymentService.ProcessPaymentAsync(
                     subscription.Id,
                     explorerId,
-                    true,
-                    planTier.Id,
+                    subscription.TotalCost,
+                    dto.PaymentMethod.ToString(),
+                    subscription.Id,
                     cancellationToken);
 
-                if (!premiumResult.IsSuccess)
+                if (!paymentResult.IsSuccess)
                 {
-                    _logger.LogWarning("Setting premium failed for subscription {SubscriptionId}. ErrorCode: {ErrorCode}", subscription.Id, premiumResult.errorCode);
-                    return ApiResponse<GetSubscriptionDto>.Failure(premiumResult.errorCode);
+                    _logger.LogWarning("Payment failed for subscription {SubscriptionId}. ErrorCode: {ErrorCode}", subscription.Id, paymentResult.errorCode);
+
+                    if (paymentResult.errorCode is not ErrorCode.Timeout and not ErrorCode.ExternalServiceError)
+                    {
+                        subscription.Status = SubscriptionStatus.Cancelled;
+                        subscription.CancelledAt = DateTime.UtcNow;
+                        subscription.UpdatedAt = DateTime.UtcNow;
+                        await _subscriptionRepository.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation("Subscription {SubscriptionId} cancelled after payment failure", subscription.Id);
+                    }
+
+                    return ApiResponse<GetSubscriptionDto>.Failure(paymentResult.errorCode);
                 }
 
-                subscription.Status = SubscriptionStatus.Active;
-                subscription.StartedAt = now;
-                subscription.ExpiresAt = now.AddDays(7);
-                subscription.UpdatedAt = DateTime.UtcNow;
-                await _subscriptionRepository.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Subscription {SubscriptionId} activated for explorer {ExplorerId}", subscription.Id, explorerId);
+                var activationResult = await ActivateSubscriptionAsync(subscription, explorerId, planTier.Id, now, cancellationToken);
+                if (!activationResult.IsSuccess)
+                    return ApiResponse<GetSubscriptionDto>.Failure(activationResult.errorCode);
+            }
+            else
+            {
+                _logger.LogWarning("Unsupported payment method {PaymentMethod} for subscription {SubscriptionId}", dto.PaymentMethod, subscription.Id);
+                return ApiResponse<GetSubscriptionDto>.Failure(ErrorCode.InvalidValue);
             }
 
             subscription.PlanTier = planTier;
             return ApiResponse<GetSubscriptionDto>.Success(RewardsMapper.ToDto(subscription));
+        }
+
+        private async Task<ApiResponse<string>> ActivateSubscriptionAsync(
+            Subscription subscription,
+            Guid explorerId,
+            Guid planTierId,
+            DateTime startedAt,
+            CancellationToken cancellationToken)
+        {
+            var premiumResult = await _gamificationService.SetPremiumAsync(
+                subscription.Id,
+                explorerId,
+                true,
+                planTierId,
+                cancellationToken);
+
+            if (!premiumResult.IsSuccess)
+            {
+                _logger.LogWarning("Setting premium failed for subscription {SubscriptionId}. ErrorCode: {ErrorCode}", subscription.Id, premiumResult.errorCode);
+                return ApiResponse<string>.Failure(premiumResult.errorCode);
+            }
+
+            subscription.Status = SubscriptionStatus.Active;
+            subscription.StartedAt = startedAt;
+            subscription.ExpiresAt = startedAt.AddDays(7 * subscription.Duration);
+            subscription.UpdatedAt = DateTime.UtcNow;
+            await _subscriptionRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Subscription {SubscriptionId} activated for explorer {ExplorerId}", subscription.Id, explorerId);
+            return ApiResponse<string>.Success("Subscription activated successfully");
         }
 
         public async Task<ApiResponse<GetSubscriptionDto>> GetActiveAsync(Guid explorerId, CancellationToken cancellationToken = default)
