@@ -55,7 +55,8 @@ namespace Payment.Infrastructure.Gateways
                     Customer = customer.Id,
                     AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
                     {
-                        Enabled = true
+                        Enabled = true,
+                        AllowRedirects = "never"
                     }
                 },
                 cancellationToken: cancellationToken);
