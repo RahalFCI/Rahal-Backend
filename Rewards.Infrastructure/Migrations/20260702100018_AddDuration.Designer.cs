@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rewards.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Rewards.Infrastructure.Persistence;
 namespace Rewards.Infrastructure.Migrations
 {
     [DbContext(typeof(RewardsDbContext))]
-    partial class RewardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702100018_AddDuration")]
+    partial class AddDuration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
