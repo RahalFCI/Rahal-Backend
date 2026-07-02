@@ -7,6 +7,8 @@ namespace Rewards.Application.DTOs.Subscriptions
         public Guid PlanTierId { get; set; }
         public string PlanTierName { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = string.Empty;
+        public int Duration { get; set; }
+        public decimal TotalCost { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime? StartedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }

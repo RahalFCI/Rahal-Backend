@@ -1,4 +1,5 @@
-﻿using Gamification.Domain.Entities;
+﻿using Shared.Infrastructure.Persistence.Configurations;
+using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -7,14 +8,13 @@ using System.Text;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class AchievementCriteriaTypeConfiguration : IEntityTypeConfiguration<AchievementCriteriaType>
+    public class AchievementCriteriaTypeConfiguration : BaseAuditableEntityConfiguration<AchievementCriteriaType>
     {
-        public void Configure(EntityTypeBuilder<AchievementCriteriaType> builder)
+        public override void Configure(EntityTypeBuilder<AchievementCriteriaType> builder)
         {
-            builder.ToTable("AchievementCriteriaTypes", "gamification");
+            base.Configure(builder);
 
-            // Primary Key (composite)
-            builder.HasKey(e => e.Id);
+            builder.ToTable("AchievementCriteriaTypes", "gamification");
 
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
@@ -31,9 +31,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasColumnType("text");
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

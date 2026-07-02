@@ -37,15 +37,18 @@ namespace Gamification.Application.CQRS.Handlers.UserStat.Commands
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
+
             // Calculate new streak based on last activity date
             var now = DateTime.UtcNow;
+  
+            if (stats.LastActivityDate.HasValue && stats.LastActivityDate.Value.Date == now.Date)
+                return ApiResponse<string>.Success("Streak already updated today");
+
             var newStreak = stats.LastActivityDate.HasValue &&
                             (now - stats.LastActivityDate.Value).TotalHours <= 24
                 ? stats.CurrentStreak + 1
                 : 1;
 
-            if (stats.LastActivityDate.HasValue && stats.LastActivityDate.Value.Date == now.Date)
-                return ApiResponse<string>.Success("Streak already updated today");
 
             // Update the streak and longest streak if necessary
             await _userStatsRepository.GetTable()

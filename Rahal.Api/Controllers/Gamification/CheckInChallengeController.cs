@@ -39,15 +39,17 @@ namespace Rahal.Api.Controllers.Gamification
 
         [HttpPost("{id}/validate")]
         [Authorize(Roles = "Explorer")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ValidateCheckInChallengeAsync(
             [FromRoute] Guid id,
+            [FromForm] IFormFile image,
             CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(
-                new ValidateCheckInChallengeOrchestrator(id),
+                new ValidateCheckInChallengeOrchestrator(id, image),
                 cancellationToken);
             return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
         }

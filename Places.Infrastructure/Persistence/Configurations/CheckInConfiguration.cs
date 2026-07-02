@@ -1,3 +1,4 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Places.Domain.Entities;
@@ -6,14 +7,13 @@ using Places.Domain.Enums;
 namespace Places.Infrastructure.Persistence.Configuration
 {
 
-    public class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
+    public class CheckInConfiguration : BaseAuditableEntityConfiguration<CheckIn>
     {
-        public void Configure(EntityTypeBuilder<CheckIn> builder)
+        public override void Configure(EntityTypeBuilder<CheckIn> builder)
         {
-            builder.ToTable("CheckIns", "places");
+            base.Configure(builder);
 
-            // Primary Key (composite)
-            builder.HasKey(e => e.Id);
+            builder.ToTable("CheckIns", "places");
 
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
@@ -40,9 +40,6 @@ namespace Places.Infrastructure.Persistence.Configuration
                 .IsRequired();
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

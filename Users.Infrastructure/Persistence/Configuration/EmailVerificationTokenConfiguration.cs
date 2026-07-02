@@ -1,17 +1,17 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Users.Domain.Entities;
 
 namespace Users.Infrastructure.Persistence.Configuration
 {
-    public class EmailVerificationTokenConfiguration : IEntityTypeConfiguration<EmailVerificationToken>
+    public class EmailVerificationTokenConfiguration : BaseAuditableEntityConfiguration<EmailVerificationToken>
     {
-        public void Configure(EntityTypeBuilder<EmailVerificationToken> builder)
+        public override void Configure(EntityTypeBuilder<EmailVerificationToken> builder)
         {
-            builder.ToTable("EmailVerificationTokens", "users");
+            base.Configure(builder);
 
-            // Primary Key
-            builder.HasKey(e => e.Id);
+            builder.ToTable("EmailVerificationTokens", "users");
 
             // Properties
             builder.Property(e => e.UserId)
@@ -33,9 +33,6 @@ namespace Users.Infrastructure.Persistence.Configuration
                 .HasDefaultValue(0);
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

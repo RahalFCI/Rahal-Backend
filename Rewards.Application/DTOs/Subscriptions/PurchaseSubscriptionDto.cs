@@ -6,5 +6,6 @@ namespace Rewards.Application.DTOs.Subscriptions
     {
         public Guid PlanTierId { get; set; }
         public SubscriptionPaymentMethod PaymentMethod { get; set; }
+        public int Duration { get; set; }
     }
 }

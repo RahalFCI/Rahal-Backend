@@ -34,6 +34,12 @@ namespace Gamification.Infrastructure
 
             services.AddScoped(typeof(IGamificationRepository<>), typeof(GamificationRepository<>));
             services.AddScoped<IVendorBranchPlaceClient, VendorBranchPlaceClient>();
+            services.AddHttpClient<ICheckInChallengeAiValidationService, CheckInChallengeAiValidationService>(client =>
+            {
+                var baseUrl = configuration["AiSystem:BaseUrl"];
+                if (!string.IsNullOrWhiteSpace(baseUrl))
+                    client.BaseAddress = new Uri(baseUrl);
+            });
 
 
             // Register Search Index Configuration

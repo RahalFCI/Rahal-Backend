@@ -1,3 +1,4 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Places.Domain.Entities;
@@ -8,22 +9,18 @@ namespace Places.Infrastructure.Persistence.Configuration
     /// Entity configuration for PlaceCategory
     /// Configures table mapping, indexes, constraints, and soft delete query filter
     /// </summary>
-    public class PlaceCategoryConfiguration : IEntityTypeConfiguration<PlaceCategory>
+    public class PlaceCategoryConfiguration : BaseAuditableEntityConfiguration<PlaceCategory>
     {
-        public void Configure(EntityTypeBuilder<PlaceCategory> builder)
+        public override void Configure(EntityTypeBuilder<PlaceCategory> builder)
         {
-            builder.ToTable("PlaceCategories", "places");
+            base.Configure(builder);
 
-            // Primary Key
-            builder.HasKey(e => e.Id);
+            builder.ToTable("PlaceCategories", "places");
 
             // Query filter for soft deletion
             builder.HasQueryFilter(e => !e.IsDeleted);
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

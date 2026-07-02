@@ -130,6 +130,8 @@ namespace Rewards.Application.Mappers
                 PlanTierId = subscription.PlanTierId,
                 PlanTierName = subscription.PlanTier?.Name ?? string.Empty,
                 PaymentMethod = subscription.PaymentMethod.ToString(),
+                Duration = subscription.Duration,
+                TotalCost = subscription.TotalCost,
                 Status = subscription.Status.ToString(),
                 StartedAt = subscription.StartedAt,
                 ExpiresAt = subscription.ExpiresAt,
@@ -144,10 +146,9 @@ namespace Rewards.Application.Mappers
                 Id = travelPlan.Id,
                 ExplorerId = travelPlan.ExplorerId,
                 SubscriptionId = travelPlan.SubscriptionId,
-                BudgetLimit = travelPlan.BudgetLimit,
                 StayDurationDays = travelPlan.StayDurationDays,
                 Prompt = travelPlan.Prompt,
-                GeneratedPlanJson = travelPlan.GeneratedPlanJson,
+                GeneratedPlanJson = travelPlan.GeneratedPlan,
                 CreatedAt = travelPlan.CreatedAt
             };
         }

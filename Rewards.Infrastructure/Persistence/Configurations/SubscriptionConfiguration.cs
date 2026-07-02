@@ -1,20 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rewards.Domain.Entities;
+using Shared.Infrastructure.Persistence.Configurations;
 
 namespace Rewards.Infrastructure.Persistence.Configurations
 {
-    public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
+    public class SubscriptionConfiguration : BaseAuditableEntityConfiguration<Subscription>
     {
-        public void Configure(EntityTypeBuilder<Subscription> builder)
+        public override void Configure(EntityTypeBuilder<Subscription> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("Subscriptions", "rewards");
-            builder.HasKey(s => s.Id);
             builder.HasQueryFilter(s => !s.IsDeleted);
 
             builder.Property(s => s.PaymentMethod).HasConversion<string>().IsRequired();
+            builder.Property(s => s.Duration).IsRequired();
+            builder.Property(s => s.TotalCost).HasPrecision(18, 2).IsRequired();
             builder.Property(s => s.Status).HasConversion<string>().IsRequired();
-            builder.Property(s => s.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
             builder.Property(s => s.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(s => s.IsDeleted).HasDefaultValue(false);
 

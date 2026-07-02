@@ -1,16 +1,17 @@
-﻿using Gamification.Domain.Entities;
+﻿using Shared.Infrastructure.Persistence.Configurations;
+using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class BadgeConfiguration : IEntityTypeConfiguration<Badge>
+    public class BadgeConfiguration : BaseAuditableEntityConfiguration<Badge>
     {
-        public void Configure(EntityTypeBuilder<Badge> builder)
+        public override void Configure(EntityTypeBuilder<Badge> builder)
         {
-            builder.ToTable("Badges", "gamification");
+            base.Configure(builder);
 
-            builder.HasKey(e => e.Id);
+            builder.ToTable("Badges", "gamification");
 
             builder.HasQueryFilter(e => !e.IsDeleted);
 
@@ -30,9 +31,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
                 .HasColumnType("text");
 
             // Audit Properties (inherited from BaseEntity)
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

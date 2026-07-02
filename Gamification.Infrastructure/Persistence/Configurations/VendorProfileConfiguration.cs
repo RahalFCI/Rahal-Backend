@@ -1,13 +1,16 @@
+using Shared.Infrastructure.Persistence.Configurations;
 using Gamification.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gamification.Infrastructure.Persistence.Configurations
 {
-    public class VendorProfileConfiguration : IEntityTypeConfiguration<VendorProfile>
+    public class VendorProfileConfiguration : BaseAuditableEntityConfiguration<VendorProfile>
     {
-        public void Configure(EntityTypeBuilder<VendorProfile> builder)
+        public override void Configure(EntityTypeBuilder<VendorProfile> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("VendorProfiles", "gamification");
 
             builder.Property(e => e.DisplayName)
@@ -44,10 +47,6 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             builder.Property(e => e.CategoryId)
                 .IsRequired();
-
-            builder.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .ValueGeneratedOnAdd();
 
             builder.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnUpdate();

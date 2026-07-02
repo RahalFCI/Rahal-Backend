@@ -1,15 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rewards.Domain.Entities;
+using Shared.Infrastructure.Persistence.Configurations;
 
 namespace Rewards.Infrastructure.Persistence.Configurations
 {
-    public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
+    public class CouponConfiguration : BaseAuditableEntityConfiguration<Coupon>
     {
-        public void Configure(EntityTypeBuilder<Coupon> builder)
+        public override void Configure(EntityTypeBuilder<Coupon> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("Coupons", "rewards");
-            builder.HasKey(c => c.Id);
             builder.HasQueryFilter(c => !c.IsDeleted);
 
             builder.Property(c => c.Title).IsRequired().HasMaxLength(150);
@@ -23,7 +25,6 @@ namespace Rewards.Infrastructure.Persistence.Configurations
             builder.Property(c => c.CurrentClaims).IsRequired().HasDefaultValue(0);
             builder.Property(c => c.ExpiresAt).IsRequired();
             builder.Property(c => c.IsActive).IsRequired().HasDefaultValue(true);
-            builder.Property(c => c.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
             builder.Property(c => c.UpdatedAt).ValueGeneratedOnUpdate();
             builder.Property(c => c.IsDeleted).HasDefaultValue(false);
 
