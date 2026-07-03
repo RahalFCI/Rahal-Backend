@@ -58,30 +58,30 @@ namespace Users.Application.Services
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequestDto.Password, lockoutOnFailure: true);
 
-            if (result.IsNotAllowed)
-            {
-                _logger.LogWarning("Login failed: User {UserId} account is not allowed to sign in", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.Unauthorized);
-            }
+            //if (result.IsNotAllowed)
+            //{
+            //    _logger.LogWarning("Login failed: User {UserId} account is not allowed to sign in", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.Unauthorized);
+            //}
             
-            if (result.IsLockedOut)
-            {
-                _logger.LogWarning("Login failed: User {UserId} account is locked out", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.LockedOut);
-            }
+            //if (result.IsLockedOut)
+            //{
+            //    _logger.LogWarning("Login failed: User {UserId} account is locked out", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.LockedOut);
+            //}
 
-            if(!result.Succeeded)
-            {
-                _logger.LogWarning("Login failed: Invalid credentials for user {UserId}", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
-            }
+            //if(!result.Succeeded)
+            //{
+            //    _logger.LogWarning("Login failed: Invalid credentials for user {UserId}", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
+            //}
 
-            // Check if email is confirmed
-            if (!user.EmailConfirmed)
-            {
-                _logger.LogWarning("Login failed: Email not verified for user {UserId}", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.EmailNotVerified);
-            }
+            //// Check if email is confirmed
+            //if (!user.EmailConfirmed)
+            //{
+            //    _logger.LogWarning("Login failed: Email not verified for user {UserId}", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.EmailNotVerified);
+            //}
 
             var roles = await _userManager.GetRolesAsync(user);
             if(!roles.Any())

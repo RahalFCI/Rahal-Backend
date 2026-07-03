@@ -84,11 +84,23 @@ namespace Gamification.Infrastructure.Services
                 if (root.ValueKind is JsonValueKind.True or JsonValueKind.False)
                     return root.GetBoolean();
 
-                if (root.ValueKind == JsonValueKind.Object
-                    && root.TryGetProperty("verification_result", out var isValid)
-                    && isValid.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                if (root.ValueKind == JsonValueKind.String &&
+                    bool.TryParse(root.GetString(), out var directResult))
                 {
-                    return isValid.GetBoolean();
+                    return directResult;
+                }
+
+                if (root.ValueKind == JsonValueKind.Object &&
+                    root.TryGetProperty("verification_result", out var result))
+                {
+                    if (result.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                        return result.GetBoolean();
+
+                    if (result.ValueKind == JsonValueKind.String &&
+                        bool.TryParse(result.GetString(), out var parsed))
+                    {
+                        return parsed;
+                    }
                 }
             }
             catch (JsonException)

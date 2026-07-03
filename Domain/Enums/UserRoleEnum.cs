@@ -6,6 +6,6 @@ namespace Users.Domain.Enums
 {
     public enum UserRoleEnum
     {
-        Explorer, Admin, Vendor
+        Explorer = 1, Admin = 2, Vendor = 3
     }
 }

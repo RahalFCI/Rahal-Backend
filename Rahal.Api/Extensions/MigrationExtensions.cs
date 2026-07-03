@@ -44,6 +44,8 @@ namespace Rahal.Api.Extensions
         { 
             var context = scope.ServiceProvider.GetRequiredService<TContext>();
             await context.Database.MigrateAsync();
+            Console.WriteLine($"Migrating: {typeof(TContext).Name}");
+
         }
 
         public static async Task<WebApplication> SeedAsync(this WebApplication app)
