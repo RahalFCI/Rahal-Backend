@@ -13,6 +13,7 @@ namespace Payment.Application
         {
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
+            services.AddScoped<IPaymentTransactionQueryService, PaymentTransactionQueryService>();
 
             return services;
         }
