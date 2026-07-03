@@ -1,9 +1,10 @@
-using System.Net.Http.Json;
-using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Rewards.Application.Interfaces;
 using Shared.Application.DTOs;
 using Shared.Domain.Enums;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace Rewards.Infrastructure.Services
 {
@@ -26,14 +27,15 @@ namespace Rewards.Infrastructure.Services
         {
             try
             {
-                var request = new
-                {
-                    project_id = ProjectId,
-                    prompt,
-                    limit = Limit
-                };
+                var url = QueryHelpers.AddQueryString(
+                    GenerateTravelPlanEndpoint,
+                    new Dictionary<string, string?>
+                    {
+                        ["query"] = prompt,
+                        ["limit"] = Limit.ToString()
+                    });
 
-                using var response = await _httpClient.PostAsJsonAsync(GenerateTravelPlanEndpoint, request, cancellationToken);
+                using var response = await _httpClient.PostAsync(url, null, cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
                 {

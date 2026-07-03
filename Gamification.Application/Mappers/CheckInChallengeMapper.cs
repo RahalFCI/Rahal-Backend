@@ -25,7 +25,6 @@ namespace Gamification.Application.Mappers
             {
                 ChallengeId = dto.ChallengeId,
                 CheckInId = dto.CheckInId,
-                ProofUrl = dto.ProofMediaUrl ?? string.Empty,
                 ValidationStatus = Gamification.Domain.Enums.ChallengeValidationStatus.Pending
             };
         }

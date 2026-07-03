@@ -58,24 +58,23 @@ namespace Users.Application.Services
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequestDto.Password, lockoutOnFailure: true);
 
-            if (result.IsNotAllowed)
-            {
-                _logger.LogWarning("Login failed: User {UserId} account is not allowed to sign in", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.Unauthorized);
-            }
+            //if (result.IsNotAllowed)
+            //{
+            //    _logger.LogWarning("Login failed: User {UserId} account is not allowed to sign in", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.Unauthorized);
+            //}
             
-            if (result.IsLockedOut)
-            {
-                _logger.LogWarning("Login failed: User {UserId} account is locked out", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.LockedOut);
-            }
+            //if (result.IsLockedOut)
+            //{
+            //    _logger.LogWarning("Login failed: User {UserId} account is locked out", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.LockedOut);
+            //}
 
-            if(!result.Succeeded)
-            {
-                _logger.LogWarning("Login failed: Invalid credentials for user {UserId}", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
-            }
-
+            //if(!result.Succeeded)
+            //{
+            //    _logger.LogWarning("Login failed: Invalid credentials for user {UserId}", user.Id);
+            //    return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
+            //}
 
             // TODO(Ziad): uncomment this line in production
             // Check if email is confirmed (Commented out temporarily for testing without OTP)

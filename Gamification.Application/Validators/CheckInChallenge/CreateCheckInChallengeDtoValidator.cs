@@ -12,10 +12,6 @@ namespace Gamification.Application.Validators.CheckInChallenge
 
             RuleFor(x => x.CheckInId)
                 .NotEmpty().WithMessage("Check-in ID is required");
-
-            RuleFor(x => x.ProofMediaUrl)
-                .MaximumLength(500).WithMessage("Proof media URL cannot exceed 500 characters")
-                .When(x => !string.IsNullOrEmpty(x.ProofMediaUrl));
         }
     }
 }

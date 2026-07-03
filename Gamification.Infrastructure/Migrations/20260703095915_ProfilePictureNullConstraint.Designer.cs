@@ -3,6 +3,7 @@ using System;
 using Gamification.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(GamificationDbContext))]
-    partial class GamificationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260703095915_ProfilePictureNullConstraint")]
+    partial class ProfilePictureNullConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -379,6 +382,10 @@ namespace Gamification.Infrastructure.Migrations
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()

@@ -4,6 +4,5 @@ namespace Gamification.Application.DTOs.CheckInChallenge
     {
         public Guid ChallengeId { get; set; }
         public Guid CheckInId { get; set; }
-        public string? ProofMediaUrl { get; set; }
     }
 }

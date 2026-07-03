@@ -10,6 +10,7 @@ namespace Places.Application.Mappers
         {
             return new GetCheckInDto
             {
+                CheckInId = checkIn.Id,
                 ExplorerId = checkIn.ExplorerId,
                 PlaceId = checkIn.PlaceId,
                 ValidationStatus = checkIn.ValidationStatus,
