@@ -36,7 +36,7 @@ namespace Rewards.Infrastructure
             services.AddScoped<IRewardsUnitOfWork, RewardsUnitOfWork>();
             services.AddHttpClient<IRagTravelPlanService, RagTravelPlanService>(client =>
             {
-                var baseUrl = configuration["RagSystem:BaseUrl"];
+                var baseUrl = configuration["AiSystem:BaseUrl"];
                 if (!string.IsNullOrWhiteSpace(baseUrl))
                     client.BaseAddress = new Uri(baseUrl);
             });
