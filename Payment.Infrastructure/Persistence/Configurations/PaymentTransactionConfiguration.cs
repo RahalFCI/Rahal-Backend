@@ -75,6 +75,18 @@ namespace Payment.Infrastructure.Persistence.Configurations
             builder.HasIndex(payment => payment.OperationId)
                 .HasDatabaseName("IX_Payments_OperationId");
 
+            builder.HasIndex(payment => payment.CreatedAt)
+                .HasDatabaseName("IX_Payments_CreatedAt");
+
+            builder.HasIndex(payment => new { payment.ExplorerId, payment.CreatedAt })
+                .HasDatabaseName("IX_Payments_ExplorerId_CreatedAt");
+
+            builder.HasIndex(payment => new { payment.Status, payment.CreatedAt })
+                .HasDatabaseName("IX_Payments_Status_CreatedAt");
+
+            builder.HasIndex(payment => new { payment.Currency, payment.CreatedAt })
+                .HasDatabaseName("IX_Payments_Currency_CreatedAt");
+
             builder.HasIndex(payment => payment.GatewayPaymentIntentId)
                 .HasDatabaseName("IX_Payments_GatewayPaymentIntentId")
                 .IsUnique()
