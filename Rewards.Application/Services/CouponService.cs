@@ -124,7 +124,7 @@ namespace Rewards.Application.Services
                 : ApiResponse<GetCouponDto>.Success(RewardsMapper.ToDto(coupon));
         }
 
-        public async Task<ApiResponse<PagedResult<GetCouponDto>>> GetByVendorIdAsync(Guid vendorId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResult<GetCouponDto>>> GetByVendorIdAsync(Guid vendorId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Fetching coupons for vendor {VendorId}", vendorId);
 
@@ -134,7 +134,7 @@ namespace Rewards.Application.Services
                 .OrderBy(c => c.ExpiresAt)
                 .Select(c => RewardsMapper.ToDto(c));
 
-            var result = await PaginationExtensions.ToPagedResultAsync(query, new OffsetPaginationRequest(), cancellationToken);
+            var result = await PaginationExtensions.ToPagedResultAsync(query, request, cancellationToken);
             return ApiResponse<PagedResult<GetCouponDto>>.Success(result);
         }
 

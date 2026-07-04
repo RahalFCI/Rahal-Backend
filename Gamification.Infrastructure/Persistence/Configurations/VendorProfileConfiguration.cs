@@ -13,11 +13,14 @@ namespace Gamification.Infrastructure.Persistence.Configurations
 
             builder.ToTable("VendorProfiles", "gamification");
 
+            builder.Ignore(e => e.Id);
+
             builder.Property(e => e.DisplayName)
                 .IsRequired()
                 .HasMaxLength(100);
 
             builder.Property(e => e.ProfilePictureURL)
+                .IsRequired(false)
                 .HasMaxLength(500);
 
             builder.HasKey(e => e.UserId);

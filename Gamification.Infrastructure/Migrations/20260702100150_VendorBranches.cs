@@ -10,21 +10,15 @@ namespace Gamification.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateIndex(
-                name: "IX_XpTransactions_ExplorerProfileId_Source_ReferenceId",
-                schema: "gamification",
-                table: "XpTransactions",
-                columns: new[] { "ExplorerProfileId", "Source", "ReferenceId" },
-                unique: true);
+            // No-op: IX_XpTransactions_ExplorerProfileId_Source_ReferenceId is already
+            // created by 20260630080921_AddVendorBranches. This migration was authored
+            // independently on master before the two branches were merged and would
+            // otherwise try to create the same index twice.
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_XpTransactions_ExplorerProfileId_Source_ReferenceId",
-                schema: "gamification",
-                table: "XpTransactions");
         }
     }
 }

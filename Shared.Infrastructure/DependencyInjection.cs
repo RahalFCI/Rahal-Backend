@@ -34,7 +34,17 @@ namespace Shared.Infrastructure
             services.Configure<MailSettings>(
             configuration.GetSection(MailSettings.SectionName));
 
-            services.AddTransient<IEmailService, SmtpEmailService>();
+            var useLoggingEmail = bool.TryParse(configuration["Mail:UseLoggingService"], out var parsedUseLoggingEmail)
+                && parsedUseLoggingEmail;
+
+            if (useLoggingEmail)
+            {
+                services.AddTransient<IEmailService, LoggingEmailService>();
+            }
+            else
+            {
+                services.AddTransient<IEmailService, SmtpEmailService>();
+            }
 
 
             // Register file storage service

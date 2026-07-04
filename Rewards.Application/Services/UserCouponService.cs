@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Rewards.Application.DTOs.Coupons;
 using Rewards.Application.DTOs.UserCoupons;
 using Rewards.Application.Interfaces;
 using Rewards.Application.Mappers;
@@ -215,6 +216,73 @@ namespace Rewards.Application.Services
 
             var result = await PaginationExtensions.ToPagedResultAsync(query, request, cancellationToken);
             return ApiResponse<PagedResult<GetUserCouponDto>>.Success(result);
+        }
+
+        public async Task<ApiResponse<PagedResult<GetUserCouponDto>>> GetByCouponAsync(Guid couponId, Guid? vendorId, OffsetPaginationRequest request, CancellationToken cancellationToken = default)
+        {
+            var coupon = await _couponRepository.GetTable()
+                .AsNoTracking()
+                .Where(c => c.Id == couponId)
+                .Select(c => new { c.Id, c.VendorId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (coupon is null)
+                return ApiResponse<PagedResult<GetUserCouponDto>>.Failure(ErrorCode.NotFound);
+
+            if (vendorId.HasValue && coupon.VendorId != vendorId.Value)
+                return ApiResponse<PagedResult<GetUserCouponDto>>.Failure(ErrorCode.Forbidden);
+
+            var query = _userCouponRepository.GetTable()
+                .AsNoTracking()
+                .Include(c => c.Coupon)
+                .Where(c => c.CouponId == couponId && (c.Status == UserCouponStatus.Redeemed || c.IsRedeemed))
+                .OrderByDescending(c => c.RedeemedAt ?? c.ClaimedAt)
+                .Select(c => RewardsMapper.ToDto(c));
+
+            var result = await PaginationExtensions.ToPagedResultAsync(query, request, cancellationToken);
+            return ApiResponse<PagedResult<GetUserCouponDto>>.Success(result);
+        }
+
+        public async Task<ApiResponse<CouponStatsDto>> GetStatsByCouponAsync(Guid couponId, Guid? vendorId, CancellationToken cancellationToken = default)
+        {
+            var coupon = await _couponRepository.GetTable()
+                .AsNoTracking()
+                .Where(c => c.Id == couponId)
+                .Select(c => new { c.Id, c.VendorId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (coupon is null)
+                return ApiResponse<CouponStatsDto>.Failure(ErrorCode.NotFound);
+
+            if (vendorId.HasValue && coupon.VendorId != vendorId.Value)
+                return ApiResponse<CouponStatsDto>.Failure(ErrorCode.Forbidden);
+
+            var query = _userCouponRepository.GetTable()
+                .AsNoTracking()
+                .Where(c => c.CouponId == couponId);
+
+            var totalClaims = await query.CountAsync(cancellationToken);
+            var redeemedCount = await query.CountAsync(c => c.Status == UserCouponStatus.Redeemed || c.IsRedeemed, cancellationToken);
+            var claimedCount = await query.CountAsync(c => c.Status == UserCouponStatus.Claimed, cancellationToken);
+            var pendingCount = await query.CountAsync(c => c.Status == UserCouponStatus.Pending, cancellationToken);
+            var expiredCount = await query.CountAsync(c => c.Status == UserCouponStatus.Expired, cancellationToken);
+            var cancelledCount = await query.CountAsync(c => c.Status == UserCouponStatus.Cancelled, cancellationToken);
+            var lastRedeemedAt = await query
+                .Where(c => c.RedeemedAt.HasValue)
+                .MaxAsync(c => c.RedeemedAt, cancellationToken);
+
+            return ApiResponse<CouponStatsDto>.Success(new CouponStatsDto
+            {
+                CouponId = couponId,
+                TotalClaims = totalClaims,
+                RedeemedCount = redeemedCount,
+                ClaimedCount = claimedCount,
+                PendingCount = pendingCount,
+                ExpiredCount = expiredCount,
+                CancelledCount = cancelledCount,
+                RedemptionRate = totalClaims == 0 ? 0 : redeemedCount / (double)totalClaims,
+                LastRedeemedAt = lastRedeemedAt
+            });
         }
 
         private static string GenerateCode()

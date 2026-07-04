@@ -12,6 +12,12 @@
 
 .env
 
+# local secret token dump
+api_token.txt
+
+# runtime upload artifacts
+uploads/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

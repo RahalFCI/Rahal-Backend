@@ -29,6 +29,9 @@ namespace Rahal.Api.Controllers.Gamification
             [FromBody] CreateVendorBranchDto dto,
             CancellationToken cancellationToken)
         {
+            if (User.IsInRole("Vendor") && !User.IsInRole("Admin"))
+                dto.VendorId = GetCurrentUserId();
+
             var result = await _mediator.Send(new CreateVendorBranchCommand(dto), cancellationToken);
             return result.IsSuccess ? Ok(result) : ToActionResult(result);
         }
@@ -42,6 +45,9 @@ namespace Rahal.Api.Controllers.Gamification
             CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetVendorBranchByIdQuery(id), cancellationToken);
+            if (result.IsSuccess && User.IsInRole("Vendor") && !User.IsInRole("Admin") && result.Data.VendorId != GetCurrentUserId())
+                return Forbid();
+
             return result.IsSuccess ? Ok(result) : ToActionResult(result);
         }
 
@@ -54,6 +60,9 @@ namespace Rahal.Api.Controllers.Gamification
             [FromQuery] int pageSize = 10,
             CancellationToken cancellationToken = default)
         {
+            if (User.IsInRole("Vendor") && !User.IsInRole("Admin") && vendorId != GetCurrentUserId())
+                return Forbid();
+
             var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
             var result = await _mediator.Send(new GetVendorBranchesByVendorIdQuery(vendorId, request), cancellationToken);
             return result.IsSuccess ? Ok(result) : ToActionResult(result);
@@ -69,6 +78,15 @@ namespace Rahal.Api.Controllers.Gamification
             [FromBody] UpdateVendorBranchDto dto,
             CancellationToken cancellationToken)
         {
+            if (User.IsInRole("Vendor") && !User.IsInRole("Admin"))
+            {
+                var existing = await _mediator.Send(new GetVendorBranchByIdQuery(id), cancellationToken);
+                if (!existing.IsSuccess)
+                    return ToActionResult(existing);
+                if (existing.Data.VendorId != GetCurrentUserId())
+                    return Forbid();
+            }
+
             var result = await _mediator.Send(new UpdateVendorBranchCommand(id, dto), cancellationToken);
             return result.IsSuccess ? Ok(result) : ToActionResult(result);
         }
@@ -81,6 +99,15 @@ namespace Rahal.Api.Controllers.Gamification
             [FromRoute] Guid id,
             CancellationToken cancellationToken)
         {
+            if (User.IsInRole("Vendor") && !User.IsInRole("Admin"))
+            {
+                var existing = await _mediator.Send(new GetVendorBranchByIdQuery(id), cancellationToken);
+                if (!existing.IsSuccess)
+                    return ToActionResult(existing);
+                if (existing.Data.VendorId != GetCurrentUserId())
+                    return Forbid();
+            }
+
             var result = await _mediator.Send(new DeleteVendorBranchCommand(id), cancellationToken);
             return result.IsSuccess ? Ok(result) : ToActionResult(result);
         }
@@ -90,6 +117,7 @@ namespace Rahal.Api.Controllers.Gamification
             return response.errorCode switch
             {
                 ErrorCode.NotFound => NotFound(response),
+                ErrorCode.Forbidden => Forbid(),
                 ErrorCode.AlreadyExists or ErrorCode.Conflict => Conflict(response),
                 ErrorCode.Timeout or ErrorCode.ExternalServiceError => StatusCode(StatusCodes.Status502BadGateway, response),
                 _ => BadRequest(response)

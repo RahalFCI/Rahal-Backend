@@ -33,9 +33,14 @@ services:
      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
      - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+     - Mail__Host=${MAIL_HOST:-sandbox.smtp.mailtrap.io}
+     - Mail__Port=${MAIL_PORT:-587}
      - Mail__Username=${MAIL_USERNAME:-}
      - Mail__Password=${MAIL_PASSWORD:-}
-     - Mail__FromEmail=${MAIL_FROM_EMAIL:-}
+     - Mail__FromEmail=${MAIL_FROM_EMAIL:-no-reply@rahal.com}
+     - Mail__FromName=${MAIL_FROM_NAME:-Rahal}
+     - Mail__EnableSsl=${MAIL_ENABLE_SSL:-true}
+     - Mail__UseLoggingService=${MAIL_USE_LOGGING_SERVICE:-false}
 
     ports:
      - "7145:8080"

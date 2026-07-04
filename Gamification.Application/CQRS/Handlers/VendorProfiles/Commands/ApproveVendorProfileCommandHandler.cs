@@ -31,7 +31,7 @@ namespace Gamification.Application.CQRS.Handlers.VendorProfiles.Commands
             try
             {
                 _logger.LogError("Approving vendor profile for user {UserId}", request.VendorProfileId);
-                var existingVendor = await _repository.GetTable().Where(x => x.Id == request.VendorProfileId).AnyAsync(cancellationToken);
+                var existingVendor = await _repository.GetTable().Where(x => x.UserId == request.VendorProfileId).AnyAsync(cancellationToken);
                 if (!existingVendor)
                 {
                     _logger.LogError("Vendor profile does not exist for user {UserId}", request.VendorProfileId);

@@ -39,11 +39,11 @@ namespace Gamification.Application.CQRS.Handlers.VendorCategories.Queries
             _logger.LogInformation("Fetching all vendor categories from database");
 
             var categories = await _repository.GetAllAsync(cancellationToken);
+            var categoryDtos = VendorCategoryMapper.ToGetDtos(categories).ToList();
 
-            await _cacheService.SetAsync("vendor-categories:all", categories, TimeSpan.FromHours(1));
+            await _cacheService.SetAsync("vendor-categories:all", categoryDtos, TimeSpan.FromHours(1));
             _logger.LogInformation("Cached all vendor categories");
 
-            var categoryDtos = VendorCategoryMapper.ToGetDtos(categories);
             return ApiResponse<IEnumerable<GetVendorCategoryDto>>.Success(categoryDtos);
         }
     }
