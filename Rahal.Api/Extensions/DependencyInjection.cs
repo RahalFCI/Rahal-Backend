@@ -2,6 +2,8 @@
 using Gamification.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Notifications.Application;
+using Notifications.Infrastructure;
 using Payment.Application;
 using Payment.Infrastructure;
 using Places.Application;
@@ -51,6 +53,10 @@ namespace Shared.Infrastructure
             //Payment Module
             services.AddPaymentApplication(configuration);
             services.AddPaymentInfrastructure(configuration);
+
+            //Notifications Module
+            services.AddNotificationsApplication(configuration);
+            services.AddNotificationsInfrastructure(configuration);
             
             //Shared Module
             services.AddSharedApplication(configuration);

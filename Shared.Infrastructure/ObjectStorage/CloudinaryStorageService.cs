@@ -1,4 +1,5 @@
 using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Options;
 using Shared.Application.Interfaces;
 using Shared.Infrastructure.Settings;
@@ -56,6 +57,56 @@ namespace Shared.Infrastructure.ObjectStorage
             var extension = isVideo ? ".mp4" : (isGif ? ".gif" : ".jpg");
 
             return $"https://res.cloudinary.com/{_settings.CloudName}/{resourceType}/upload/{publicId}{extension}";
+        }
+
+        public async Task DeleteMediaAsync(string mediaUrl, CancellationToken cancellationToken = default)
+        {
+            var (publicId, resourceType) = ParseMediaUrl(mediaUrl);
+            if (string.IsNullOrWhiteSpace(publicId))
+            {
+                return;
+            }
+
+            var deletionParams = new DeletionParams(publicId)
+            {
+                ResourceType = resourceType
+            };
+
+            await _cloudinary.DestroyAsync(deletionParams);
+        }
+
+        private static (string PublicId, ResourceType ResourceType) ParseMediaUrl(string mediaUrl)
+        {
+            if (!Uri.TryCreate(mediaUrl, UriKind.Absolute, out var uri))
+            {
+                return (string.Empty, ResourceType.Image);
+            }
+
+            var segments = uri.AbsolutePath
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (segments.Length < 3 || !segments[1].Equals("upload", StringComparison.OrdinalIgnoreCase))
+            {
+                return (string.Empty, ResourceType.Image);
+            }
+
+            var resourceType = segments[0].Equals("video", StringComparison.OrdinalIgnoreCase)
+                ? ResourceType.Video
+                : ResourceType.Image;
+
+            var publicIdSegments = segments
+                .Skip(2)
+                .Where(segment => !segment.StartsWith("v", StringComparison.OrdinalIgnoreCase) || !segment.Skip(1).All(char.IsDigit))
+                .ToArray();
+
+            var publicId = string.Join('/', publicIdSegments);
+            var extensionIndex = publicId.LastIndexOf('.');
+            if (extensionIndex > 0)
+            {
+                publicId = publicId[..extensionIndex];
+            }
+
+            return (publicId, resourceType);
         }
     }
 }

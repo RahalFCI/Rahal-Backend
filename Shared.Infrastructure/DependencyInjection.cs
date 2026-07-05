@@ -12,6 +12,7 @@ using Shared.Application.Settings;
 using Shared.Application.Settings.ReslilienceSettings;
 using Shared.Infrastructure.Email;
 using Shared.Infrastructure.FileStorage;
+using Shared.Infrastructure.Notifications;
 using Shared.Infrastructure.ObjectStorage;
 using Shared.Infrastructure.Persistence;
 using Shared.Infrastructure.Repositories;
@@ -44,6 +45,10 @@ namespace Shared.Infrastructure
             services.Configure<EmailResilienceSettings>(configuration.GetSection(EmailResilienceSettings.SectionName));
             services.Configure<FileStorageResilienceSettings>(configuration.GetSection(FileStorageResilienceSettings.SectionName));
             services.Configure<RedisResilienceSettings>(configuration.GetSection(RedisResilienceSettings.SectionName));
+            services.Configure<FirebaseSettings>(options =>
+            {
+                options.ServiceAccountJson = ResolveEnvPlaceholder(configuration["Firebase:ServiceAccountJson"]);
+            });
 
             // Register ResiliencePipeline as singleton
             services.AddSingleton<SearchResiliencePipelineFactory>();
@@ -137,6 +142,7 @@ namespace Shared.Infrastructure
                 options.ApiSecret = ResolveEnvPlaceholder(configuration["Cloudinary:ApiSecret"]);
             });
             services.AddScoped<IObjectStorageService, CloudinaryStorageService>();
+            services.AddSingleton<IFcmNotificationService, FcmNotificationService>();
 
             return services;
         }
