@@ -1,5 +1,6 @@
 ﻿using Gamification.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Notifications.Infrastructure.Persistence;
 using Payment.Infrastructure.Persistence;
 using Places.Infrastructure.Persistence;
 using Rewards.Infrastructure.Persistence;
@@ -22,6 +23,7 @@ namespace Rahal.Api.Extensions
             await MigrateAsync<PlacesDbContext>(scope);
             await MigrateAsync<PaymentDbContext>(scope);
             await MigrateAsync<GamificationDbContext>(scope);
+            await MigrateAsync<NotificationsDbContext>(scope);
 
             var seeders = scope.ServiceProvider.GetServices<IDbInitializer>();
 
