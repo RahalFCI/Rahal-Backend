@@ -1,16 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Payment.Application.Interfaces;
+using Payment.Application.Services;
 
 namespace Payment.Application
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddPaymentApplication(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddPaymentApplication(
+            this IServiceCollection services,
+            IConfiguration configuration)
         {
-
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
+            services.AddScoped<IPaymentTransactionQueryService, PaymentTransactionQueryService>();
 
             return services;
         }
