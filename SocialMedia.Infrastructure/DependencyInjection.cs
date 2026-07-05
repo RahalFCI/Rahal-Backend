@@ -33,6 +33,7 @@ namespace SocialMedia.Infrastructure
             services.AddScoped<IFollowRepository, FollowRepository>();
             services.AddScoped<ILikeRepository, LikeRepository>();
             services.AddScoped<IPostPlaceRepository, PostPlaceRepository>();
+            services.AddScoped<IUserGateway, UserGateway>();
 
             return services;
         }

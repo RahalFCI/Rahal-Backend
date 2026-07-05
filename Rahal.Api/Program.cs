@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using Notifications.Application.EventConsumers;
 using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Filters;
@@ -21,6 +22,7 @@ using Serilog;
 using Shared.Application.Services;
 using Shared.Application.Settings;
 using Shared.Infrastructure;
+using SocialMedia.Application.EventConsumers;
 using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
@@ -74,6 +76,14 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<DeleteProfileEventConsumer>();
     x.AddConsumer<RestoreProfileEventConsumer>();
     x.AddConsumer<CreateCheckInEventConsumer>();
+    x.AddConsumer<SocialMediaFanoutPostCreatedConsumer>();
+    x.AddConsumer<SocialMediaFanoutPostDeletedConsumer>();
+    x.AddConsumer<SocialMediaFanoutUserFollowedConsumer>();
+    x.AddConsumer<SocialMediaFanoutUserUnfollowedConsumer>();
+    x.AddConsumer<PostLikedConsumer, PostLikedConsumerDefinition>();
+    x.AddConsumer<CommentCreatedConsumer, CommentCreatedConsumerDefinition>();
+    x.AddConsumer<UserFollowedConsumer, UserFollowedConsumerDefinition>();
+    x.AddConsumer<PostCreatedConsumer, PostCreatedConsumerDefinition>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -104,7 +114,8 @@ builder.Services.AddControllers(
     options =>
     {
         options.Filters.Add<ValidationActionFilter>();
-        options.Filters.Add<ProfileSetupRequiredFilter>();
+        // TODO(Ziad): uncomment this line in prod
+        // options.Filters.Add<ProfileSetupRequiredFilter>();
 
     })
     .AddJsonOptions(options =>
@@ -128,8 +139,12 @@ builder.Services.AddHttpLogging(options =>
 builder.Host.UseSerilog((HostBuilderContext context, IServiceProvider services, LoggerConfiguration loggerConfiguration)
     =>
 {
-    loggerConfiguration.ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
-    .ReadFrom.Services(services);//Read app services and make them availavle to serilog
+    //     loggerConfiguration.ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
+    // .ReadFrom.Services(services);//Read app services and make them availavle to serilog
+    loggerConfiguration
+    .ReadFrom.Configuration(context.Configuration) //Assigning the project's logging configs to Serilog configs
+    .ReadFrom.Services(services) //Read app services and make them availavle to serilog
+    .WriteTo.Console(); // Force console output regardless of appsettings
 });
 
 

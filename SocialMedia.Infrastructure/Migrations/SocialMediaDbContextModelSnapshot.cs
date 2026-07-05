@@ -52,6 +52,11 @@ namespace SocialMedia.Infrastructure.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("RepliesCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnUpdate()
                         .HasColumnType("timestamp with time zone");
@@ -61,13 +66,12 @@ namespace SocialMedia.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentCommentId")
-                        .HasDatabaseName("IX_Comments_ParentCommentId")
-                        .HasFilter("\"IsDeleted\" = false");
+                    b.HasIndex("ParentCommentId", "CreatedAt")
+                        .HasDatabaseName("IX_Comments_ParentCommentId_CreatedAt");
 
-                    b.HasIndex("PostId", "ParentCommentId")
-                        .HasDatabaseName("IX_Comments_PostId_ParentCommentId")
-                        .HasFilter("\"IsDeleted\" = false");
+                    b.HasIndex("PostId", "ParentCommentId", "CreatedAt")
+                        .IsDescending(false, false, true)
+                        .HasDatabaseName("IX_Comments_PostId_ParentCommentId_CreatedAt");
 
                     b.ToTable("Comments", "socialmedia");
                 });

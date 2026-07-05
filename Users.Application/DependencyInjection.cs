@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +18,7 @@ using Users.Application.Mappers;
 using Users.Application.Services;
 using Users.Application.Settings;
 using Users.Application.Validators;
+using Users.Contracts.Interfaces;
 
 namespace Users.Application
 {
@@ -87,6 +88,7 @@ namespace Users.Application
             services.AddScoped<IOAuthGoogleFacade, GoogleOAuthFacade>();
 
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IUsersPublicApi, UsersPublicApi>();
 
 
             return services;

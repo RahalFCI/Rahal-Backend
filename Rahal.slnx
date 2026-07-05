@@ -9,6 +9,11 @@
     <Project Path="Payment.Domain/Payment.Domain.csproj" Id="f1bad3fa-054b-4e32-b61e-3489f024d9c3" />
     <Project Path="Payment.Infrastructure/Payment.Infrastructure.csproj" Id="31d7813d-24f9-40b7-9e3a-e5f01779b5ba" />
   </Folder>
+  <Folder Name="/Notifications/">
+    <Project Path="Notifications.Application/Notifications.Application.csproj" Id="dd6415c8-df61-46f3-8ad2-dabdddb03f14" />
+    <Project Path="Notifications.Domain/Notifications.Domain.csproj" Id="086dc695-fe38-489d-ae70-c1fba5872c9d" />
+    <Project Path="Notifications.Infrastructure/Notifications.Infrastructure.csproj" Id="15461d2e-0f0e-4705-8d47-fc68c459156f" />
+  </Folder>
   <Folder Name="/Places/">
     <Project Path="Places.Application/Places.Application.csproj" Id="95e0695f-4205-4f1b-b01e-0f325142cda0" />
     <Project Path="Places.Domain/Places.Domain.csproj" Id="efa8df2a-3d87-4d38-ac0f-af4adf97f85b" />
@@ -38,4 +43,5 @@
     <Build />
   </Project>
   <Project Path="Rahal.Api/Rahal.Api.csproj" />
+  <Project Path="Users.Contracts/Users.Contracts.csproj" />
 </Solution>

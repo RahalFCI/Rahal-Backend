@@ -76,12 +76,14 @@ namespace Users.Application.Services
                 return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.InvalidCredentials);
             }
 
-            // Check if email is confirmed
-            if (!user.EmailConfirmed)
-            {
-                _logger.LogWarning("Login failed: Email not verified for user {UserId}", user.Id);
-                return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.EmailNotVerified);
-            }
+
+            // TODO(Ziad): uncomment this line in production
+            // Check if email is confirmed (Commented out temporarily for testing without OTP)
+            // if (!user.EmailConfirmed)
+            // {
+            //     _logger.LogWarning("Login failed: Email not verified for user {UserId}", user.Id);
+            //     return ApiResponse<AuthResponseDto?>.Failure(ErrorCode.EmailNotVerified);
+            // }
 
             var roles = await _userManager.GetRolesAsync(user);
             if(!roles.Any())
