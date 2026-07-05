@@ -28,6 +28,9 @@
     <ProjectReference Include="..\Gamification.Application\Gamification.Application.csproj" />
     <ProjectReference Include="..\Gamification.Domain\Gamification.Domain.csproj" />
     <ProjectReference Include="..\Gamification.Infrastructure\Gamification.Infrastructure.csproj" />
+    <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
+    <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
+    <ProjectReference Include="..\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
     <ProjectReference Include="..\Payment.Application\Payment.Application.csproj" />
     <ProjectReference Include="..\Payment.Domain\Payment.Domain.csproj" />
     <ProjectReference Include="..\Payment.Infrastructure\Payment.Infrastructure.csproj" />

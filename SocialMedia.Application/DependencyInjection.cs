@@ -15,8 +15,16 @@ namespace SocialMedia.Application
             // Media service
             services.AddScoped<IMediaService, MediaService>();
 
+            // Post service
+            services.AddScoped<IPostService, PostService>();
+
+            // Follow service
+            services.AddScoped<IFollowService, FollowService>();
+
             // Validators
             services.AddScoped<IValidator<GenerateUploadSignaturesRequest>, GenerateUploadSignaturesRequestValidator>();
+            services.AddScoped<IValidator<SocialMedia.Application.DTOs.Comments.CreateCommentRequest>, CreateCommentRequestValidator>();
+            services.AddScoped<IValidator<SocialMedia.Application.DTOs.Comments.EditCommentRequest>, EditCommentRequestValidator>();
 
             return services;
         }

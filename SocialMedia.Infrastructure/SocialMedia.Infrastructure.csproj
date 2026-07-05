@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\SocialMedia.Application\SocialMedia.Application.csproj" />
+    <ProjectReference Include="..\Users.Contracts\Users.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
