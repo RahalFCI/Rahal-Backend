@@ -8,11 +8,11 @@ using SocialMedia.Application.Interfaces;
 
 namespace Rahal.Api.Controllers.SocialMedia
 {
-    public class PostController : CustomControllerBase
+    public class PostsController : CustomControllerBase
     {
         private readonly IPostService _postService;
 
-        public PostController(IPostService postService)
+        public PostsController(IPostService postService)
         {
             _postService = postService;
         }
@@ -20,7 +20,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// <summary>
         /// Gets a post by id using Redis hash cache-aside with database fallback.
         /// </summary>
-        [HttpGet("~/api/posts/{id:guid}")]
+        [HttpGet("{id:guid}")]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Posts.PostResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetPostByIdAsync(
@@ -41,7 +42,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// POST /api/media/signatures. Any unrecognised ID is rejected.
         /// </summary>
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -61,12 +62,47 @@ namespace Rahal.Api.Controllers.SocialMedia
         }
 
         /// <summary>
+        /// Soft deletes a post owned by the current explorer. Admins can delete any post.
+        /// </summary>
+        [HttpDelete("{postId:guid}")]
+        [Authorize(Roles = "Explorer,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeletePostAsync(
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var isAdmin = GetCurrentUserRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
+            var result = await _postService.DeletePostAsync(postId, userId, isAdmin, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
+                {
+                    return NotFound(result);
+                }
+
+                if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
+                {
+                    return Forbid();
+                }
+
+                return BadRequest(result);
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Likes a post. Returns 400 if the user has already liked it.
         /// The cache is hydrated on miss; only the Redis LikesCount is updated here —
         /// the DB write is handled by the same request for consistency.
         /// </summary>
         [HttpPost("{postId:guid}/like")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -89,7 +125,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Unlikes a post. Returns 400 if the user has not liked the post.
         /// </summary>
         [HttpDelete("{postId:guid}/like")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -112,7 +148,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Creates a new comment or reply on a post.
         /// </summary>
         [HttpPost("{postId:guid}/comments")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -136,7 +172,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Edits an existing comment.
         /// </summary>
         [HttpPut("~/api/comments/{commentId:guid}")]
-        [Authorize]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -166,23 +202,25 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Soft deletes a comment. Child replies remain intact.
         /// </summary>
         [HttpDelete("~/api/comments/{commentId:guid}")]
-        [Authorize]
+        [Authorize(Roles = "Explorer,Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCommentAsync(
             Guid commentId,
             CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();
-            var result = await _postService.DeleteCommentAsync(commentId, userId, cancellationToken);
+            var isAdmin = GetCurrentUserRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
+            var result = await _postService.DeleteCommentAsync(commentId, userId, isAdmin, cancellationToken);
 
             if (!result.IsSuccess)
             {
                 if (result.errorCode == Shared.Domain.Enums.ErrorCode.NotFound)
                     return NotFound(result);
                 if (result.errorCode == Shared.Domain.Enums.ErrorCode.Unauthorized)
-                    return Unauthorized(result);
+                    return Forbid();
 
                 return BadRequest(result);
             }
@@ -194,6 +232,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Gets root comments for a post utilizing keyset pagination.
         /// </summary>
         [HttpGet("{postId:guid}/comments")]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentPagedResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRootCommentsAsync(
             Guid postId,
@@ -209,6 +248,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// Gets nested replies for a specific comment utilizing ascending keyset pagination.
         /// </summary>
         [HttpGet("~/api/comments/{commentId:guid}/replies")]
+        [Authorize(Roles = "Explorer")]
         [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Comments.CommentPagedResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCommentRepliesAsync(
             Guid commentId,

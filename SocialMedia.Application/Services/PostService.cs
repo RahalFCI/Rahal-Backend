@@ -136,11 +136,20 @@ namespace SocialMedia.Application.Services
                 _logger.LogError(ex, "Redis cache write failed for post {PostId} — non-fatal, DB is source of truth", post.Id);
             }
 
+            try
+            {
+                await AddPostToAuthorFeedAsync(db, userId, post.Id, post.CreatedAt, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Redis feed write failed for author {UserId} and post {PostId} — non-fatal, DB is source of truth", userId, post.Id);
+            }
+
             // ── 7. Publish PostCreatedEvent to RabbitMQ ────────────────────────
             try
             {
                 await _publisher.Publish(
-                    new PostCreatedEvent(post.Id, userId, post.CreatedAt),
+                    new PostCreatedEvent(post.Id, userId, post.CreatedAt, CreatePreview(post.Content)),
                     cancellationToken);
 
                 _logger.LogInformation("PostCreatedEvent published for post {PostId}", post.Id);
@@ -190,6 +199,69 @@ namespace SocialMedia.Application.Services
             var isPostLiked = await IsPostLikedByUserAsync(db, viewerUserId, postId, cancellationToken);
 
             return ApiResponse<PostResponseDto>.Success(MapPostResponse(post, isPostLiked));
+        }
+
+        public async Task<ApiResponse<string>> DeletePostAsync(
+            Guid postId,
+            Guid userId,
+            bool isAdmin = false,
+            CancellationToken cancellationToken = default)
+        {
+            if (postId == Guid.Empty || userId == Guid.Empty)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
+            var post = await _postRepository.GetTable()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+
+            if (post is null || post.IsDeleted)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            if (!isAdmin && post.UserId != userId)
+            {
+                return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
+            }
+
+            post.IsDeleted = true;
+            post.DeletedAt = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            _postRepository.Update(post);
+            await _postRepository.SaveChangesAsync(cancellationToken);
+
+            var db = _redis.GetDatabase();
+            try
+            {
+                var batch = db.CreateBatch();
+                var postCacheDeleteTask = batch.KeyDeleteAsync($"Post:{post.Id}");
+                var authorFeedRemoveTask = batch.SortedSetRemoveAsync($"Feed:{post.UserId}", post.Id.ToString());
+
+                batch.Execute();
+                await Task.WhenAll(postCacheDeleteTask, authorFeedRemoveTask);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete Post:{PostId} cache or author feed entry after post deletion - non-fatal, DB is source of truth", post.Id);
+            }
+
+            try
+            {
+                await _publisher.Publish(
+                    new PostDeletedEvent(post.Id, post.UserId, DateTime.UtcNow),
+                    cancellationToken);
+
+                _logger.LogInformation("PostDeletedEvent published for post {PostId}", post.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish PostDeletedEvent for post {PostId} - non-fatal", post.Id);
+            }
+
+            return ApiResponse<string>.Success("Post deleted successfully");
         }
 
         public async Task<ApiResponse<FeedPagedResponse>> GetFeedPaginatedAsync(
@@ -423,9 +495,13 @@ namespace SocialMedia.Application.Services
             // ── 4. Publish PostLikedEvent to RabbitMQ ─────────────────────────
             try
             {
-                await _publisher.Publish(
-                    new PostLikedEvent(postId, userId, DateTime.UtcNow),
-                    cancellationToken);
+                var postAuthorId = await GetPostAuthorIdAsync(db, postCacheKey, postId, cancellationToken);
+                if (postAuthorId is not null)
+                {
+                    await _publisher.Publish(
+                        new PostLikedEvent(postId, userId, postAuthorId.Value, DateTime.UtcNow),
+                        cancellationToken);
+                }
 
                 _logger.LogInformation("PostLikedEvent published for post {PostId}", postId);
             }
@@ -456,6 +532,13 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.ValidationError);
             }
 
+            var like = await _likeRepository.GetAsync(userId, postId, cancellationToken);
+            if (like is null)
+            {
+                _logger.LogWarning("Unlike rejected: like relationship from user {UserId} to post {PostId} was not found in DB", userId, postId);
+                return ApiResponse<string>.Failure(ErrorCode.ValidationError);
+            }
+
             if (await db.SetLengthAsync(userLikesKey) == 0)
             {
                 await db.SetAddAsync(userLikesKey, EmptyUserLikesSentinel);
@@ -473,8 +556,6 @@ namespace SocialMedia.Application.Services
 
                 if (post is null)
                 {
-                    // Rollback the SREM
-                    await db.SetAddAsync(userLikesKey, postId.ToString());
                     _logger.LogWarning("Unlike rejected: post {PostId} not found", postId);
                     return ApiResponse<string>.Failure(ErrorCode.NotFound);
                 }
@@ -508,13 +589,9 @@ namespace SocialMedia.Application.Services
             _logger.LogDebug("Decremented LikesCount for Post:{PostId}", postId);
 
             // ── 3. Delete Like from PostgreSQL ────────────────────────────────
-            var like = await _likeRepository.GetAsync(userId, postId, cancellationToken);
-            if (like is not null)
-            {
-                _likeRepository.Remove(like);
-                await _likeRepository.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("User {UserId} unliked post {PostId}", userId, postId);
-            }
+            _likeRepository.Remove(like);
+            await _likeRepository.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("User {UserId} unliked post {PostId}", userId, postId);
 
             return ApiResponse<string>.Success("Post unliked successfully");
         }
@@ -607,6 +684,29 @@ namespace SocialMedia.Application.Services
             _logger.LogInformation("User {UserId} commented on post {PostId}", userId, postId);
 
             // ── 3. Map and Return Response ────────────────────────────────────
+            try
+            {
+                var postAuthorId = await GetPostAuthorIdAsync(db, postCacheKey, postId, cancellationToken);
+                if (postAuthorId is not null)
+                {
+                    await _publisher.Publish(
+                        new CommentCreatedEvent(
+                            comment.Id,
+                            postId,
+                            userId,
+                            postAuthorId.Value,
+                            CreatePreview(comment.Content),
+                            DateTime.UtcNow),
+                        cancellationToken);
+                }
+
+                _logger.LogInformation("CommentCreatedEvent published for comment {CommentId}", comment.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish CommentCreatedEvent for comment {CommentId} - non-fatal", comment.Id);
+            }
+
             var response = new SocialMedia.Application.DTOs.Comments.CommentResponse
             {
                 Id              = comment.Id,
@@ -661,6 +761,7 @@ namespace SocialMedia.Application.Services
         public async Task<ApiResponse<string>> DeleteCommentAsync(
             Guid commentId,
             Guid userId,
+            bool isAdmin = false,
             CancellationToken cancellationToken = default)
         {
             var comment = await _commentRepository.GetByIdAsync(commentId, cancellationToken);
@@ -671,7 +772,7 @@ namespace SocialMedia.Application.Services
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
             }
 
-            if (comment.UserId != userId)
+            if (!isAdmin && comment.UserId != userId)
             {
                 return ApiResponse<string>.Failure(ErrorCode.Unauthorized);
             }
@@ -881,14 +982,14 @@ namespace SocialMedia.Application.Services
             CancellationToken cancellationToken)
         {
             var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
-            if (followeeIds.Count == 0)
-            {
-                return;
-            }
+            var feedAuthorIds = followeeIds
+                .Append(userId)
+                .Distinct()
+                .ToList();
 
             var feedEntries = await _postRepository.GetTable()
                 .AsNoTracking()
-                .Where(post => followeeIds.Contains(post.UserId))
+                .Where(post => feedAuthorIds.Contains(post.UserId))
                 .OrderByDescending(post => post.CreatedAt)
                 .Take(MaxFeedSize)
                 .Select(post => new
@@ -914,6 +1015,25 @@ namespace SocialMedia.Application.Services
             await db.KeyExpireAsync(feedKey, FeedCacheTtl);
         }
 
+        private async Task AddPostToAuthorFeedAsync(
+            IDatabase db,
+            Guid authorId,
+            Guid postId,
+            DateTime createdAt,
+            CancellationToken cancellationToken)
+        {
+            var feedKey = (RedisKey)$"Feed:{authorId}";
+            if (await db.SortedSetLengthAsync(feedKey) == 0)
+            {
+                await HydrateFeedAsync(db, authorId, feedKey, cancellationToken);
+            }
+
+            var score = new DateTimeOffset(createdAt, TimeSpan.Zero).ToUnixTimeSeconds();
+            await db.SortedSetAddAsync(feedKey, postId.ToString(), score);
+            await db.SortedSetRemoveRangeByRankAsync(feedKey, 0, -501);
+            await db.KeyExpireAsync(feedKey, FeedCacheTtl);
+        }
+
         private async Task<List<Guid>> GetFeedPostIdsFromDbAsync(
             Guid userId,
             long cursorTimestamp,
@@ -922,16 +1042,16 @@ namespace SocialMedia.Application.Services
             CancellationToken cancellationToken)
         {
             var followeeIds = await _followRepository.GetFolloweeIdsByFollowerAsync(userId, cancellationToken);
-            if (followeeIds.Count == 0)
-            {
-                return new List<Guid>();
-            }
+            var feedAuthorIds = followeeIds
+                .Append(userId)
+                .Distinct()
+                .ToList();
 
             var cursorDate = DateTimeOffset.FromUnixTimeSeconds(cursorTimestamp).UtcDateTime;
 
             return await _postRepository.GetTable()
                 .AsNoTracking()
-                .Where(post => followeeIds.Contains(post.UserId))
+                .Where(post => feedAuthorIds.Contains(post.UserId))
                 .Where(post => post.CreatedAt < cursorDate)
                 .Where(post => !excludedPostIds.Contains(post.Id))
                 .OrderByDescending(post => post.CreatedAt)
@@ -1139,6 +1259,33 @@ namespace SocialMedia.Application.Services
 
             batch.Execute();
             await Task.WhenAll(tasks);
+        }
+
+        private async Task<Guid?> GetPostAuthorIdAsync(
+            IDatabase db,
+            string postCacheKey,
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var authorValue = await db.HashGetAsync(postCacheKey, "AuthorId");
+            if (Guid.TryParse(authorValue.ToString(), out var authorId))
+            {
+                return authorId;
+            }
+
+            return await _postRepository.GetTable()
+                .AsNoTracking()
+                .Where(post => post.Id == postId)
+                .Select(post => (Guid?)post.UserId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        private static string CreatePreview(string content)
+        {
+            var trimmed = content.Trim();
+            return trimmed.Length <= 15
+                ? trimmed
+                : trimmed[..15] + "...";
         }
 
         private static Task CachePostAsync(IDatabase db, CachedPost post)

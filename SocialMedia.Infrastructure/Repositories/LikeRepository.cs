@@ -34,7 +34,17 @@ namespace SocialMedia.Infrastructure.Repositories
             return await _context.Likes
                 .AsNoTracking()
                 .Where(l => l.UserId == userId)
+                .Where(l => _context.Posts.Any(p => p.Id == l.PostId))
                 .Select(l => l.PostId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Guid>> GetUserIdsWhoLikedPostAsync(Guid postId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Likes
+                .AsNoTracking()
+                .Where(l => l.PostId == postId)
+                .Select(l => l.UserId)
                 .ToListAsync(cancellationToken);
         }
 

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using Notifications.Application.EventConsumers;
 using Places.Infrastructure.Search.EventHandlers;
 using Rahal.Api.Extensions;
 using Rahal.Api.Filters;
@@ -79,6 +80,10 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<SocialMediaFanoutPostDeletedConsumer>();
     x.AddConsumer<SocialMediaFanoutUserFollowedConsumer>();
     x.AddConsumer<SocialMediaFanoutUserUnfollowedConsumer>();
+    x.AddConsumer<PostLikedConsumer, PostLikedConsumerDefinition>();
+    x.AddConsumer<CommentCreatedConsumer, CommentCreatedConsumerDefinition>();
+    x.AddConsumer<UserFollowedConsumer, UserFollowedConsumerDefinition>();
+    x.AddConsumer<PostCreatedConsumer, PostCreatedConsumerDefinition>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

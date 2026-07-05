@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Shared.Application.DTOs;
@@ -10,6 +11,7 @@ namespace Rahal.Api.Controllers.SocialMedia
     [ApiController]
     [Route("api/users/{userId:guid}/posts")]
     [EnableRateLimiting("per-user")]
+    [Authorize(Roles = "Explorer")]
     public class UserPostsController : ControllerBase
     {
         private readonly IPostService _postService;
@@ -25,6 +27,8 @@ namespace Rahal.Api.Controllers.SocialMedia
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<FeedPagedResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetUserPostsPaginatedAsync(
             Guid userId,
             [FromQuery] long? cursor,
