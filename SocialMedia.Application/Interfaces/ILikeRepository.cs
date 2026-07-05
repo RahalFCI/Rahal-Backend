@@ -16,6 +16,8 @@ namespace SocialMedia.Application.Interfaces
         /// </summary>
         Task<List<Guid>> GetPostIdsLikedByUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
+        Task<List<Guid>> GetUserIdsWhoLikedPostAsync(Guid postId, CancellationToken cancellationToken = default);
+
         void Add(Like like);
         void Remove(Like like);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
