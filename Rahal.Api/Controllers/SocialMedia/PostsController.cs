@@ -8,11 +8,11 @@ using SocialMedia.Application.Interfaces;
 
 namespace Rahal.Api.Controllers.SocialMedia
 {
-    public class PostController : CustomControllerBase
+    public class PostsController : CustomControllerBase
     {
         private readonly IPostService _postService;
 
-        public PostController(IPostService postService)
+        public PostsController(IPostService postService)
         {
             _postService = postService;
         }
@@ -20,7 +20,7 @@ namespace Rahal.Api.Controllers.SocialMedia
         /// <summary>
         /// Gets a post by id using Redis hash cache-aside with database fallback.
         /// </summary>
-        [HttpGet("~/api/posts/{id:guid}")]
+        [HttpGet("{id:guid}")]
         [Authorize(Roles = "Explorer")]
         [ProducesResponseType(typeof(Shared.Application.DTOs.ApiResponse<global::SocialMedia.Application.DTOs.Posts.PostResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

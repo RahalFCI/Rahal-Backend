@@ -7,5 +7,5 @@ namespace Shared.Application.Events.Posts
     /// Consumers can react (e.g., send notifications, update leaderboard)
     /// without coupling to the PostService.
     /// </summary>
-    public record PostLikedEvent(Guid PostId, Guid UserId, DateTime Timestamp) : BaseDomainEvent;
+    public record PostLikedEvent(Guid PostId, Guid LikerId, Guid PostAuthorId, DateTime Timestamp) : BaseDomainEvent;
 }

@@ -1,5 +1,6 @@
 using MassTransit;
 using Shared.Application.Events.Posts;
+using Shared.Application.Events.SocialMedia;
 using SocialMedia.Application.Interfaces;
 using StackExchange.Redis;
 
@@ -18,17 +19,25 @@ namespace SocialMedia.Application.EventConsumers
 
         private readonly IFollowRepository _followRepository;
         private readonly IConnectionMultiplexer _redis;
+        private readonly IPublishEndpoint _publisher;
 
         public SocialMediaFanoutPostCreatedConsumer(
             IFollowRepository followRepository,
-            IConnectionMultiplexer redis)
+            IConnectionMultiplexer redis,
+            IPublishEndpoint publisher)
         {
             _followRepository = followRepository;
             _redis = redis;
+            _publisher = publisher;
         }
 
         public async Task Consume(ConsumeContext<PostCreatedEvent> context)
         {
+            if (context.Headers.TryGetHeader(SocialEventHeaders.SocialFanoutCompleted, out _))
+            {
+                return;
+            }
+
             var message = context.Message;
             var followerIds = await _followRepository.GetFollowerIdsByFolloweeAsync(
                 message.UserId,
@@ -53,6 +62,16 @@ namespace SocialMedia.Application.EventConsumers
 
             batch.Execute();
             await Task.WhenAll(tasks);
+
+            await _publisher.Publish(
+                new PostCreatedEvent(
+                    message.PostId,
+                    message.UserId,
+                    message.CreatedAt,
+                    message.ContentPreview,
+                    followerIds),
+                publishContext => publishContext.Headers.Set(SocialEventHeaders.SocialFanoutCompleted, true),
+                context.CancellationToken);
         }
     }
 }

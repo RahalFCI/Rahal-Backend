@@ -149,7 +149,7 @@ namespace SocialMedia.Application.Services
             try
             {
                 await _publisher.Publish(
-                    new PostCreatedEvent(post.Id, userId, post.CreatedAt),
+                    new PostCreatedEvent(post.Id, userId, post.CreatedAt, CreatePreview(post.Content)),
                     cancellationToken);
 
                 _logger.LogInformation("PostCreatedEvent published for post {PostId}", post.Id);
@@ -495,9 +495,13 @@ namespace SocialMedia.Application.Services
             // ── 4. Publish PostLikedEvent to RabbitMQ ─────────────────────────
             try
             {
-                await _publisher.Publish(
-                    new PostLikedEvent(postId, userId, DateTime.UtcNow),
-                    cancellationToken);
+                var postAuthorId = await GetPostAuthorIdAsync(db, postCacheKey, postId, cancellationToken);
+                if (postAuthorId is not null)
+                {
+                    await _publisher.Publish(
+                        new PostLikedEvent(postId, userId, postAuthorId.Value, DateTime.UtcNow),
+                        cancellationToken);
+                }
 
                 _logger.LogInformation("PostLikedEvent published for post {PostId}", postId);
             }
@@ -680,6 +684,29 @@ namespace SocialMedia.Application.Services
             _logger.LogInformation("User {UserId} commented on post {PostId}", userId, postId);
 
             // ── 3. Map and Return Response ────────────────────────────────────
+            try
+            {
+                var postAuthorId = await GetPostAuthorIdAsync(db, postCacheKey, postId, cancellationToken);
+                if (postAuthorId is not null)
+                {
+                    await _publisher.Publish(
+                        new CommentCreatedEvent(
+                            comment.Id,
+                            postId,
+                            userId,
+                            postAuthorId.Value,
+                            CreatePreview(comment.Content),
+                            DateTime.UtcNow),
+                        cancellationToken);
+                }
+
+                _logger.LogInformation("CommentCreatedEvent published for comment {CommentId}", comment.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish CommentCreatedEvent for comment {CommentId} - non-fatal", comment.Id);
+            }
+
             var response = new SocialMedia.Application.DTOs.Comments.CommentResponse
             {
                 Id              = comment.Id,
@@ -1232,6 +1259,33 @@ namespace SocialMedia.Application.Services
 
             batch.Execute();
             await Task.WhenAll(tasks);
+        }
+
+        private async Task<Guid?> GetPostAuthorIdAsync(
+            IDatabase db,
+            string postCacheKey,
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            var authorValue = await db.HashGetAsync(postCacheKey, "AuthorId");
+            if (Guid.TryParse(authorValue.ToString(), out var authorId))
+            {
+                return authorId;
+            }
+
+            return await _postRepository.GetTable()
+                .AsNoTracking()
+                .Where(post => post.Id == postId)
+                .Select(post => (Guid?)post.UserId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        private static string CreatePreview(string content)
+        {
+            var trimmed = content.Trim();
+            return trimmed.Length <= 15
+                ? trimmed
+                : trimmed[..15] + "...";
         }
 
         private static Task CachePostAsync(IDatabase db, CachedPost post)
