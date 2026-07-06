@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rahal-config
+  namespace: rahal
+  labels:
+    app.kubernetes.io/name: rahal
+data:
+  # Non-sensitive runtime configuration. Secrets are referenced from rahal-secrets.
+  ASPNETCORE_ENVIRONMENT: "Development"
+  ASPNETCORE_URLS: "http://0.0.0.0:8080"
+  ASPNETCORE_HTTP_PORTS: "8080"
+
+  DATABASE_HOST: "postgres"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "Rahal"
+
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+
+  MEILI_HOST: "meilisearch"
+  MEILI_PORT: "7700"
+
+  RabbitMQ__Host: "rabbitmq"
+  RabbitMQ__VirtualHost: "/"
+
+  Mail__Host: "smtp-relay.brevo.com"
+  Mail__Port: "587"
+  Mail__FromName: "Rahal"
+  Mail__EnableSsl: "true"

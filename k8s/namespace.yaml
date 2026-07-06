@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rahal
+  labels:
+    app.kubernetes.io/name: rahal
+    app.kubernetes.io/part-of: rahal-backend

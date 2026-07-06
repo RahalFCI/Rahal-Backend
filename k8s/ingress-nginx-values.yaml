@@ -1,0 +1,8 @@
+controller:
+  service:
+    annotations:
+      # Azure Load Balancer should check that the ingress ports are open.
+      # HTTP probes against "/" can fail because NGINX may redirect or return 404
+      # before an app-specific host rule is involved.
+      service.beta.kubernetes.io/port_80_health-probe_protocol: Tcp
+      service.beta.kubernetes.io/port_443_health-probe_protocol: Tcp

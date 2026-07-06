@@ -370,9 +370,14 @@ docker-compose.dev.yml
 # personal local run script
 run-local.sh
 
+# private Kubernetes secrets generated from k8s/secrets-template.yaml
+k8s/secrets.yaml
+
 # personal VS Code debug config
 .vscode/launch.json
 
 rahal.postman_collection.json
 
 test_upload.html
+
+docs
