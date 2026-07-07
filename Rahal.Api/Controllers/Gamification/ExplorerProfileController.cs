@@ -71,7 +71,20 @@ namespace Rahal.Api.Controllers.Gamification
             return result.IsSuccess ? Ok(result) : result.errorCode == ErrorCode.NotFound ? NotFound(result) : BadRequest(result);
         }
 
-        [HttpGet("{explorerId}")]
+        [HttpGet("names")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetExplorerNamesAsync(
+            [FromQuery] List<Guid> ids,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new GetExplorerNamesByIdsQuery(ids),
+                cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("{explorerId:guid}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -96,19 +109,6 @@ namespace Rahal.Api.Controllers.Gamification
             var request = new OffsetPaginationRequest { Page = page, PageSize = pageSize };
             var result = await _mediator.Send(
                 new GetAllExplorerProfilesQuery(request),
-                cancellationToken);
-            return Ok(result);
-        }
-
-        [HttpGet("names")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetExplorerNamesByIdsAsync(
-            [FromQuery] List<Guid> ids,
-            CancellationToken cancellationToken = default)
-        {
-            var result = await _mediator.Send(
-                new GetExplorerNamesByIdsQuery(ids),
                 cancellationToken);
             return Ok(result);
         }

@@ -14,13 +14,16 @@ namespace Rewards.Application.Services
     internal class PlanTierService : IPlanTierService
     {
         private readonly IRewardsRepository<PlanTier> _repository;
+        private readonly IRewardsRepository<Subscription> _subscriptionRepository;
         private readonly ILogger<PlanTierService> _logger;
 
         public PlanTierService(
             IRewardsRepository<PlanTier> repository,
+            IRewardsRepository<Subscription> subscriptionRepository,
             ILogger<PlanTierService> logger)
         {
             _repository = repository;
+            _subscriptionRepository = subscriptionRepository;
             _logger = logger;
         }
 
@@ -53,6 +56,16 @@ namespace Rewards.Application.Services
             {
                 _logger.LogWarning("Plan tier {PlanTierId} not found for permanent deletion", id);
                 return ApiResponse<string>.Failure(ErrorCode.NotFound);
+            }
+
+            // Soft-deleted subscriptions still hold the FK, so bypass the query filter.
+            var hasSubscriptions = await _subscriptionRepository.GetTable()
+                .IgnoreQueryFilters()
+                .AnyAsync(s => s.PlanTierId == id, cancellationToken);
+            if (hasSubscriptions)
+            {
+                _logger.LogWarning("Plan tier {PlanTierId} cannot be permanently deleted - subscriptions still reference it", id);
+                return ApiResponse<string>.Failure(ErrorCode.Conflict);
             }
 
             _repository.Delete(planTier);

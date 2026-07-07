@@ -13,7 +13,7 @@ using Gamification.Application.Interfaces;
 
 namespace Gamification.Application.CQRS.Handlers.Badges.Commands
 {
-    public class PermenantDeleteBadgeCommandHandler : IRequestHandler<DeleteBadgeCommand, ApiResponse<string>>
+    public class PermenantDeleteBadgeCommandHandler : IRequestHandler<PermenantDeleteBadgeCommand, ApiResponse<string>>
     {
         private readonly IGamificationRepository<Badge> _repository;
         private readonly IFileStorageService _fileStorageService;
@@ -29,9 +29,9 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
             _logger = logger;
         }
 
-        public async Task<ApiResponse<string>> Handle(DeleteBadgeCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<string>> Handle(PermenantDeleteBadgeCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Deleting badge {BadgeId}", request.Id);
+            _logger.LogInformation("Permanently deleting badge {BadgeId}", request.Id);
 
             var badge = await _repository.GetTable().Where(b => b.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
             if (badge is null)
@@ -40,7 +40,7 @@ namespace Gamification.Application.CQRS.Handlers.Badges.Commands
                 return ApiResponse<string>.Failure(ErrorCode.InvalidRequest);
             }
 
-            if (badge.ImageUrl is not null)
+            if (!string.IsNullOrWhiteSpace(badge.ImageUrl))
             {
                 await _fileStorageService.DeleteAsync(badge.ImageUrl, cancellationToken);
                 _logger.LogInformation("Badge {BadgeId} Image deleted successfully", badge.Id);

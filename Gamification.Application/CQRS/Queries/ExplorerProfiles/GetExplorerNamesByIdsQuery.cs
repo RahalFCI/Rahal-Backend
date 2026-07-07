@@ -6,5 +6,5 @@ using System.Collections.Generic;
 
 namespace Gamification.Application.CQRS.Queries.ExplorerProfiles
 {
-    public record GetExplorerNamesByIdsQuery(List<Guid> Ids) : IRequest<ApiResponse<List<ExplorerNameDto>>>;
+    public record GetExplorerNamesByIdsQuery(IReadOnlyCollection<Guid> Ids) : IRequest<ApiResponse<List<GetExplorerNameDto>>>;
 }
