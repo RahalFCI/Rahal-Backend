@@ -32,6 +32,19 @@ namespace Rahal.Api.Controllers.Gamification
             return Ok(result);
         }
 
+        [HttpGet("leaderboard")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetLeaderboardAsync(
+            [FromQuery] int count = 10,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _mediator.Send(
+                new GetLeaderboardQuery(GetCurrentUserId(), count),
+                cancellationToken);
+            return Ok(result);
+        }
+
         [HttpGet("{explorerId}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]

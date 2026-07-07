@@ -19,9 +19,13 @@ namespace Rahal.Api.Controllers.Rewards
 
         [HttpPost]
         [Authorize(Roles = "Explorer")]
-        public async Task<IActionResult> CreateAsync([FromBody] CreateTravelPlanDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAsync([FromBody] CreateTravelPlanDto dto)
         {
-            var result = await _travelPlanService.CreateAsync(GetCurrentUserId(), dto, cancellationToken);
+            // Deliberately NOT bound to the request cancellation token: RAG generation is
+            // slow (often minutes), and if the client times out or navigates away we still
+            // want the plan generated and persisted so it surfaces on the explorer's next
+            // fetch. Binding to RequestAborted would throw the finished plan away.
+            var result = await _travelPlanService.CreateAsync(GetCurrentUserId(), dto, CancellationToken.None);
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 

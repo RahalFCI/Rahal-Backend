@@ -39,6 +39,12 @@ namespace Rewards.Infrastructure
                 var baseUrl = configuration["AiSystem:BaseUrl"];
                 if (!string.IsNullOrWhiteSpace(baseUrl))
                     client.BaseAddress = new Uri(baseUrl);
+
+                // RAG itinerary generation regularly runs well past HttpClient's default
+                // 100s ceiling; without this the backend times out and drops a plan the
+                // AI actually produced. Configurable via AiSystem:TimeoutSeconds.
+                var timeoutSeconds = configuration.GetValue<int?>("AiSystem:TimeoutSeconds") ?? 300;
+                client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
             });
 
             return services;

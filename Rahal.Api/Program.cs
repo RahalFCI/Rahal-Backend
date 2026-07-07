@@ -247,10 +247,15 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 //    job => job.ExecuteAsync(CancellationToken.None),
 //    Cron.Daily(0));
 
-//// Initial leaderboard build
-//using var scope = app.Services.CreateScope();
-//var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-//await mediator.Send(new RebuildLeaderboardCommand());
+// Initial leaderboard build — the Redis sorted set (`leaderboard:xp`) is otherwise
+// only populated incrementally by live XP events, so a fresh boot (or a seeded DB
+// whose UserStats never went through Redis) leaves it sparse. Rebuilding from the
+// top UserStats at startup makes the leaderboard read endpoint reflect all explorers.
+using (var leaderboardScope = app.Services.CreateScope())
+{
+    var leaderboardMediator = leaderboardScope.ServiceProvider.GetRequiredService<IMediator>();
+    await leaderboardMediator.Send(new RebuildLeaderboardCommand());
+}
 
 app.UseExceptionHandlingMiddleware();
 
